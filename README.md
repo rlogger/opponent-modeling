@@ -106,10 +106,7 @@ src/tag_objectives/   objective-typed environment and evaluation
 src/mopa/             rollouts, encoders, beliefs, policies, BC, CPL, manifests
 scripts/              MAPPO training and the end-to-end Part 1 driver
 configs/alg/          capture, risk, and curious MAPPO configurations
-docs/                 environment, pipeline, protocol, and status
+docs/                 environment and implementation status
 tests/                unit, regression, synthetic pipeline, and env tests
 .github/workflows/    locked lint, test, and MAPPO smoke CI
 ```
-
-Read [docs/PART1.md](docs/PART1.md) for the model/data flow and
-[docs/PART1_GUIDELINES.md](docs/PART1_GUIDELINES.md) for the claim rules.

@@ -1,8 +1,8 @@
 # Implementation status
 
 This file is the source of truth for what the repository implements and what
-still needs experiment evidence. It reconciles the May/July co-training decks,
-the July 31 latent-strategy review, and the later update deck.
+still needs experiment evidence. It consolidates the historical research
+requirements and later implementation updates.
 
 ## Current lean scope
 
@@ -67,7 +67,7 @@ TD-MPC2 or as completed co-training.
 
 ## Open experiment decisions
 
-The source decks do not specify the preference ordering for CPL, success
+The current protocol does not specify the preference ordering for CPL, success
 thresholds for “clearly distinguishable,” full training budgets, confidence
 interval convention, adaptive-opponent schedule, or exact planner choice.
 Those decisions must be recorded in a run config before the corresponding
