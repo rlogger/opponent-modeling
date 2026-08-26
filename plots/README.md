@@ -1,4 +1,23 @@
-# Representative objective trajectories
+# Objective trajectory plots
+
+## Trajectory sample overview
+
+![Sampled prey-seeking, risk-averse, and curious predator trajectories](trajectory-samples.png)
+
+The overview shows 120 deterministic matched reset groups: 40 from each
+checkpoint seed. Faint paths show the sample distribution, while the six bold
+paths are representative joint medoids balanced across checkpoint seeds. Every
+path uses only its valid prefix and stops at capture or the 100-step horizon.
+The panel statistics use all 600 episodes per objective, not only the displayed
+sample.
+
+To preserve a readable common scale without clipping, the illustrative sample
+is drawn from the central 90% of matched groups by joint spatial extent. See
+[`trajectory-samples.json`](trajectory-samples.json) for the exact reset keys,
+episode indices, valid point counts, selection rule, source dataset hash, and
+figure hash.
+
+## Synchronized representative trajectories
 
 ![Synchronized prey-seeking, risk-averse, and curious trajectories](all-trajectories.gif)
 

@@ -1,0 +1,2410 @@
+{
+  "schema": "objective-trajectory-samples/v1",
+  "source": {
+    "dataset_filename": "trajectories.npz",
+    "dataset_sha256": "d0cb511465d1a5db980979eec907e03879314b575c343404cb0ecd65a073cdd3",
+    "metadata_filename": "metadata.json",
+    "metadata_sha256": "98268507e78cfb9280124a43407c9a637e713c78ebea3c34ecff1b495a0ff147",
+    "episodes": 1800,
+    "label_mapping": {
+      "0": "prey-seeking (capture)",
+      "1": "risk-averse",
+      "2": "curious"
+    },
+    "valid_prefix": "positions[:valid_length+1], actions[:valid_length]",
+    "matched_reset_keys_across_labels": true,
+    "prey_policy_control": "fixed capture checkpoint family"
+  },
+  "selection": {
+    "salt": "opponent-modeling-trajectory-samples-v1",
+    "central_quantile_global": 0.9,
+    "eligibility_rule": "Compute each matched group's maximum absolute predator coordinate over all three labels and valid prefixes; retain groups at or below the global higher-method 90th percentile, then sample within checkpoint-seed strata.",
+    "background_rule": "Within each eligible seed stratum, sort matched reset keys by SHA-256 of salt|checkpoint_seed|env_key_word_0|env_key_word_1 and select the first 40.",
+    "highlight_rule": "Within each checkpoint-seed stratum, select two deterministic joint medoids over robust-standardized, time-resampled predator paths and behavior vectors from all three labels.",
+    "global_joint_extent_threshold": 2.683706760406494,
+    "groups_selected": 120,
+    "groups_selected_per_checkpoint_seed": 40,
+    "highlighted_groups": 6,
+    "eligibility_by_checkpoint_seed": {
+      "0": {
+        "groups_total": 200,
+        "groups_eligible": 188,
+        "groups_selected": 40
+      },
+      "1": {
+        "groups_total": 200,
+        "groups_eligible": 171,
+        "groups_selected": 40
+      },
+      "2": {
+        "groups_total": 200,
+        "groups_eligible": 182,
+        "groups_selected": 40
+      }
+    },
+    "highlighted_group_keys": [
+      {
+        "checkpoint_seed": 0,
+        "environment_key": [
+          204866677,
+          341372596
+        ]
+      },
+      {
+        "checkpoint_seed": 0,
+        "environment_key": [
+          3371551859,
+          982849115
+        ]
+      },
+      {
+        "checkpoint_seed": 1,
+        "environment_key": [
+          1320600607,
+          3537625214
+        ]
+      },
+      {
+        "checkpoint_seed": 1,
+        "environment_key": [
+          2087665182,
+          3544327283
+        ]
+      },
+      {
+        "checkpoint_seed": 2,
+        "environment_key": [
+          1820137808,
+          3910383810
+        ]
+      },
+      {
+        "checkpoint_seed": 2,
+        "environment_key": [
+          1983862489,
+          3177687068
+        ]
+      }
+    ],
+    "groups": [
+      {
+        "checkpoint_seed": 0,
+        "environment_key": [
+          129518018,
+          2581160800
+        ],
+        "joint_max_abs_extent": 1.389105200767517,
+        "highlighted_joint_medoid": false,
+        "indices": {
+          "0": 81,
+          "1": 681,
+          "2": 1281
+        },
+        "valid_position_points": {
+          "0": 40,
+          "1": 101,
+          "2": 19
+        }
+      },
+      {
+        "checkpoint_seed": 0,
+        "environment_key": [
+          133161659,
+          1819007125
+        ],
+        "joint_max_abs_extent": 1.9932079315185547,
+        "highlighted_joint_medoid": false,
+        "indices": {
+          "0": 191,
+          "1": 791,
+          "2": 1391
+        },
+        "valid_position_points": {
+          "0": 101,
+          "1": 101,
+          "2": 101
+        }
+      },
+      {
+        "checkpoint_seed": 0,
+        "environment_key": [
+          168383534,
+          960199772
+        ],
+        "joint_max_abs_extent": 1.9089046716690063,
+        "highlighted_joint_medoid": false,
+        "indices": {
+          "0": 160,
+          "1": 760,
+          "2": 1360
+        },
+        "valid_position_points": {
+          "0": 29,
+          "1": 101,
+          "2": 101
+        }
+      },
+      {
+        "checkpoint_seed": 0,
+        "environment_key": [
+          204866677,
+          341372596
+        ],
+        "joint_max_abs_extent": 1.4860029220581055,
+        "highlighted_joint_medoid": true,
+        "indices": {
+          "0": 118,
+          "1": 718,
+          "2": 1318
+        },
+        "valid_position_points": {
+          "0": 30,
+          "1": 101,
+          "2": 28
+        }
+      },
+      {
+        "checkpoint_seed": 0,
+        "environment_key": [
+          276563374,
+          186693658
+        ],
+        "joint_max_abs_extent": 1.7273238897323608,
+        "highlighted_joint_medoid": false,
+        "indices": {
+          "0": 124,
+          "1": 724,
+          "2": 1324
+        },
+        "valid_position_points": {
+          "0": 18,
+          "1": 49,
+          "2": 101
+        }
+      },
+      {
+        "checkpoint_seed": 0,
+        "environment_key": [
+          300437306,
+          736685442
+        ],
+        "joint_max_abs_extent": 2.064225912094116,
+        "highlighted_joint_medoid": false,
+        "indices": {
+          "0": 149,
+          "1": 749,
+          "2": 1349
+        },
+        "valid_position_points": {
+          "0": 33,
+          "1": 101,
+          "2": 101
+        }
+      },
+      {
+        "checkpoint_seed": 0,
+        "environment_key": [
+          417853211,
+          1581331049
+        ],
+        "joint_max_abs_extent": 1.9407025575637817,
+        "highlighted_joint_medoid": false,
+        "indices": {
+          "0": 50,
+          "1": 650,
+          "2": 1250
+        },
+        "valid_position_points": {
+          "0": 18,
+          "1": 101,
+          "2": 50
+        }
+      },
+      {
+        "checkpoint_seed": 0,
+        "environment_key": [
+          609451662,
+          2108169109
+        ],
+        "joint_max_abs_extent": 1.884353756904602,
+        "highlighted_joint_medoid": false,
+        "indices": {
+          "0": 156,
+          "1": 756,
+          "2": 1356
+        },
+        "valid_position_points": {
+          "0": 19,
+          "1": 101,
+          "2": 17
+        }
+      },
+      {
+        "checkpoint_seed": 0,
+        "environment_key": [
+          1023733208,
+          1589007725
+        ],
+        "joint_max_abs_extent": 1.9408087730407715,
+        "highlighted_joint_medoid": false,
+        "indices": {
+          "0": 24,
+          "1": 624,
+          "2": 1224
+        },
+        "valid_position_points": {
+          "0": 17,
+          "1": 101,
+          "2": 101
+        }
+      },
+      {
+        "checkpoint_seed": 0,
+        "environment_key": [
+          1087607150,
+          3400046455
+        ],
+        "joint_max_abs_extent": 1.8508678674697876,
+        "highlighted_joint_medoid": false,
+        "indices": {
+          "0": 194,
+          "1": 794,
+          "2": 1394
+        },
+        "valid_position_points": {
+          "0": 20,
+          "1": 101,
+          "2": 101
+        }
+      },
+      {
+        "checkpoint_seed": 0,
+        "environment_key": [
+          1271859274,
+          2267111737
+        ],
+        "joint_max_abs_extent": 2.2027690410614014,
+        "highlighted_joint_medoid": false,
+        "indices": {
+          "0": 130,
+          "1": 730,
+          "2": 1330
+        },
+        "valid_position_points": {
+          "0": 48,
+          "1": 101,
+          "2": 101
+        }
+      },
+      {
+        "checkpoint_seed": 0,
+        "environment_key": [
+          1336440303,
+          512765739
+        ],
+        "joint_max_abs_extent": 2.084105968475342,
+        "highlighted_joint_medoid": false,
+        "indices": {
+          "0": 173,
+          "1": 773,
+          "2": 1373
+        },
+        "valid_position_points": {
+          "0": 26,
+          "1": 101,
+          "2": 101
+        }
+      },
+      {
+        "checkpoint_seed": 0,
+        "environment_key": [
+          1365793858,
+          1262121487
+        ],
+        "joint_max_abs_extent": 2.1021180152893066,
+        "highlighted_joint_medoid": false,
+        "indices": {
+          "0": 77,
+          "1": 677,
+          "2": 1277
+        },
+        "valid_position_points": {
+          "0": 20,
+          "1": 65,
+          "2": 101
+        }
+      },
+      {
+        "checkpoint_seed": 0,
+        "environment_key": [
+          1456104589,
+          3410751642
+        ],
+        "joint_max_abs_extent": 1.7368113994598389,
+        "highlighted_joint_medoid": false,
+        "indices": {
+          "0": 189,
+          "1": 789,
+          "2": 1389
+        },
+        "valid_position_points": {
+          "0": 37,
+          "1": 101,
+          "2": 101
+        }
+      },
+      {
+        "checkpoint_seed": 0,
+        "environment_key": [
+          1544413962,
+          602365884
+        ],
+        "joint_max_abs_extent": 2.1414053440093994,
+        "highlighted_joint_medoid": false,
+        "indices": {
+          "0": 30,
+          "1": 630,
+          "2": 1230
+        },
+        "valid_position_points": {
+          "0": 27,
+          "1": 101,
+          "2": 98
+        }
+      },
+      {
+        "checkpoint_seed": 0,
+        "environment_key": [
+          1887385796,
+          689338135
+        ],
+        "joint_max_abs_extent": 1.9151532649993896,
+        "highlighted_joint_medoid": false,
+        "indices": {
+          "0": 105,
+          "1": 705,
+          "2": 1305
+        },
+        "valid_position_points": {
+          "0": 101,
+          "1": 101,
+          "2": 101
+        }
+      },
+      {
+        "checkpoint_seed": 0,
+        "environment_key": [
+          1908630219,
+          2488899491
+        ],
+        "joint_max_abs_extent": 1.8317296504974365,
+        "highlighted_joint_medoid": false,
+        "indices": {
+          "0": 140,
+          "1": 740,
+          "2": 1340
+        },
+        "valid_position_points": {
+          "0": 38,
+          "1": 101,
+          "2": 101
+        }
+      },
+      {
+        "checkpoint_seed": 0,
+        "environment_key": [
+          2000312328,
+          1192958143
+        ],
+        "joint_max_abs_extent": 2.2373440265655518,
+        "highlighted_joint_medoid": false,
+        "indices": {
+          "0": 190,
+          "1": 790,
+          "2": 1390
+        },
+        "valid_position_points": {
+          "0": 33,
+          "1": 101,
+          "2": 101
+        }
+      },
+      {
+        "checkpoint_seed": 0,
+        "environment_key": [
+          2020983804,
+          4173806766
+        ],
+        "joint_max_abs_extent": 2.112416982650757,
+        "highlighted_joint_medoid": false,
+        "indices": {
+          "0": 145,
+          "1": 745,
+          "2": 1345
+        },
+        "valid_position_points": {
+          "0": 31,
+          "1": 101,
+          "2": 101
+        }
+      },
+      {
+        "checkpoint_seed": 0,
+        "environment_key": [
+          2228216940,
+          576463107
+        ],
+        "joint_max_abs_extent": 1.8601006269454956,
+        "highlighted_joint_medoid": false,
+        "indices": {
+          "0": 46,
+          "1": 646,
+          "2": 1246
+        },
+        "valid_position_points": {
+          "0": 38,
+          "1": 101,
+          "2": 101
+        }
+      },
+      {
+        "checkpoint_seed": 0,
+        "environment_key": [
+          2273324756,
+          4157833237
+        ],
+        "joint_max_abs_extent": 1.862561821937561,
+        "highlighted_joint_medoid": false,
+        "indices": {
+          "0": 144,
+          "1": 744,
+          "2": 1344
+        },
+        "valid_position_points": {
+          "0": 42,
+          "1": 101,
+          "2": 101
+        }
+      },
+      {
+        "checkpoint_seed": 0,
+        "environment_key": [
+          2432325616,
+          2193594882
+        ],
+        "joint_max_abs_extent": 2.232602596282959,
+        "highlighted_joint_medoid": false,
+        "indices": {
+          "0": 134,
+          "1": 734,
+          "2": 1334
+        },
+        "valid_position_points": {
+          "0": 39,
+          "1": 101,
+          "2": 101
+        }
+      },
+      {
+        "checkpoint_seed": 0,
+        "environment_key": [
+          2520552908,
+          1438563839
+        ],
+        "joint_max_abs_extent": 2.3665547370910645,
+        "highlighted_joint_medoid": false,
+        "indices": {
+          "0": 135,
+          "1": 735,
+          "2": 1335
+        },
+        "valid_position_points": {
+          "0": 33,
+          "1": 101,
+          "2": 101
+        }
+      },
+      {
+        "checkpoint_seed": 0,
+        "environment_key": [
+          2815433696,
+          1267086271
+        ],
+        "joint_max_abs_extent": 2.035404920578003,
+        "highlighted_joint_medoid": false,
+        "indices": {
+          "0": 178,
+          "1": 778,
+          "2": 1378
+        },
+        "valid_position_points": {
+          "0": 101,
+          "1": 101,
+          "2": 43
+        }
+      },
+      {
+        "checkpoint_seed": 0,
+        "environment_key": [
+          2929357993,
+          2408153401
+        ],
+        "joint_max_abs_extent": 1.6923179626464844,
+        "highlighted_joint_medoid": false,
+        "indices": {
+          "0": 9,
+          "1": 609,
+          "2": 1209
+        },
+        "valid_position_points": {
+          "0": 30,
+          "1": 101,
+          "2": 101
+        }
+      },
+      {
+        "checkpoint_seed": 0,
+        "environment_key": [
+          2933033742,
+          1728538399
+        ],
+        "joint_max_abs_extent": 2.1454319953918457,
+        "highlighted_joint_medoid": false,
+        "indices": {
+          "0": 56,
+          "1": 656,
+          "2": 1256
+        },
+        "valid_position_points": {
+          "0": 30,
+          "1": 101,
+          "2": 101
+        }
+      },
+      {
+        "checkpoint_seed": 0,
+        "environment_key": [
+          3026204425,
+          1034940319
+        ],
+        "joint_max_abs_extent": 2.6268954277038574,
+        "highlighted_joint_medoid": false,
+        "indices": {
+          "0": 22,
+          "1": 622,
+          "2": 1222
+        },
+        "valid_position_points": {
+          "0": 28,
+          "1": 101,
+          "2": 101
+        }
+      },
+      {
+        "checkpoint_seed": 0,
+        "environment_key": [
+          3122510000,
+          1523559352
+        ],
+        "joint_max_abs_extent": 1.9342364072799683,
+        "highlighted_joint_medoid": false,
+        "indices": {
+          "0": 28,
+          "1": 628,
+          "2": 1228
+        },
+        "valid_position_points": {
+          "0": 19,
+          "1": 101,
+          "2": 101
+        }
+      },
+      {
+        "checkpoint_seed": 0,
+        "environment_key": [
+          3156018424,
+          4163610838
+        ],
+        "joint_max_abs_extent": 1.9616522789001465,
+        "highlighted_joint_medoid": false,
+        "indices": {
+          "0": 113,
+          "1": 713,
+          "2": 1313
+        },
+        "valid_position_points": {
+          "0": 37,
+          "1": 101,
+          "2": 101
+        }
+      },
+      {
+        "checkpoint_seed": 0,
+        "environment_key": [
+          3227028110,
+          72839509
+        ],
+        "joint_max_abs_extent": 2.155693531036377,
+        "highlighted_joint_medoid": false,
+        "indices": {
+          "0": 110,
+          "1": 710,
+          "2": 1310
+        },
+        "valid_position_points": {
+          "0": 50,
+          "1": 101,
+          "2": 101
+        }
+      },
+      {
+        "checkpoint_seed": 0,
+        "environment_key": [
+          3371551859,
+          982849115
+        ],
+        "joint_max_abs_extent": 2.0338220596313477,
+        "highlighted_joint_medoid": true,
+        "indices": {
+          "0": 73,
+          "1": 673,
+          "2": 1273
+        },
+        "valid_position_points": {
+          "0": 39,
+          "1": 101,
+          "2": 101
+        }
+      },
+      {
+        "checkpoint_seed": 0,
+        "environment_key": [
+          3648230556,
+          2545978260
+        ],
+        "joint_max_abs_extent": 2.1517703533172607,
+        "highlighted_joint_medoid": false,
+        "indices": {
+          "0": 143,
+          "1": 743,
+          "2": 1343
+        },
+        "valid_position_points": {
+          "0": 57,
+          "1": 101,
+          "2": 101
+        }
+      },
+      {
+        "checkpoint_seed": 0,
+        "environment_key": [
+          3737337300,
+          623373726
+        ],
+        "joint_max_abs_extent": 1.8405036926269531,
+        "highlighted_joint_medoid": false,
+        "indices": {
+          "0": 188,
+          "1": 788,
+          "2": 1388
+        },
+        "valid_position_points": {
+          "0": 66,
+          "1": 101,
+          "2": 101
+        }
+      },
+      {
+        "checkpoint_seed": 0,
+        "environment_key": [
+          3746776171,
+          1132564423
+        ],
+        "joint_max_abs_extent": 1.972293496131897,
+        "highlighted_joint_medoid": false,
+        "indices": {
+          "0": 84,
+          "1": 684,
+          "2": 1284
+        },
+        "valid_position_points": {
+          "0": 75,
+          "1": 101,
+          "2": 101
+        }
+      },
+      {
+        "checkpoint_seed": 0,
+        "environment_key": [
+          3900694945,
+          3324098297
+        ],
+        "joint_max_abs_extent": 2.253607988357544,
+        "highlighted_joint_medoid": false,
+        "indices": {
+          "0": 4,
+          "1": 604,
+          "2": 1204
+        },
+        "valid_position_points": {
+          "0": 51,
+          "1": 101,
+          "2": 101
+        }
+      },
+      {
+        "checkpoint_seed": 0,
+        "environment_key": [
+          3943967233,
+          4076316737
+        ],
+        "joint_max_abs_extent": 2.06046724319458,
+        "highlighted_joint_medoid": false,
+        "indices": {
+          "0": 69,
+          "1": 669,
+          "2": 1269
+        },
+        "valid_position_points": {
+          "0": 101,
+          "1": 101,
+          "2": 101
+        }
+      },
+      {
+        "checkpoint_seed": 0,
+        "environment_key": [
+          3962789702,
+          4085942070
+        ],
+        "joint_max_abs_extent": 2.0857951641082764,
+        "highlighted_joint_medoid": false,
+        "indices": {
+          "0": 68,
+          "1": 668,
+          "2": 1268
+        },
+        "valid_position_points": {
+          "0": 49,
+          "1": 101,
+          "2": 101
+        }
+      },
+      {
+        "checkpoint_seed": 0,
+        "environment_key": [
+          4058655949,
+          32791924
+        ],
+        "joint_max_abs_extent": 1.8414398431777954,
+        "highlighted_joint_medoid": false,
+        "indices": {
+          "0": 55,
+          "1": 655,
+          "2": 1255
+        },
+        "valid_position_points": {
+          "0": 25,
+          "1": 101,
+          "2": 45
+        }
+      },
+      {
+        "checkpoint_seed": 0,
+        "environment_key": [
+          4115830308,
+          2453163244
+        ],
+        "joint_max_abs_extent": 1.8631480932235718,
+        "highlighted_joint_medoid": false,
+        "indices": {
+          "0": 58,
+          "1": 658,
+          "2": 1258
+        },
+        "valid_position_points": {
+          "0": 45,
+          "1": 101,
+          "2": 101
+        }
+      },
+      {
+        "checkpoint_seed": 0,
+        "environment_key": [
+          4280037012,
+          2752179166
+        ],
+        "joint_max_abs_extent": 1.984614610671997,
+        "highlighted_joint_medoid": false,
+        "indices": {
+          "0": 167,
+          "1": 767,
+          "2": 1367
+        },
+        "valid_position_points": {
+          "0": 29,
+          "1": 101,
+          "2": 101
+        }
+      },
+      {
+        "checkpoint_seed": 1,
+        "environment_key": [
+          57934900,
+          871191539
+        ],
+        "joint_max_abs_extent": 2.366663932800293,
+        "highlighted_joint_medoid": false,
+        "indices": {
+          "0": 282,
+          "1": 882,
+          "2": 1482
+        },
+        "valid_position_points": {
+          "0": 101,
+          "1": 101,
+          "2": 101
+        }
+      },
+      {
+        "checkpoint_seed": 1,
+        "environment_key": [
+          89010323,
+          837939729
+        ],
+        "joint_max_abs_extent": 1.7617989778518677,
+        "highlighted_joint_medoid": false,
+        "indices": {
+          "0": 371,
+          "1": 971,
+          "2": 1571
+        },
+        "valid_position_points": {
+          "0": 60,
+          "1": 101,
+          "2": 101
+        }
+      },
+      {
+        "checkpoint_seed": 1,
+        "environment_key": [
+          242729027,
+          2669723158
+        ],
+        "joint_max_abs_extent": 1.5478538274765015,
+        "highlighted_joint_medoid": false,
+        "indices": {
+          "0": 248,
+          "1": 848,
+          "2": 1448
+        },
+        "valid_position_points": {
+          "0": 25,
+          "1": 101,
+          "2": 101
+        }
+      },
+      {
+        "checkpoint_seed": 1,
+        "environment_key": [
+          296652553,
+          4110790558
+        ],
+        "joint_max_abs_extent": 1.8503164052963257,
+        "highlighted_joint_medoid": false,
+        "indices": {
+          "0": 393,
+          "1": 993,
+          "2": 1593
+        },
+        "valid_position_points": {
+          "0": 98,
+          "1": 101,
+          "2": 101
+        }
+      },
+      {
+        "checkpoint_seed": 1,
+        "environment_key": [
+          335982025,
+          989574467
+        ],
+        "joint_max_abs_extent": 1.5737498998641968,
+        "highlighted_joint_medoid": false,
+        "indices": {
+          "0": 365,
+          "1": 965,
+          "2": 1565
+        },
+        "valid_position_points": {
+          "0": 32,
+          "1": 101,
+          "2": 101
+        }
+      },
+      {
+        "checkpoint_seed": 1,
+        "environment_key": [
+          647284572,
+          94385267
+        ],
+        "joint_max_abs_extent": 1.9533278942108154,
+        "highlighted_joint_medoid": false,
+        "indices": {
+          "0": 336,
+          "1": 936,
+          "2": 1536
+        },
+        "valid_position_points": {
+          "0": 27,
+          "1": 101,
+          "2": 101
+        }
+      },
+      {
+        "checkpoint_seed": 1,
+        "environment_key": [
+          671630489,
+          1764103680
+        ],
+        "joint_max_abs_extent": 1.8419902324676514,
+        "highlighted_joint_medoid": false,
+        "indices": {
+          "0": 374,
+          "1": 974,
+          "2": 1574
+        },
+        "valid_position_points": {
+          "0": 17,
+          "1": 101,
+          "2": 101
+        }
+      },
+      {
+        "checkpoint_seed": 1,
+        "environment_key": [
+          863952712,
+          398592024
+        ],
+        "joint_max_abs_extent": 1.7775527238845825,
+        "highlighted_joint_medoid": false,
+        "indices": {
+          "0": 390,
+          "1": 990,
+          "2": 1590
+        },
+        "valid_position_points": {
+          "0": 48,
+          "1": 101,
+          "2": 66
+        }
+      },
+      {
+        "checkpoint_seed": 1,
+        "environment_key": [
+          888837669,
+          3131633998
+        ],
+        "joint_max_abs_extent": 2.3383255004882812,
+        "highlighted_joint_medoid": false,
+        "indices": {
+          "0": 319,
+          "1": 919,
+          "2": 1519
+        },
+        "valid_position_points": {
+          "0": 21,
+          "1": 101,
+          "2": 101
+        }
+      },
+      {
+        "checkpoint_seed": 1,
+        "environment_key": [
+          1114993551,
+          1169391778
+        ],
+        "joint_max_abs_extent": 2.272824764251709,
+        "highlighted_joint_medoid": false,
+        "indices": {
+          "0": 323,
+          "1": 923,
+          "2": 1523
+        },
+        "valid_position_points": {
+          "0": 24,
+          "1": 101,
+          "2": 101
+        }
+      },
+      {
+        "checkpoint_seed": 1,
+        "environment_key": [
+          1234417064,
+          1003773406
+        ],
+        "joint_max_abs_extent": 1.7215073108673096,
+        "highlighted_joint_medoid": false,
+        "indices": {
+          "0": 310,
+          "1": 910,
+          "2": 1510
+        },
+        "valid_position_points": {
+          "0": 31,
+          "1": 101,
+          "2": 101
+        }
+      },
+      {
+        "checkpoint_seed": 1,
+        "environment_key": [
+          1247158874,
+          3592005225
+        ],
+        "joint_max_abs_extent": 1.661709189414978,
+        "highlighted_joint_medoid": false,
+        "indices": {
+          "0": 351,
+          "1": 951,
+          "2": 1551
+        },
+        "valid_position_points": {
+          "0": 50,
+          "1": 101,
+          "2": 101
+        }
+      },
+      {
+        "checkpoint_seed": 1,
+        "environment_key": [
+          1320600607,
+          3537625214
+        ],
+        "joint_max_abs_extent": 2.1001627445220947,
+        "highlighted_joint_medoid": true,
+        "indices": {
+          "0": 203,
+          "1": 803,
+          "2": 1403
+        },
+        "valid_position_points": {
+          "0": 69,
+          "1": 101,
+          "2": 26
+        }
+      },
+      {
+        "checkpoint_seed": 1,
+        "environment_key": [
+          1342546179,
+          1935217775
+        ],
+        "joint_max_abs_extent": 2.0405378341674805,
+        "highlighted_joint_medoid": false,
+        "indices": {
+          "0": 353,
+          "1": 953,
+          "2": 1553
+        },
+        "valid_position_points": {
+          "0": 68,
+          "1": 101,
+          "2": 101
+        }
+      },
+      {
+        "checkpoint_seed": 1,
+        "environment_key": [
+          1407616723,
+          2636664852
+        ],
+        "joint_max_abs_extent": 2.6445915699005127,
+        "highlighted_joint_medoid": false,
+        "indices": {
+          "0": 350,
+          "1": 950,
+          "2": 1550
+        },
+        "valid_position_points": {
+          "0": 81,
+          "1": 101,
+          "2": 101
+        }
+      },
+      {
+        "checkpoint_seed": 1,
+        "environment_key": [
+          1527943813,
+          1282540889
+        ],
+        "joint_max_abs_extent": 2.187746286392212,
+        "highlighted_joint_medoid": false,
+        "indices": {
+          "0": 322,
+          "1": 922,
+          "2": 1522
+        },
+        "valid_position_points": {
+          "0": 33,
+          "1": 101,
+          "2": 101
+        }
+      },
+      {
+        "checkpoint_seed": 1,
+        "environment_key": [
+          1606315796,
+          3607601338
+        ],
+        "joint_max_abs_extent": 2.289517402648926,
+        "highlighted_joint_medoid": false,
+        "indices": {
+          "0": 307,
+          "1": 907,
+          "2": 1507
+        },
+        "valid_position_points": {
+          "0": 89,
+          "1": 101,
+          "2": 101
+        }
+      },
+      {
+        "checkpoint_seed": 1,
+        "environment_key": [
+          1762809786,
+          2452664928
+        ],
+        "joint_max_abs_extent": 2.071284055709839,
+        "highlighted_joint_medoid": false,
+        "indices": {
+          "0": 260,
+          "1": 860,
+          "2": 1460
+        },
+        "valid_position_points": {
+          "0": 42,
+          "1": 101,
+          "2": 101
+        }
+      },
+      {
+        "checkpoint_seed": 1,
+        "environment_key": [
+          1845886079,
+          1652521897
+        ],
+        "joint_max_abs_extent": 1.588469386100769,
+        "highlighted_joint_medoid": false,
+        "indices": {
+          "0": 343,
+          "1": 943,
+          "2": 1543
+        },
+        "valid_position_points": {
+          "0": 29,
+          "1": 101,
+          "2": 101
+        }
+      },
+      {
+        "checkpoint_seed": 1,
+        "environment_key": [
+          1894712132,
+          2318010133
+        ],
+        "joint_max_abs_extent": 1.7241400480270386,
+        "highlighted_joint_medoid": false,
+        "indices": {
+          "0": 346,
+          "1": 946,
+          "2": 1546
+        },
+        "valid_position_points": {
+          "0": 18,
+          "1": 101,
+          "2": 101
+        }
+      },
+      {
+        "checkpoint_seed": 1,
+        "environment_key": [
+          2087665182,
+          3544327283
+        ],
+        "joint_max_abs_extent": 1.4710322618484497,
+        "highlighted_joint_medoid": true,
+        "indices": {
+          "0": 345,
+          "1": 945,
+          "2": 1545
+        },
+        "valid_position_points": {
+          "0": 27,
+          "1": 101,
+          "2": 101
+        }
+      },
+      {
+        "checkpoint_seed": 1,
+        "environment_key": [
+          2323971963,
+          3065124048
+        ],
+        "joint_max_abs_extent": 1.8730347156524658,
+        "highlighted_joint_medoid": false,
+        "indices": {
+          "0": 293,
+          "1": 893,
+          "2": 1493
+        },
+        "valid_position_points": {
+          "0": 17,
+          "1": 17,
+          "2": 101
+        }
+      },
+      {
+        "checkpoint_seed": 1,
+        "environment_key": [
+          2357624509,
+          550265086
+        ],
+        "joint_max_abs_extent": 1.8079408407211304,
+        "highlighted_joint_medoid": false,
+        "indices": {
+          "0": 313,
+          "1": 913,
+          "2": 1513
+        },
+        "valid_position_points": {
+          "0": 26,
+          "1": 101,
+          "2": 101
+        }
+      },
+      {
+        "checkpoint_seed": 1,
+        "environment_key": [
+          2580565627,
+          3100156580
+        ],
+        "joint_max_abs_extent": 2.395639181137085,
+        "highlighted_joint_medoid": false,
+        "indices": {
+          "0": 218,
+          "1": 818,
+          "2": 1418
+        },
+        "valid_position_points": {
+          "0": 17,
+          "1": 101,
+          "2": 101
+        }
+      },
+      {
+        "checkpoint_seed": 1,
+        "environment_key": [
+          2807475628,
+          1100650327
+        ],
+        "joint_max_abs_extent": 1.906843662261963,
+        "highlighted_joint_medoid": false,
+        "indices": {
+          "0": 330,
+          "1": 930,
+          "2": 1530
+        },
+        "valid_position_points": {
+          "0": 36,
+          "1": 101,
+          "2": 101
+        }
+      },
+      {
+        "checkpoint_seed": 1,
+        "environment_key": [
+          2866522783,
+          3631571905
+        ],
+        "joint_max_abs_extent": 2.4342827796936035,
+        "highlighted_joint_medoid": false,
+        "indices": {
+          "0": 243,
+          "1": 843,
+          "2": 1443
+        },
+        "valid_position_points": {
+          "0": 101,
+          "1": 101,
+          "2": 101
+        }
+      },
+      {
+        "checkpoint_seed": 1,
+        "environment_key": [
+          2872253636,
+          1238636097
+        ],
+        "joint_max_abs_extent": 2.4147372245788574,
+        "highlighted_joint_medoid": false,
+        "indices": {
+          "0": 354,
+          "1": 954,
+          "2": 1554
+        },
+        "valid_position_points": {
+          "0": 33,
+          "1": 101,
+          "2": 101
+        }
+      },
+      {
+        "checkpoint_seed": 1,
+        "environment_key": [
+          2893895912,
+          656157209
+        ],
+        "joint_max_abs_extent": 2.469027280807495,
+        "highlighted_joint_medoid": false,
+        "indices": {
+          "0": 230,
+          "1": 830,
+          "2": 1430
+        },
+        "valid_position_points": {
+          "0": 32,
+          "1": 101,
+          "2": 101
+        }
+      },
+      {
+        "checkpoint_seed": 1,
+        "environment_key": [
+          2942083703,
+          1779602025
+        ],
+        "joint_max_abs_extent": 1.8377885818481445,
+        "highlighted_joint_medoid": false,
+        "indices": {
+          "0": 380,
+          "1": 980,
+          "2": 1580
+        },
+        "valid_position_points": {
+          "0": 32,
+          "1": 101,
+          "2": 101
+        }
+      },
+      {
+        "checkpoint_seed": 1,
+        "environment_key": [
+          3033203842,
+          737254282
+        ],
+        "joint_max_abs_extent": 1.0857950448989868,
+        "highlighted_joint_medoid": false,
+        "indices": {
+          "0": 253,
+          "1": 853,
+          "2": 1453
+        },
+        "valid_position_points": {
+          "0": 20,
+          "1": 101,
+          "2": 19
+        }
+      },
+      {
+        "checkpoint_seed": 1,
+        "environment_key": [
+          3063696772,
+          3965607700
+        ],
+        "joint_max_abs_extent": 1.886907935142517,
+        "highlighted_joint_medoid": false,
+        "indices": {
+          "0": 213,
+          "1": 813,
+          "2": 1413
+        },
+        "valid_position_points": {
+          "0": 35,
+          "1": 101,
+          "2": 101
+        }
+      },
+      {
+        "checkpoint_seed": 1,
+        "environment_key": [
+          3300835283,
+          2867213346
+        ],
+        "joint_max_abs_extent": 1.549809455871582,
+        "highlighted_joint_medoid": false,
+        "indices": {
+          "0": 281,
+          "1": 881,
+          "2": 1481
+        },
+        "valid_position_points": {
+          "0": 41,
+          "1": 101,
+          "2": 101
+        }
+      },
+      {
+        "checkpoint_seed": 1,
+        "environment_key": [
+          3336254308,
+          261180158
+        ],
+        "joint_max_abs_extent": 1.4063763618469238,
+        "highlighted_joint_medoid": false,
+        "indices": {
+          "0": 286,
+          "1": 886,
+          "2": 1486
+        },
+        "valid_position_points": {
+          "0": 44,
+          "1": 101,
+          "2": 101
+        }
+      },
+      {
+        "checkpoint_seed": 1,
+        "environment_key": [
+          3365582358,
+          2097260405
+        ],
+        "joint_max_abs_extent": 1.4434903860092163,
+        "highlighted_joint_medoid": false,
+        "indices": {
+          "0": 255,
+          "1": 855,
+          "2": 1455
+        },
+        "valid_position_points": {
+          "0": 33,
+          "1": 101,
+          "2": 101
+        }
+      },
+      {
+        "checkpoint_seed": 1,
+        "environment_key": [
+          3540441627,
+          2460631375
+        ],
+        "joint_max_abs_extent": 1.6202449798583984,
+        "highlighted_joint_medoid": false,
+        "indices": {
+          "0": 204,
+          "1": 804,
+          "2": 1404
+        },
+        "valid_position_points": {
+          "0": 60,
+          "1": 101,
+          "2": 101
+        }
+      },
+      {
+        "checkpoint_seed": 1,
+        "environment_key": [
+          3644052191,
+          1046783957
+        ],
+        "joint_max_abs_extent": 2.015695810317993,
+        "highlighted_joint_medoid": false,
+        "indices": {
+          "0": 268,
+          "1": 868,
+          "2": 1468
+        },
+        "valid_position_points": {
+          "0": 33,
+          "1": 101,
+          "2": 101
+        }
+      },
+      {
+        "checkpoint_seed": 1,
+        "environment_key": [
+          3740465412,
+          2782277121
+        ],
+        "joint_max_abs_extent": 2.196531057357788,
+        "highlighted_joint_medoid": false,
+        "indices": {
+          "0": 356,
+          "1": 956,
+          "2": 1556
+        },
+        "valid_position_points": {
+          "0": 39,
+          "1": 101,
+          "2": 101
+        }
+      },
+      {
+        "checkpoint_seed": 1,
+        "environment_key": [
+          4142455259,
+          1543905936
+        ],
+        "joint_max_abs_extent": 2.137218713760376,
+        "highlighted_joint_medoid": false,
+        "indices": {
+          "0": 249,
+          "1": 849,
+          "2": 1449
+        },
+        "valid_position_points": {
+          "0": 19,
+          "1": 101,
+          "2": 101
+        }
+      },
+      {
+        "checkpoint_seed": 1,
+        "environment_key": [
+          4215896066,
+          834535347
+        ],
+        "joint_max_abs_extent": 1.8673501014709473,
+        "highlighted_joint_medoid": false,
+        "indices": {
+          "0": 363,
+          "1": 963,
+          "2": 1563
+        },
+        "valid_position_points": {
+          "0": 21,
+          "1": 101,
+          "2": 101
+        }
+      },
+      {
+        "checkpoint_seed": 1,
+        "environment_key": [
+          4231878952,
+          2683614466
+        ],
+        "joint_max_abs_extent": 1.7839125394821167,
+        "highlighted_joint_medoid": false,
+        "indices": {
+          "0": 358,
+          "1": 958,
+          "2": 1558
+        },
+        "valid_position_points": {
+          "0": 53,
+          "1": 101,
+          "2": 101
+        }
+      },
+      {
+        "checkpoint_seed": 2,
+        "environment_key": [
+          172022241,
+          2193941896
+        ],
+        "joint_max_abs_extent": 2.2052955627441406,
+        "highlighted_joint_medoid": false,
+        "indices": {
+          "0": 461,
+          "1": 1061,
+          "2": 1661
+        },
+        "valid_position_points": {
+          "0": 36,
+          "1": 101,
+          "2": 101
+        }
+      },
+      {
+        "checkpoint_seed": 2,
+        "environment_key": [
+          651026570,
+          2506558602
+        ],
+        "joint_max_abs_extent": 2.493971109390259,
+        "highlighted_joint_medoid": false,
+        "indices": {
+          "0": 567,
+          "1": 1167,
+          "2": 1767
+        },
+        "valid_position_points": {
+          "0": 35,
+          "1": 101,
+          "2": 101
+        }
+      },
+      {
+        "checkpoint_seed": 2,
+        "environment_key": [
+          707823009,
+          54715281
+        ],
+        "joint_max_abs_extent": 1.8568843603134155,
+        "highlighted_joint_medoid": false,
+        "indices": {
+          "0": 504,
+          "1": 1104,
+          "2": 1704
+        },
+        "valid_position_points": {
+          "0": 28,
+          "1": 101,
+          "2": 101
+        }
+      },
+      {
+        "checkpoint_seed": 2,
+        "environment_key": [
+          778183783,
+          1689778912
+        ],
+        "joint_max_abs_extent": 2.3743743896484375,
+        "highlighted_joint_medoid": false,
+        "indices": {
+          "0": 583,
+          "1": 1183,
+          "2": 1783
+        },
+        "valid_position_points": {
+          "0": 34,
+          "1": 101,
+          "2": 101
+        }
+      },
+      {
+        "checkpoint_seed": 2,
+        "environment_key": [
+          858876825,
+          2726490982
+        ],
+        "joint_max_abs_extent": 1.9063293933868408,
+        "highlighted_joint_medoid": false,
+        "indices": {
+          "0": 494,
+          "1": 1094,
+          "2": 1694
+        },
+        "valid_position_points": {
+          "0": 15,
+          "1": 101,
+          "2": 61
+        }
+      },
+      {
+        "checkpoint_seed": 2,
+        "environment_key": [
+          932272557,
+          965442898
+        ],
+        "joint_max_abs_extent": 2.3635671138763428,
+        "highlighted_joint_medoid": false,
+        "indices": {
+          "0": 415,
+          "1": 1015,
+          "2": 1615
+        },
+        "valid_position_points": {
+          "0": 45,
+          "1": 97,
+          "2": 92
+        }
+      },
+      {
+        "checkpoint_seed": 2,
+        "environment_key": [
+          1019994335,
+          3326459932
+        ],
+        "joint_max_abs_extent": 1.974081039428711,
+        "highlighted_joint_medoid": false,
+        "indices": {
+          "0": 451,
+          "1": 1051,
+          "2": 1651
+        },
+        "valid_position_points": {
+          "0": 28,
+          "1": 101,
+          "2": 101
+        }
+      },
+      {
+        "checkpoint_seed": 2,
+        "environment_key": [
+          1294469769,
+          796902325
+        ],
+        "joint_max_abs_extent": 2.1826088428497314,
+        "highlighted_joint_medoid": false,
+        "indices": {
+          "0": 425,
+          "1": 1025,
+          "2": 1625
+        },
+        "valid_position_points": {
+          "0": 28,
+          "1": 101,
+          "2": 101
+        }
+      },
+      {
+        "checkpoint_seed": 2,
+        "environment_key": [
+          1312826702,
+          3767985260
+        ],
+        "joint_max_abs_extent": 1.5175774097442627,
+        "highlighted_joint_medoid": false,
+        "indices": {
+          "0": 515,
+          "1": 1115,
+          "2": 1715
+        },
+        "valid_position_points": {
+          "0": 82,
+          "1": 101,
+          "2": 41
+        }
+      },
+      {
+        "checkpoint_seed": 2,
+        "environment_key": [
+          1376039496,
+          2547338077
+        ],
+        "joint_max_abs_extent": 1.9789199829101562,
+        "highlighted_joint_medoid": false,
+        "indices": {
+          "0": 455,
+          "1": 1055,
+          "2": 1655
+        },
+        "valid_position_points": {
+          "0": 32,
+          "1": 101,
+          "2": 101
+        }
+      },
+      {
+        "checkpoint_seed": 2,
+        "environment_key": [
+          1709628865,
+          1506085373
+        ],
+        "joint_max_abs_extent": 2.629615545272827,
+        "highlighted_joint_medoid": false,
+        "indices": {
+          "0": 468,
+          "1": 1068,
+          "2": 1668
+        },
+        "valid_position_points": {
+          "0": 55,
+          "1": 101,
+          "2": 101
+        }
+      },
+      {
+        "checkpoint_seed": 2,
+        "environment_key": [
+          1711742532,
+          2743781936
+        ],
+        "joint_max_abs_extent": 1.663362979888916,
+        "highlighted_joint_medoid": false,
+        "indices": {
+          "0": 449,
+          "1": 1049,
+          "2": 1649
+        },
+        "valid_position_points": {
+          "0": 51,
+          "1": 101,
+          "2": 101
+        }
+      },
+      {
+        "checkpoint_seed": 2,
+        "environment_key": [
+          1760859943,
+          1467786656
+        ],
+        "joint_max_abs_extent": 1.96867835521698,
+        "highlighted_joint_medoid": false,
+        "indices": {
+          "0": 421,
+          "1": 1021,
+          "2": 1621
+        },
+        "valid_position_points": {
+          "0": 33,
+          "1": 101,
+          "2": 101
+        }
+      },
+      {
+        "checkpoint_seed": 2,
+        "environment_key": [
+          1820137808,
+          3910383810
+        ],
+        "joint_max_abs_extent": 1.6586272716522217,
+        "highlighted_joint_medoid": true,
+        "indices": {
+          "0": 407,
+          "1": 1007,
+          "2": 1607
+        },
+        "valid_position_points": {
+          "0": 40,
+          "1": 101,
+          "2": 101
+        }
+      },
+      {
+        "checkpoint_seed": 2,
+        "environment_key": [
+          1895199848,
+          1986256443
+        ],
+        "joint_max_abs_extent": 1.6527620553970337,
+        "highlighted_joint_medoid": false,
+        "indices": {
+          "0": 530,
+          "1": 1130,
+          "2": 1730
+        },
+        "valid_position_points": {
+          "0": 42,
+          "1": 101,
+          "2": 58
+        }
+      },
+      {
+        "checkpoint_seed": 2,
+        "environment_key": [
+          1983862489,
+          3177687068
+        ],
+        "joint_max_abs_extent": 1.6774379014968872,
+        "highlighted_joint_medoid": true,
+        "indices": {
+          "0": 532,
+          "1": 1132,
+          "2": 1732
+        },
+        "valid_position_points": {
+          "0": 27,
+          "1": 101,
+          "2": 101
+        }
+      },
+      {
+        "checkpoint_seed": 2,
+        "environment_key": [
+          2007164208,
+          3515927387
+        ],
+        "joint_max_abs_extent": 1.684206485748291,
+        "highlighted_joint_medoid": false,
+        "indices": {
+          "0": 478,
+          "1": 1078,
+          "2": 1678
+        },
+        "valid_position_points": {
+          "0": 33,
+          "1": 101,
+          "2": 101
+        }
+      },
+      {
+        "checkpoint_seed": 2,
+        "environment_key": [
+          2132373169,
+          1601048689
+        ],
+        "joint_max_abs_extent": 2.212653160095215,
+        "highlighted_joint_medoid": false,
+        "indices": {
+          "0": 446,
+          "1": 1046,
+          "2": 1646
+        },
+        "valid_position_points": {
+          "0": 45,
+          "1": 101,
+          "2": 101
+        }
+      },
+      {
+        "checkpoint_seed": 2,
+        "environment_key": [
+          2285892321,
+          3020267015
+        ],
+        "joint_max_abs_extent": 2.56198787689209,
+        "highlighted_joint_medoid": false,
+        "indices": {
+          "0": 527,
+          "1": 1127,
+          "2": 1727
+        },
+        "valid_position_points": {
+          "0": 26,
+          "1": 101,
+          "2": 101
+        }
+      },
+      {
+        "checkpoint_seed": 2,
+        "environment_key": [
+          2319525779,
+          3556468165
+        ],
+        "joint_max_abs_extent": 2.478177309036255,
+        "highlighted_joint_medoid": false,
+        "indices": {
+          "0": 486,
+          "1": 1086,
+          "2": 1686
+        },
+        "valid_position_points": {
+          "0": 31,
+          "1": 101,
+          "2": 101
+        }
+      },
+      {
+        "checkpoint_seed": 2,
+        "environment_key": [
+          2331712225,
+          1053067134
+        ],
+        "joint_max_abs_extent": 2.053831100463867,
+        "highlighted_joint_medoid": false,
+        "indices": {
+          "0": 471,
+          "1": 1071,
+          "2": 1671
+        },
+        "valid_position_points": {
+          "0": 20,
+          "1": 101,
+          "2": 79
+        }
+      },
+      {
+        "checkpoint_seed": 2,
+        "environment_key": [
+          2346312802,
+          381299566
+        ],
+        "joint_max_abs_extent": 1.9485642910003662,
+        "highlighted_joint_medoid": false,
+        "indices": {
+          "0": 497,
+          "1": 1097,
+          "2": 1697
+        },
+        "valid_position_points": {
+          "0": 24,
+          "1": 101,
+          "2": 101
+        }
+      },
+      {
+        "checkpoint_seed": 2,
+        "environment_key": [
+          2361573159,
+          2110032287
+        ],
+        "joint_max_abs_extent": 1.8039042949676514,
+        "highlighted_joint_medoid": false,
+        "indices": {
+          "0": 453,
+          "1": 1053,
+          "2": 1653
+        },
+        "valid_position_points": {
+          "0": 48,
+          "1": 101,
+          "2": 101
+        }
+      },
+      {
+        "checkpoint_seed": 2,
+        "environment_key": [
+          2407892122,
+          3735449607
+        ],
+        "joint_max_abs_extent": 2.297865152359009,
+        "highlighted_joint_medoid": false,
+        "indices": {
+          "0": 432,
+          "1": 1032,
+          "2": 1632
+        },
+        "valid_position_points": {
+          "0": 30,
+          "1": 101,
+          "2": 101
+        }
+      },
+      {
+        "checkpoint_seed": 2,
+        "environment_key": [
+          2422095733,
+          1679458083
+        ],
+        "joint_max_abs_extent": 1.69644296169281,
+        "highlighted_joint_medoid": false,
+        "indices": {
+          "0": 409,
+          "1": 1009,
+          "2": 1609
+        },
+        "valid_position_points": {
+          "0": 18,
+          "1": 25,
+          "2": 101
+        }
+      },
+      {
+        "checkpoint_seed": 2,
+        "environment_key": [
+          2515626490,
+          1364799505
+        ],
+        "joint_max_abs_extent": 1.7455414533615112,
+        "highlighted_joint_medoid": false,
+        "indices": {
+          "0": 516,
+          "1": 1116,
+          "2": 1716
+        },
+        "valid_position_points": {
+          "0": 101,
+          "1": 101,
+          "2": 53
+        }
+      },
+      {
+        "checkpoint_seed": 2,
+        "environment_key": [
+          2554340186,
+          175750416
+        ],
+        "joint_max_abs_extent": 2.294741153717041,
+        "highlighted_joint_medoid": false,
+        "indices": {
+          "0": 419,
+          "1": 1019,
+          "2": 1619
+        },
+        "valid_position_points": {
+          "0": 101,
+          "1": 101,
+          "2": 101
+        }
+      },
+      {
+        "checkpoint_seed": 2,
+        "environment_key": [
+          2924193402,
+          3450563795
+        ],
+        "joint_max_abs_extent": 1.548771858215332,
+        "highlighted_joint_medoid": false,
+        "indices": {
+          "0": 430,
+          "1": 1030,
+          "2": 1630
+        },
+        "valid_position_points": {
+          "0": 17,
+          "1": 101,
+          "2": 101
+        }
+      },
+      {
+        "checkpoint_seed": 2,
+        "environment_key": [
+          2941097873,
+          1342380605
+        ],
+        "joint_max_abs_extent": 2.021853446960449,
+        "highlighted_joint_medoid": false,
+        "indices": {
+          "0": 426,
+          "1": 1026,
+          "2": 1626
+        },
+        "valid_position_points": {
+          "0": 19,
+          "1": 101,
+          "2": 101
+        }
+      },
+      {
+        "checkpoint_seed": 2,
+        "environment_key": [
+          3096155016,
+          1062488903
+        ],
+        "joint_max_abs_extent": 1.9423669576644897,
+        "highlighted_joint_medoid": false,
+        "indices": {
+          "0": 598,
+          "1": 1198,
+          "2": 1798
+        },
+        "valid_position_points": {
+          "0": 62,
+          "1": 101,
+          "2": 101
+        }
+      },
+      {
+        "checkpoint_seed": 2,
+        "environment_key": [
+          3198241300,
+          1486329440
+        ],
+        "joint_max_abs_extent": 2.3967912197113037,
+        "highlighted_joint_medoid": false,
+        "indices": {
+          "0": 521,
+          "1": 1121,
+          "2": 1721
+        },
+        "valid_position_points": {
+          "0": 77,
+          "1": 101,
+          "2": 101
+        }
+      },
+      {
+        "checkpoint_seed": 2,
+        "environment_key": [
+          3552889916,
+          3672627101
+        ],
+        "joint_max_abs_extent": 2.222045421600342,
+        "highlighted_joint_medoid": false,
+        "indices": {
+          "0": 589,
+          "1": 1189,
+          "2": 1789
+        },
+        "valid_position_points": {
+          "0": 39,
+          "1": 101,
+          "2": 101
+        }
+      },
+      {
+        "checkpoint_seed": 2,
+        "environment_key": [
+          3627316294,
+          1613373063
+        ],
+        "joint_max_abs_extent": 2.3578805923461914,
+        "highlighted_joint_medoid": false,
+        "indices": {
+          "0": 460,
+          "1": 1060,
+          "2": 1660
+        },
+        "valid_position_points": {
+          "0": 30,
+          "1": 101,
+          "2": 101
+        }
+      },
+      {
+        "checkpoint_seed": 2,
+        "environment_key": [
+          3884849164,
+          1958113770
+        ],
+        "joint_max_abs_extent": 1.8428983688354492,
+        "highlighted_joint_medoid": false,
+        "indices": {
+          "0": 457,
+          "1": 1057,
+          "2": 1657
+        },
+        "valid_position_points": {
+          "0": 25,
+          "1": 95,
+          "2": 101
+        }
+      },
+      {
+        "checkpoint_seed": 2,
+        "environment_key": [
+          4091428623,
+          1999100019
+        ],
+        "joint_max_abs_extent": 1.2347075939178467,
+        "highlighted_joint_medoid": false,
+        "indices": {
+          "0": 482,
+          "1": 1082,
+          "2": 1682
+        },
+        "valid_position_points": {
+          "0": 17,
+          "1": 46,
+          "2": 16
+        }
+      },
+      {
+        "checkpoint_seed": 2,
+        "environment_key": [
+          4128788779,
+          710128287
+        ],
+        "joint_max_abs_extent": 2.1369760036468506,
+        "highlighted_joint_medoid": false,
+        "indices": {
+          "0": 439,
+          "1": 1039,
+          "2": 1639
+        },
+        "valid_position_points": {
+          "0": 54,
+          "1": 101,
+          "2": 101
+        }
+      },
+      {
+        "checkpoint_seed": 2,
+        "environment_key": [
+          4153534187,
+          699157717
+        ],
+        "joint_max_abs_extent": 1.961464524269104,
+        "highlighted_joint_medoid": false,
+        "indices": {
+          "0": 534,
+          "1": 1134,
+          "2": 1734
+        },
+        "valid_position_points": {
+          "0": 30,
+          "1": 101,
+          "2": 101
+        }
+      },
+      {
+        "checkpoint_seed": 2,
+        "environment_key": [
+          4169228044,
+          2495050621
+        ],
+        "joint_max_abs_extent": 1.9900107383728027,
+        "highlighted_joint_medoid": false,
+        "indices": {
+          "0": 546,
+          "1": 1146,
+          "2": 1746
+        },
+        "valid_position_points": {
+          "0": 37,
+          "1": 101,
+          "2": 101
+        }
+      },
+      {
+        "checkpoint_seed": 2,
+        "environment_key": [
+          4242870962,
+          2839543494
+        ],
+        "joint_max_abs_extent": 1.9065443277359009,
+        "highlighted_joint_medoid": false,
+        "indices": {
+          "0": 477,
+          "1": 1077,
+          "2": 1677
+        },
+        "valid_position_points": {
+          "0": 36,
+          "1": 101,
+          "2": 101
+        }
+      },
+      {
+        "checkpoint_seed": 2,
+        "environment_key": [
+          4258912407,
+          3238567448
+        ],
+        "joint_max_abs_extent": 1.8914426565170288,
+        "highlighted_joint_medoid": false,
+        "indices": {
+          "0": 441,
+          "1": 1041,
+          "2": 1641
+        },
+        "valid_position_points": {
+          "0": 56,
+          "1": 101,
+          "2": 101
+        }
+      }
+    ]
+  },
+  "full_dataset_panel_statistics": {
+    "0": {
+      "name": "Prey-seeking",
+      "episodes": 600,
+      "capture_rate": 0.9516666666666667,
+      "median_valid_length": 32.0,
+      "mean_pred_coverage": 14.34000015258789,
+      "mean_pred_lava_steps": 8.776666641235352
+    },
+    "1": {
+      "name": "Risk-averse",
+      "episodes": 600,
+      "capture_rate": 0.045,
+      "median_valid_length": 100.0,
+      "mean_pred_coverage": 8.916666984558105,
+      "mean_pred_lava_steps": 0.34166666865348816
+    },
+    "2": {
+      "name": "Curious",
+      "episodes": 600,
+      "capture_rate": 0.13333333333333333,
+      "median_valid_length": 100.0,
+      "mean_pred_coverage": 39.72833251953125,
+      "mean_pred_lava_steps": 10.693333625793457
+    }
+  },
+  "figure": {
+    "filename": "trajectory-samples.png",
+    "sha256": "5367cf3c073aa1499e53c3b4dfcec12a658846fb9afbe93da52173948030994b",
+    "bytes": 558945,
+    "pixel_width": 2700,
+    "pixel_height": 1080,
+    "dpi": 180,
+    "common_symmetric_axis_limit": 2.75,
+    "faint_line_alpha": 0.065,
+    "bold_line_count_per_panel": 6
+  },
+  "claim_boundary": "These are behavior rollouts from trained specialists. The bundle does not by itself establish representation recovery or downstream scientific success."
+}
