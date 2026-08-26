@@ -40,7 +40,7 @@ src/mopa/             # Part 1: encoders, belief, bc, data, metrics
 scripts/train_mappo.py
 scripts/run_part1.py
 configs/alg/mappo_objectives_{capture,risk,curious}.yaml
-docs/{ENVIRONMENT,PART1,PART1_GUIDELINES}.md
+docs/ENVIRONMENT.md
 tests/
 ```
 
