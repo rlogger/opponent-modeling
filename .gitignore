@@ -1,5 +1,10 @@
 logs/
-plots/
+plots/*
+!plots/README.md
+!plots/animation-manifest.json
+!plots/*.gif
+!plots/*.png
+!plots/*.pdf
 *.npz
 *.safetensors
 .venv/

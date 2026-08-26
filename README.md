@@ -32,6 +32,12 @@ python scripts/train_mappo.py alg=mappo_objectives_curious NUM_SEEDS=3
 
 Checkpoints land under `logs/MPE_simple_tag_v3/`.
 
+## Trajectory visualizations
+
+See [`plots/`](plots/) for synchronized and individual GIFs of the
+prey-seeking, risk-averse, and curious specialists, plus the static comparison
+plot and provenance manifest.
+
 ## Layout
 
 ```text
@@ -41,6 +47,7 @@ scripts/train_mappo.py
 scripts/run_part1.py
 configs/alg/mappo_objectives_{capture,risk,curious}.yaml
 docs/ENVIRONMENT.md
+plots/                 # representative trajectory GIFs and static plot
 tests/
 ```
 
