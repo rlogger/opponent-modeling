@@ -125,6 +125,21 @@ displacement mode is available only for parity checks and is rejected by full
 runs because it exposes the transition caused by the current action. Shashank's
 model budget is 1,500 updates, window 8, latent size 8, and hidden size 64.
 
+### `0s` verification
+
+| Evaluation | Probe | GMM ARI | Window probe | Decoder accuracy |
+|---|---:|---:|---:|---:|
+| Shashank's published `0s` | 0.785 | 0.435 | 0.547 | 0.829 |
+| Integrated recommended mode, 3 encoder seeds | 0.734 ± 0.046 | 0.525 ± 0.017 | 0.581 ± 0.031 | 0.763 ± 0.001 |
+
+The port was also checked against the frozen upstream implementation on the
+same current dataset: episode latents, window latents, and decoder accuracy
+matched exactly (maximum absolute difference `0.0`). The published row used an
+unavailable legacy dataset and different checkpoints. The recommended row uses
+fixed capture-prey, matched resets, checkpoint holdout, and past-only state
+displacement. Its complete-episode score is post-hoc because `0s` encodes
+observed actions; prefix scores are required for online interpretation.
+
 ## Trajectory visualizations
 
 See [`plots/`](plots/) for synchronized and individual GIFs of the

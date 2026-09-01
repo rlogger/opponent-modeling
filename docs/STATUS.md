@@ -18,6 +18,7 @@ reproducible manifests. Within that scope, the implementation is complete:
 | Capture-aware labeled rollouts with a fixed prey control | `mopa.data`, `mopa.types` | Shape, mask, split, reset-key, valid-length, and causal-sample tests |
 | Variable-length GRU-JEPA | `mopa.encoders` | Padding invariance, short-episode, EMA/frozen-encode, LayerNorm/no-BatchNorm, and squared-L2 tests |
 | Window JEPA and beta-VAE baselines | `mopa.encoders` | Frozen encode round trips, moving-window evaluation, and valid future-target filtering |
+| Short-window `0s` action-decoder VAE | `mopa.action_decoder`, `scripts/run_part1.py` | Masked windows, frozen encoding, causal/legacy feature modes, and exact same-data upstream parity |
 | Probe, three-component GMM ARI, oracle, anytime curves | `mopa.metrics`, `scripts/run_part1.py` | Train-only fit and held-out scoring |
 | Posterior, entropy, ECE/NLL/Brier/reliability | `mopa.strategy`, `mopa.metrics` | Numerical and adapting-strategy tests |
 | Causal `pi(a_t|s_t,z_{t-1})` and belief-mixture policy | `mopa.bc`, `mopa.strategy` | Explicit sample timestep, fixed manifest split, observed lava state, top-1, and action NLL |
@@ -47,6 +48,9 @@ The following must be true before claiming that strategy was recovered:
    the current action, never from a full-episode latent.
 5. Smoke stages remain `smoke_passed`. `full_run_finished` records that the
    declared computation ended; it is not a scientific success label.
+6. `0s` legacy-forward runs are parity checks only. Scientific comparisons use
+   past-only displacement, report every declared encoder seed, and distinguish
+   full-episode post-hoc scores from prefix-time evidence.
 
 ## Deferred research integrations
 
