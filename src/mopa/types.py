@@ -59,6 +59,13 @@ class ObjectiveDataset(_ArrayMapping):
     valid_length: Arrayi
 
 
+@dataclass
+class ObjectiveObservationDataset(ObjectiveDataset):
+    """Objective dataset plus exact pre-action predator observations."""
+
+    pred_obs: Arrayf
+
+
 @dataclass(frozen=True)
 class BCRunStats:
     """Mean / std / per-seed accuracies for one BC conditioning variant."""

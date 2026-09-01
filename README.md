@@ -34,6 +34,12 @@ uv run --locked python scripts/run_part1.py \
   --out artifacts/part1_synthetic.json
 ```
 
+## Behaviour cloning
+
+```bash
+uv run --locked python scripts/run_bc.py --require-clean
+```
+
 ## Documentation
 
 - [Environment](docs/ENVIRONMENT.md)

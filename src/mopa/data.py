@@ -16,7 +16,7 @@ import numpy as np
 
 from mopa.features import EP_LEN, occupancy, standardize, window
 from mopa.nets import ActorLogits
-from mopa.types import ObjectiveDataset
+from mopa.types import ObjectiveDataset, ObjectiveObservationDataset
 from tag_objectives import SimpleTagObjectivesMPE
 from tag_objectives.teams import freeze_tree
 
@@ -94,6 +94,7 @@ def rollout_one_checkpoint(
 
     prey_pos = [np.asarray(state.p_pos[:, prey_idx])]
     pred_pos = [np.asarray(state.p_pos[:, pred_indices])]
+    pred_obs = [np.stack([np.asarray(obs[name]) for name in preds], axis=1)]
     prey_acts, pred_acts = [], []
 
     done = jnp.zeros((num_eps,), dtype=bool)
@@ -125,6 +126,7 @@ def rollout_one_checkpoint(
 
         prey_pos.append(np.asarray(state.p_pos[:, prey_idx]))
         pred_pos.append(np.asarray(state.p_pos[:, pred_indices]))
+        pred_obs.append(np.stack([np.asarray(obs[name]) for name in preds], axis=1))
         prey_acts.append(np.asarray(jnp.where(active, all_actions[prey_name], 0)))
         pred_acts.append(
             np.stack(
@@ -142,6 +144,7 @@ def rollout_one_checkpoint(
     return dict(
         positions=np.stack(prey_pos, axis=1).astype(np.float32),
         pred_positions=np.stack(pred_pos, axis=1).astype(np.float32),
+        pred_observations=np.stack(pred_obs, axis=1).astype(np.float32),
         lava_pos=np.asarray(state.lava_pos).astype(np.float32),
         lava_rad=np.asarray(state.lava_rad).astype(np.float32),
         actions=np.stack(prey_acts, axis=1).astype(np.int32),
@@ -184,6 +187,7 @@ def objective_dataset(
         for k in (
             "prey_pos",
             "pred_pos",
+            "pred_obs",
             "lava_pos",
             "lava_rad",
             "prey_act",
@@ -220,6 +224,7 @@ def objective_dataset(
             n = len(d["positions"])
             rows["prey_pos"].append(d["positions"])
             rows["pred_pos"].append(d["pred_positions"])
+            rows["pred_obs"].append(d["pred_observations"])
             rows["lava_pos"].append(d["lava_pos"])
             rows["lava_rad"].append(d["lava_rad"])
             rows["prey_act"].append(d["actions"])
@@ -239,6 +244,7 @@ def objective_dataset(
     float_keys = {
         "prey_pos",
         "pred_pos",
+        "pred_obs",
         "lava_pos",
         "lava_rad",
         "survival_time",
@@ -257,4 +263,4 @@ def objective_dataset(
         )
         for key, vals in rows.items()
     }
-    return ObjectiveDataset(**stacked)
+    return ObjectiveObservationDataset(**stacked)

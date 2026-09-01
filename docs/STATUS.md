@@ -21,9 +21,9 @@ reproducible manifests. Within that scope, the implementation is complete:
 | Short-window `0s` action-decoder VAE | `mopa.action_decoder`, `scripts/run_part1.py` | Masked windows, frozen encoding, causal/legacy feature modes, and exact same-data upstream parity |
 | Probe, three-component GMM ARI, oracle, anytime curves | `mopa.metrics`, `scripts/run_part1.py` | Train-only fit and held-out scoring |
 | Posterior, entropy, ECE/NLL/Brier/reliability | `mopa.strategy`, `mopa.metrics` | Numerical and adapting-strategy tests |
-| Causal `pi(a_t|s_t,z_{t-1})` and belief-mixture policy | `mopa.bc`, `mopa.strategy` | Explicit sample timestep, fixed manifest split, observed lava state, top-1, and action NLL |
+| Vanilla and latent-conditioned BC | `mopa.bc`, `scripts/run_bc.py` | Exact observations, reusable MLP artifacts, four matched arms, checkpoint-held-out scoring, and closed-loop replay |
 | CPL and counterfactual pair integrity | `mopa.cpl`, `mopa.replay` | Bradley-Terry numeric/gradient tests, prefix and planner-provenance checks |
-| Reproducible pipeline artifact | `scripts/run_part1.py`, `mopa.manifest` | Schema-v2 JSON with stage status, Git/checkpoint hashes, versions, split membership, reset keys, lengths, and metrics |
+| Reproducible experiment artifacts | `scripts/run_part1.py`, `scripts/run_bc.py`, `mopa.manifest` | Git/checkpoint/dataset hashes, versions, split membership, reset keys, lengths, and metrics |
 | Dependency and regression checks | `uv.lock`, `.github/workflows/ci.yml` | Locked tests, lint, synthetic pipeline, and MAPPO smoke |
 
 ## Evidence boundary

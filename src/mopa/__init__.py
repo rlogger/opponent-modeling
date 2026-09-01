@@ -13,6 +13,15 @@ from mopa.action_decoder import (
     fit_action_decoder_vae,
     pool_episode_prefix_latents,
 )
+from mopa.bc import (
+    BCNet,
+    BCPolicy,
+    bc_metrics_from_logits,
+    build_observation_samples,
+    build_observation_samples_with_time,
+    evaluate_bc,
+    fit_bc,
+)
 from mopa.belief import Belief, categorical_entropy, fit_latent_belief
 from mopa.cpl import (
     BluePlannerRequest,
@@ -69,10 +78,17 @@ from mopa.strategy import (
     mixture_policy_metrics,
     mixture_policy_probs,
 )
-from mopa.types import BCRunStats, CheckpointRef, ObjectiveDataset
+from mopa.types import (
+    BCRunStats,
+    CheckpointRef,
+    ObjectiveDataset,
+    ObjectiveObservationDataset,
+)
 
 __all__ = [
     "ActionDecoderConfig",
+    "BCNet",
+    "BCPolicy",
     "BCRunStats",
     "BayesianStrategyFilter",
     "Belief",
@@ -83,6 +99,7 @@ __all__ = [
     "EncVAE",
     "GRUEnc",
     "ObjectiveDataset",
+    "ObjectiveObservationDataset",
     "OpponentPolicyRequest",
     "PlannerProvenance",
     "PlannedStep",
@@ -95,6 +112,9 @@ __all__ = [
     "TrajectorySchema",
     "__version__",
     "bradley_terry_cpl_loss",
+    "bc_metrics_from_logits",
+    "build_observation_samples",
+    "build_observation_samples_with_time",
     "calibration_metrics",
     "categorical_entropy",
     "classwise_ece",
@@ -107,8 +127,10 @@ __all__ = [
     "encode_vae",
     "episode_validation_mask",
     "expected_calibration_error",
+    "evaluate_bc",
     "fit_latent_belief",
     "fit_action_decoder_vae",
+    "fit_bc",
     "generate_counterfactual",
     "metrics",
     "mixture_policy_metrics",

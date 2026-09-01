@@ -7,12 +7,14 @@ from pathlib import Path
 import numpy as np
 
 from mopa.trajectory_export import (
+    dataset_schema,
+    load_objective_dataset,
     render_representative_figure,
     resource_visibility,
     select_representative_group,
     validate_objective_dataset,
 )
-from mopa.types import ObjectiveDataset
+from mopa.types import ObjectiveDataset, ObjectiveObservationDataset
 
 
 def _toy_dataset(order: np.ndarray | None = None) -> ObjectiveDataset:
@@ -101,6 +103,52 @@ def test_validation_and_selection_are_matched_and_row_order_invariant():
     permuted = select_representative_group(_toy_dataset(order))
     assert selection["group_key"] == permuted["group_key"]
     assert selection["score"] == permuted["score"]
+
+
+def test_exact_predator_observation_schema_and_legacy_loading(tmp_path: Path):
+    legacy = _toy_dataset()
+    legacy_path = tmp_path / "legacy.npz"
+    np.savez_compressed(legacy_path, **legacy.as_dict())
+
+    loaded_legacy = load_objective_dataset(legacy_path)
+    assert type(loaded_legacy) is ObjectiveDataset
+
+    values = legacy.as_dict()
+    pred_obs = np.zeros((9, 5, 1, 17), dtype=np.float32)
+    values["pred_obs"] = pred_obs
+    observed = ObjectiveObservationDataset(**values)
+    observed_path = tmp_path / "observed.npz"
+    np.savez_compressed(observed_path, **observed.as_dict())
+
+    loaded = load_objective_dataset(observed_path)
+    assert isinstance(loaded, ObjectiveObservationDataset)
+    np.testing.assert_array_equal(loaded.pred_obs, pred_obs)
+    summary = validate_objective_dataset(loaded)
+    assert summary["predator_observation_dim"] == 17
+    assert dataset_schema(loaded)["pred_obs"] == {
+        "shape": [9, 5, 1, 17],
+        "dtype": "float32",
+        "axes": [
+            "episode",
+            "time_including_initial",
+            "predator",
+            "observation_feature",
+        ],
+    }
+
+
+def test_validation_rejects_malformed_or_unfrozen_predator_observations():
+    values = _toy_dataset().as_dict()
+    values["pred_obs"] = np.zeros((9, 4, 1, 17), dtype=np.float32)
+    with np.testing.assert_raises_regex(ValueError, "pred_obs has shape"):
+        validate_objective_dataset(values)
+
+    values["pred_obs"] = np.zeros((9, 5, 1, 17), dtype=np.float32)
+    values["pred_obs"][0, 3, 0, 0] = 1.0
+    with np.testing.assert_raises_regex(
+        ValueError, "predator observation tail is not frozen"
+    ):
+        validate_objective_dataset(values)
 
 
 def test_validation_rejects_label_correlated_layouts():

@@ -11,7 +11,7 @@ from typing import Any
 
 import numpy as np
 
-from mopa.types import ObjectiveDataset
+from mopa.types import ObjectiveDataset, ObjectiveObservationDataset
 
 LABEL_NAMES = {
     0: "prey-seeking (capture)",
@@ -31,6 +31,12 @@ COLORS = {
 AXIS_SEMANTICS = {
     "prey_pos": ["episode", "time_including_initial", "xy"],
     "pred_pos": ["episode", "time_including_initial", "predator", "xy"],
+    "pred_obs": [
+        "episode",
+        "time_including_initial",
+        "predator",
+        "observation_feature",
+    ],
     "lava_pos": ["episode", "lava_region", "xy"],
     "lava_rad": ["episode", "lava_region"],
     "prey_act": ["episode", "action_time"],
@@ -54,9 +60,12 @@ def _arrays(
 ) -> dict[str, np.ndarray]:
     if isinstance(dataset, ObjectiveDataset):
         return dataset.as_dict()
+    names = list(ObjectiveDataset.__dataclass_fields__)
+    if "pred_obs" in dataset:
+        names.append("pred_obs")
     return {
         name: np.asarray(dataset[name])
-        for name in ObjectiveDataset.__dataclass_fields__
+        for name in names
     }
 
 
@@ -66,10 +75,14 @@ def load_objective_dataset(path: Path | str) -> ObjectiveDataset:
         missing = set(ObjectiveDataset.__dataclass_fields__) - set(raw.files)
         if missing:
             raise ValueError(f"dataset is missing fields: {sorted(missing)}")
-        values = {
+        values: dict[str, np.ndarray] = {
             name: np.asarray(raw[name])
             for name in ObjectiveDataset.__dataclass_fields__
         }
+        if "pred_obs" in raw.files:
+            values["pred_obs"] = np.asarray(raw["pred_obs"])
+    if "pred_obs" in values:
+        return ObjectiveObservationDataset(**values)
     return ObjectiveDataset(**values)
 
 
@@ -114,6 +127,19 @@ def validate_objective_dataset(
         "pred_act": (n, horizon, predators),
         "env_seed": (n, 2),
     }
+    if "pred_obs" in data:
+        pred_obs = data["pred_obs"]
+        if pred_obs.ndim != 4 or pred_obs.shape[-1] < 1:
+            raise ValueError(
+                "pred_obs must have shape "
+                "(episode, time_including_initial, predator, observation_feature)"
+            )
+        expected["pred_obs"] = (
+            n,
+            horizon + 1,
+            predators,
+            int(pred_obs.shape[-1]),
+        )
     for name in (
         "capture_t",
         "captured",
@@ -140,6 +166,7 @@ def validate_objective_dataset(
     float_fields = {
         "prey_pos",
         "pred_pos",
+        "pred_obs",
         "lava_pos",
         "lava_rad",
         "survival_time",
@@ -157,7 +184,7 @@ def validate_objective_dataset(
         "ckpt_seed",
         "valid_length",
     }
-    for name in float_fields:
+    for name in float_fields & data.keys():
         if data[name].dtype != np.float32:
             raise ValueError(f"{name} must use float32, found {data[name].dtype}")
     for name in integer_fields:
@@ -169,6 +196,7 @@ def validate_objective_dataset(
     for name in (
         "prey_pos",
         "pred_pos",
+        "pred_obs",
         "lava_pos",
         "lava_rad",
         "survival_time",
@@ -177,6 +205,8 @@ def validate_objective_dataset(
         "resources_collected",
         "pred_coverage",
     ):
+        if name not in data:
+            continue
         if not np.isfinite(data[name]).all():
             raise ValueError(f"{name} contains non-finite values")
 
@@ -219,6 +249,13 @@ def validate_objective_dataset(
                 data["pred_pos"][index, length:] == data["pred_pos"][index, length]
             ):
                 raise ValueError(f"predator position tail is not frozen at {index}")
+            if "pred_obs" in data and not np.all(
+                data["pred_obs"][index, length:]
+                == data["pred_obs"][index, length]
+            ):
+                raise ValueError(
+                    f"predator observation tail is not frozen at {index}"
+                )
 
     groups = matched_groups(data)
     for group_key, members in groups.items():
@@ -239,8 +276,15 @@ def validate_objective_dataset(
                     raise ValueError(
                         f"{name} differs across labels in matched group {group_key}"
                     )
+            if "pred_obs" in data and not np.array_equal(
+                data["pred_obs"][reference, 0], data["pred_obs"][candidate, 0]
+            ):
+                raise ValueError(
+                    "initial predator observation differs across labels in "
+                    f"matched group {group_key}"
+                )
 
-    return {
+    summary = {
         "episodes": n,
         "horizon": horizon,
         "predators": predators,
@@ -249,6 +293,9 @@ def validate_objective_dataset(
             str(label): int(np.sum(data["label"] == label)) for label in range(3)
         },
     }
+    if "pred_obs" in data:
+        summary["predator_observation_dim"] = int(data["pred_obs"].shape[-1])
+    return summary
 
 
 def behavior_vector(

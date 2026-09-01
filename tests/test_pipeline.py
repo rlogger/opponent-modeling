@@ -32,12 +32,89 @@ def test_causal_sample_latents_never_select_current_or_future_steps():
 
     selected = driver._causal_sample_latents(
         latents,
-        episode_ids=np.array([0, 1, 0]),
-        timesteps=np.array([1, 3, 5]),
+        episode_ids=np.array([0, 0, 1, 0]),
+        timesteps=np.array([0, 1, 3, 5]),
     )
 
-    np.testing.assert_array_equal(selected[:, 0], [0.0, 2.0, 4.0])
-    np.testing.assert_array_equal(selected[:, 1], [100.0, 102.0, 104.0])
+    np.testing.assert_array_equal(selected[0], np.zeros(2))
+    np.testing.assert_array_equal(selected[1:], latents[[0, 1, 0], [0, 2, 4]])
+
+
+def test_split_local_derangement_is_deterministic_and_never_crosses_split():
+    driver = _driver_module()
+    validation = np.array([False] * 8 + [True] * 4)
+    checkpoints = np.repeat(np.arange(3), 4)
+
+    permutation = driver._split_local_episode_derangement(
+        validation, seed=7, checkpoint_ids=checkpoints
+    )
+
+    np.testing.assert_array_equal(validation[permutation], validation)
+    np.testing.assert_array_equal(checkpoints[permutation], checkpoints)
+    assert np.all(permutation != np.arange(len(validation)))
+    np.testing.assert_array_equal(
+        driver._split_local_episode_derangement(
+            validation, seed=7, checkpoint_ids=checkpoints
+        ),
+        permutation,
+    )
+
+
+def test_dataset_cache_preserves_exact_observation_subclass(tmp_path):
+    from mopa.types import ObjectiveObservationDataset
+
+    driver = _driver_module()
+    expected = driver._synthetic_objective_dataset(2, (0,), 8)
+    cache = tmp_path / "observed.npz"
+    np.savez_compressed(cache, **expected.as_dict())
+    args = driver.build_parser().parse_args(["--dataset-cache", str(cache)])
+
+    loaded, source = driver._load_or_create_dataset(args, (0,), (2, 4))
+
+    assert source == "cache"
+    assert type(loaded) is ObjectiveObservationDataset
+    np.testing.assert_array_equal(loaded.pred_obs, expected.pred_obs)
+
+
+def test_bc_requires_paired_seed_lists_and_exact_observations(tmp_path, capsys):
+    driver = _driver_module()
+    assert driver.main(
+        [
+            "--synthetic",
+            "--encoder-seeds",
+            "0,1",
+            "--bc-seeds",
+            "0",
+            "--out",
+            str(tmp_path / "unpaired.json"),
+        ]
+    ) == 2
+    assert "equal length" in capsys.readouterr().err
+
+    observed = driver._synthetic_objective_dataset(2, (0,), 8)
+    legacy_cache = tmp_path / "legacy.npz"
+    np.savez_compressed(
+        legacy_cache,
+        **{
+            name: value
+            for name, value in observed.as_dict().items()
+            if name != "pred_obs"
+        },
+    )
+    assert driver.main(
+        [
+            "--synthetic",
+            "--dataset-cache",
+            str(legacy_cache),
+            "--encoder-seeds",
+            "0",
+            "--bc-seeds",
+            "0",
+            "--out",
+            str(tmp_path / "legacy.json"),
+        ]
+    ) == 2
+    assert "requires exact pred_obs" in capsys.readouterr().err
 
 
 def test_synthetic_smoke_runs_the_complete_pipeline(tmp_path):
@@ -131,8 +208,20 @@ def test_synthetic_smoke_runs_the_complete_pipeline(tmp_path):
     assert action_decoder["temporal_scope"] == "full_valid_episode_post_hoc"
     assert len(action_decoder["window_unit_probe"]["runs"]) == 1
     assert len(action_decoder["decoder_action_accuracy"]["runs"]) == 1
-    assert metrics["bc"]["point_z"]["conditioning"].endswith("t_minus_1")
-    assert metrics["bc"]["point_z"]["contains_future_episode_information"] is False
+    bc = metrics["bc"]
+    assert bc["condition_dim"] == 3
+    assert bc["feature_schema"] == "exact_predator_observation_plus_condition"
+    assert bc["real_z"]["conditioning"].endswith("t_minus_1")
+    assert bc["contains_future_episode_information"] is False
+    assert bc["initial_latent"] == "zero_at_t0"
+    expected_samples = sum(
+        episode["valid_length"] for episode in manifest["split"]["episodes"]
+    )
+    for arm in ("no_z", "real_z", "shuffled_z", "oracle"):
+        assert len(bc[arm]["per_seed"]) == 1
+        run = bc[arm]["per_seed"][0]
+        assert run["n_train"] + run["n_val"] == expected_samples
+        assert run["encoder_seed"] == run["bc_seed"] == 0
     assert metrics["sequential_belief_mixture"]["belief_timing"] == (
         "predictive_before_observed_action"
     )

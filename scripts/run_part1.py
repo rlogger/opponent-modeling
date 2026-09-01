@@ -19,6 +19,8 @@ _SRC = _ROOT / "src"
 if str(_SRC) not in sys.path:
     sys.path.insert(0, str(_SRC))
 
+BC_CONDITION_DIM = 3
+
 
 def _parse_ints(value: str) -> tuple[int, ...]:
     return tuple(int(item.strip()) for item in value.split(",") if item.strip())
@@ -137,10 +139,10 @@ def _synthetic_objective_dataset(
     num_steps: int,
 ):
     """Build small deterministic trajectories with three visible strategies."""
-    from mopa.types import ObjectiveDataset
+    from mopa.types import ObjectiveObservationDataset
 
     rows: dict[str, list[np.ndarray]] = {
-        name: [] for name in ObjectiveDataset.__dataclass_fields__
+        name: [] for name in ObjectiveObservationDataset.__dataclass_fields__
     }
     directions = np.asarray([[1.0, 0.2], [-0.2, 1.0], [-0.8, -0.6]])
     offsets = np.asarray([[0.45, -0.20], [-0.20, 0.45], [-0.40, -0.35]])
@@ -177,6 +179,14 @@ def _synthetic_objective_dataset(
 
                 rows["prey_pos"].append(prey[None])
                 rows["pred_pos"].append(pred[None])
+                prey_velocity = np.zeros_like(prey)
+                pred_velocity = np.zeros_like(pred[:, 0])
+                prey_velocity[1:] = prey[1:] - prey[:-1]
+                pred_velocity[1:] = pred[1:, 0] - pred[:-1, 0]
+                pred_obs = np.concatenate(
+                    [pred[:, 0], prey, pred_velocity, prey_velocity], axis=-1
+                )[:, None, :]
+                rows["pred_obs"].append(pred_obs[None].astype(np.float32))
                 rows["lava_pos"].append(
                     np.asarray([[[1.5, -1.5]]], dtype=np.float32)
                 )
@@ -214,7 +224,7 @@ def _synthetic_objective_dataset(
                     np.asarray([num_steps], dtype=np.int32)
                 )
 
-    return ObjectiveDataset(
+    return ObjectiveObservationDataset(
         **{name: np.concatenate(values, axis=0) for name, values in rows.items()}
     )
 
@@ -224,14 +234,19 @@ def _load_or_create_dataset(
     checkpoint_seeds: tuple[int, ...],
     prefixes: tuple[int, ...],
 ):
-    from mopa.types import ObjectiveDataset
+    from mopa.types import ObjectiveDataset, ObjectiveObservationDataset
 
     if args.dataset_cache is not None and args.dataset_cache.is_file():
         with np.load(args.dataset_cache, allow_pickle=False) as raw:
             values = {
                 name: raw[name] for name in ObjectiveDataset.__dataclass_fields__
             }
-        return ObjectiveDataset(**values), "cache"
+            if "pred_obs" in raw.files:
+                values["pred_obs"] = raw["pred_obs"]
+        dataset_type = (
+            ObjectiveObservationDataset if "pred_obs" in values else ObjectiveDataset
+        )
+        return dataset_type(**values), "cache"
 
     if args.synthetic:
         horizon = max(8, 2 * args.ctx, max(prefixes))
@@ -268,6 +283,10 @@ def _validate_args(
 ) -> None:
     if args.n_eps < 1 or args.lat < 1 or args.hid < 1 or args.ctx < 1:
         raise ValueError("n-eps, lat, hid, and ctx must be positive")
+    if not args.skip_bc and args.lat > BC_CONDITION_DIM:
+        raise ValueError(
+            f"BC latent size cannot exceed its {BC_CONDITION_DIM}-D condition"
+        )
     if (
         args.action_decoder_window < 2
         or args.action_decoder_lat < 1
@@ -288,6 +307,10 @@ def _validate_args(
         raise ValueError("checkpoint, encoder, and prefix lists must be non-empty")
     if not args.skip_bc and not bc_seeds:
         raise ValueError("bc-seeds must be non-empty unless --skip-bc is used")
+    if not args.skip_bc and len(encoder_seeds) != len(bc_seeds):
+        raise ValueError(
+            "encoder-seeds and bc-seeds must have equal length for paired BC runs"
+        )
     if any(prefix < 1 for prefix in prefixes):
         raise ValueError("prefixes must be positive")
     for name, seeds in (
@@ -477,18 +500,72 @@ def _causal_sample_latents(
     timesteps = np.asarray(timesteps, dtype=np.int32)
     if z.ndim != 3 or episode_ids.shape != timesteps.shape:
         raise ValueError("prefix latents and sample provenance do not align")
-    if np.any(timesteps < 1):
-        raise ValueError("causal BC samples require timestep >= 1")
+    if np.any(timesteps < 0) or np.any(timesteps > z.shape[1]):
+        raise ValueError("causal BC timestep is outside the latent horizon")
     # Feature t - 1 ends at the state available for action t. Feature t would
     # include the transition caused by the action being predicted.
-    latent_steps = np.clip(timesteps - 1, 0, z.shape[1] - 1)
-    return z[episode_ids, latent_steps]
+    result = np.zeros((len(timesteps), z.shape[-1]), dtype=np.float32)
+    observed = timesteps > 0
+    result[observed] = z[
+        episode_ids[observed], timesteps[observed] - 1
+    ]
+    return result
+
+
+def _pad_bc_condition(values: np.ndarray) -> np.ndarray:
+    condition = np.asarray(values, dtype=np.float32)
+    if condition.ndim != 2 or condition.shape[1] > BC_CONDITION_DIM:
+        raise ValueError("BC condition has an invalid shape")
+    padded = np.zeros((len(condition), BC_CONDITION_DIM), dtype=np.float32)
+    padded[:, : condition.shape[1]] = condition
+    return padded
+
+
+def _split_local_episode_derangement(
+    validation_episodes: np.ndarray,
+    seed: int,
+    checkpoint_ids: np.ndarray | None = None,
+) -> np.ndarray:
+    """Shuffle episodes without crossing a split or checkpoint."""
+    validation = np.asarray(validation_episodes, dtype=bool)
+    checkpoints = (
+        np.zeros(len(validation), dtype=np.int32)
+        if checkpoint_ids is None
+        else np.asarray(checkpoint_ids, dtype=np.int32)
+    )
+    if checkpoints.shape != validation.shape:
+        raise ValueError("checkpoint IDs must align with the episode split")
+    rng = np.random.default_rng(seed)
+    permutation = np.arange(len(validation), dtype=np.int32)
+    for fold in (False, True):
+        for checkpoint in np.unique(checkpoints[validation == fold]):
+            episode_ids = np.flatnonzero(
+                (validation == fold) & (checkpoints == checkpoint)
+            ).astype(np.int32)
+            if len(episode_ids) < 2:
+                raise ValueError("shuffled-z needs two episodes per split/checkpoint")
+            order = rng.permutation(episode_ids)
+            permutation[order] = np.roll(order, 1)
+    if np.any(permutation == np.arange(len(permutation))):
+        raise AssertionError("episode derangement contains a fixed point")
+    return permutation
 
 
 def _bc_summary(runs: list[dict[str, Any]]) -> dict[str, Any]:
+    metric_names = (
+        "episode_strategy_macro_nll",
+        "episode_strategy_macro_accuracy",
+        "action_balanced_accuracy",
+        "episode_macro_nll",
+        "episode_macro_accuracy",
+        "nll",
+        "accuracy",
+    )
     return {
-        "accuracy": _summary([run["accuracy"] for run in runs]),
-        "nll": _summary([run["nll"] for run in runs]),
+        **{
+            name: _summary([float(run[name]) for run in runs])
+            for name in metric_names
+        },
         "per_seed": runs,
     }
 
@@ -755,6 +832,12 @@ def main(argv: list[str] | None = None) -> int:
     dataset, dataset_source = _load_or_create_dataset(
         args, checkpoint_seeds, prefixes
     )
+    if not args.skip_bc and not hasattr(dataset, "pred_obs"):
+        print(
+            "behaviour cloning requires exact pred_obs; regenerate the dataset cache",
+            file=sys.stderr,
+        )
+        return 2
     num_steps = int(dataset.pred_act.shape[1])
     if args.ctx >= num_steps:
         print("ctx must be smaller than the dataset horizon", file=sys.stderr)
@@ -1100,43 +1183,79 @@ def main(argv: list[str] | None = None) -> int:
     if args.skip_bc:
         metrics["bc"] = {"skipped": True}
     else:
-        from mopa.bc import build_samples_with_time, train_eval_bc_metrics
+        from mopa.bc import (
+            build_observation_samples_with_time,
+            evaluate_bc,
+            fit_bc,
+        )
 
-        states, actions, episodes, timesteps, _ = build_samples_with_time(
-            dataset_dict, args.ctx, t_max=num_steps
+        observations, actions, episodes, timesteps, _ = (
+            build_observation_samples_with_time(dataset_dict, t_max=num_steps)
         )
         sample_validation = validation_episodes[episodes]
-        unconditioned_runs: list[dict[str, Any]] = []
-        for bc_seed in bc_seeds:
-            run = train_eval_bc_metrics(
-                states,
-                actions,
-                episodes,
-                bc_seed,
-                steps=args.bc_steps,
-                validation_mask=sample_validation,
-            )
-            unconditioned_runs.append({"bc_seed": int(bc_seed), **run})
-
-        point_latent_runs: list[dict[str, Any]] = []
-        for encoder_seed in encoder_seeds:
-            causal_z = _causal_sample_latents(
+        sample_labels = labels[episodes]
+        arm_runs: dict[str, list[dict[str, Any]]] = {
+            name: [] for name in ("no_z", "real_z", "shuffled_z", "oracle")
+        }
+        for replicate, (encoder_seed, bc_seed) in enumerate(
+            zip(encoder_seeds, bc_seeds, strict=True)
+        ):
+            real_z = _causal_sample_latents(
                 gru_prefix_latents[encoder_seed], episodes, timesteps
             )
-            conditioned_states = np.concatenate([states, causal_z], axis=-1)
-            for bc_seed in bc_seeds:
-                run = train_eval_bc_metrics(
-                    conditioned_states,
-                    actions,
-                    episodes,
+            shuffle_seed = 10_000 + replicate
+            episode_permutation = _split_local_episode_derangement(
+                validation_episodes,
+                shuffle_seed,
+                np.asarray(dataset.ckpt_seed),
+            )
+            shuffled_z = _causal_sample_latents(
+                gru_prefix_latents[encoder_seed],
+                episode_permutation[episodes],
+                timesteps,
+            )
+            conditions = {
+                "no_z": np.zeros(
+                    (len(episodes), BC_CONDITION_DIM), dtype=np.float32
+                ),
+                "real_z": _pad_bc_condition(real_z),
+                "shuffled_z": _pad_bc_condition(shuffled_z),
+                "oracle": np.eye(BC_CONDITION_DIM, dtype=np.float32)[
+                    sample_labels
+                ],
+            }
+            for arm, condition in conditions.items():
+                features = np.concatenate([observations, condition], axis=-1)
+                policy = fit_bc(
+                    features[~sample_validation],
+                    actions[~sample_validation],
                     bc_seed,
                     steps=args.bc_steps,
-                    validation_mask=sample_validation,
-                )
-                point_latent_runs.append(
-                    {
+                    metadata={
+                        "arm": arm,
+                        "replicate": replicate,
                         "encoder_seed": int(encoder_seed),
                         "bc_seed": int(bc_seed),
+                        "condition_dim": BC_CONDITION_DIM,
+                    },
+                )
+                run = evaluate_bc(
+                    policy,
+                    features[sample_validation],
+                    actions[sample_validation],
+                    episode_ids=episodes[sample_validation],
+                    strategy_labels=sample_labels[sample_validation],
+                )
+                arm_runs[arm].append(
+                    {
+                        "replicate": replicate,
+                        "encoder_seed": int(encoder_seed),
+                        "bc_seed": int(bc_seed),
+                        "shuffle_seed": (
+                            shuffle_seed if arm == "shuffled_z" else None
+                        ),
+                        "n_train": int((~sample_validation).sum()),
+                        "n_val": int(sample_validation.sum()),
                         **run,
                     }
                 )
@@ -1145,12 +1264,28 @@ def main(argv: list[str] | None = None) -> int:
             np.asarray(sample_validation, dtype=np.uint8).tobytes()
         ).hexdigest()
         metrics["bc"] = {
-            "unconditioned": _bc_summary(unconditioned_runs),
-            "point_z": {
-                **_bc_summary(point_latent_runs),
-                "conditioning": "gru_prefix_latent_at_t_minus_1",
-                "contains_future_episode_information": False,
+            "no_z": {
+                **_bc_summary(arm_runs["no_z"]),
+                "conditioning": "three_zeros",
             },
+            "real_z": {
+                **_bc_summary(arm_runs["real_z"]),
+                "conditioning": "gru_prefix_latent_at_t_minus_1",
+            },
+            "shuffled_z": {
+                **_bc_summary(arm_runs["shuffled_z"]),
+                "conditioning": "split_local_deranged_gru_prefix_latent",
+            },
+            "oracle": {
+                **_bc_summary(arm_runs["oracle"]),
+                "conditioning": "strategy_one_hot",
+                "uses_strategy_labels": True,
+            },
+            "condition_dim": BC_CONDITION_DIM,
+            "feature_schema": "exact_predator_observation_plus_condition",
+            "contains_future_episode_information": False,
+            "initial_latent": "zero_at_t0",
+            "replicate_pairing": "encoder_seed_and_bc_seed_by_position",
             "shared_validation_mask_sha256": split_digest,
             "split_source": "manifest_episode_split_broadcast_to_samples",
         }
@@ -1213,7 +1348,8 @@ def main(argv: list[str] | None = None) -> int:
     notes = [
         "Strategy labels are evaluation targets and supervised-oracle/policy-fit labels; they are not SSL encoder inputs.",
         "All learned encoders fit on the training fold and encode held-out episodes with frozen parameters.",
-        "Point-z BC uses the prefix latent available before each action, never a full-episode latent.",
+        "The four BC arms use exact observations, one shared split, and paired encoder/BC seeds.",
+        "Causal BC uses zero at t=0 and the prefix latent at t-1 thereafter.",
         "The 0s headline representation mean-pools every valid action window and is post-hoc; it is not used by causal BC.",
         "The sequential mixture scores each action with the predictive belief before that action is observed.",
         "A dry or smoke run is infrastructure evidence, not a full experiment result.",
@@ -1241,6 +1377,17 @@ def main(argv: list[str] | None = None) -> int:
             "sequence_feature_dim": int(sequence.shape[-1]),
             "action_decoder_input_dim": int(
                 action_decoder_state_raw.shape[-1] + 5
+            ),
+            "bc_condition_dim": BC_CONDITION_DIM,
+            **(
+                {
+                    "bc_observation_dim": int(dataset.pred_obs.shape[-1]),
+                    "bc_input_dim": int(
+                        dataset.pred_obs.shape[-1] + BC_CONDITION_DIM
+                    ),
+                }
+                if hasattr(dataset, "pred_obs")
+                else {}
             ),
             "sequence_train_mean": [float(value) for value in sequence_mu],
             "sequence_train_std": [float(value) for value in sequence_sd],

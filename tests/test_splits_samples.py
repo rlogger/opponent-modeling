@@ -17,6 +17,8 @@ from mopa.metrics import (
     train_only_survival_time_probe_acc,
 )
 from mopa.samples import (
+    build_predator_observation_samples,
+    build_predator_observation_samples_with_time,
     build_predator_samples,
     build_predator_samples_with_time,
     predator_state_features,
@@ -123,6 +125,47 @@ def test_build_samples_retains_timestep_and_predator_provenance():
     # The builder groups samples by timestep, then predator, then episode.
     np.testing.assert_array_equal(timestep[:4], [1, 1, 1, 1])
     np.testing.assert_array_equal(pred_id[:4], [0, 0, 1, 1])
+
+
+def test_exact_observation_samples_include_t0_and_stop_at_valid_length():
+    ds = toy_dataset(n=2, horizon=4, n_pred=2)
+    observations = np.zeros((2, 5, 2, 3), dtype=np.float32)
+    for episode in range(2):
+        for timestep in range(5):
+            for predator in range(2):
+                observations[episode, timestep, predator] = [
+                    episode,
+                    timestep,
+                    predator,
+                ]
+    ds["pred_obs"] = observations
+    ds["valid_length"] = np.asarray([2, 4], dtype=np.int32)
+
+    obs, action, episode, timestep, predator = (
+        build_predator_observation_samples_with_time(ds)
+    )
+
+    assert obs.shape == (12, 3)
+    assert len(obs) == len(action) == len(episode) == len(timestep) == len(predator)
+    assert timestep.min() == 0
+    assert np.all(timestep < ds["valid_length"][episode])
+    np.testing.assert_array_equal(timestep[:4], [0, 0, 0, 0])
+    np.testing.assert_array_equal(episode[:4], [0, 1, 0, 1])
+    np.testing.assert_array_equal(predator[:4], [0, 0, 1, 1])
+    np.testing.assert_array_equal(obs[:, 0], episode)
+    np.testing.assert_array_equal(obs[:, 1], timestep)
+    np.testing.assert_array_equal(obs[:, 2], predator)
+    np.testing.assert_array_equal(
+        action,
+        ds["pred_act"][episode, timestep, predator],
+    )
+
+    compact_obs, compact_action, compact_episode = (
+        build_predator_observation_samples(ds)
+    )
+    np.testing.assert_array_equal(compact_obs, obs)
+    np.testing.assert_array_equal(compact_action, action)
+    np.testing.assert_array_equal(compact_episode, episode)
 
 
 def test_build_predator_samples_drops_post_capture():

@@ -107,6 +107,120 @@ def build_predator_samples(
     return states, actions, episodes
 
 
+def build_predator_observation_samples(
+    ds: dict[str, np.ndarray],
+    t0: int = 0,
+    t1: int | None = None,
+) -> tuple[np.ndarray, np.ndarray, np.ndarray]:
+    """Build exact opponent-observation BC samples.
+
+    Unlike :func:`build_predator_samples`, this path does not construct a
+    velocity proxy and therefore includes the initial action at ``t = 0``.
+    Observations must be the pre-action inputs recorded during rollout.
+    """
+    observations, actions, episodes, _, _ = (
+        build_predator_observation_samples_with_time(ds, t0=t0, t1=t1)
+    )
+    return observations, actions, episodes
+
+
+def build_predator_observation_samples_with_time(
+    ds: dict[str, np.ndarray],
+    t0: int = 0,
+    t1: int | None = None,
+) -> tuple[np.ndarray, np.ndarray, np.ndarray, np.ndarray, np.ndarray]:
+    """Return exact observations, actions, and causal sample provenance.
+
+    ``ds['pred_obs']`` has shape ``(episode, state_time, predator, feature)``.
+    It may contain either the ``T`` pre-action observations or all ``T + 1``
+    states; only ``pred_obs[:, :T]`` is paired with ``ds['pred_act']``. Samples satisfy
+    ``t0 <= timestep < min(t1, valid_length)``. The preferred validity source
+    is ``ds['valid_length']``; capture metadata is accepted for compatibility.
+    """
+    observations = np.asarray(ds["pred_obs"])
+    actions = np.asarray(ds["pred_act"])
+    if observations.ndim != 4:
+        raise ValueError(
+            "ds['pred_obs'] must have shape (N, T, P, observation_dim)"
+        )
+    if observations.shape[-1] < 1:
+        raise ValueError("pred_obs observation_dim must be positive")
+    if actions.ndim != 3:
+        raise ValueError("ds['pred_act'] must have shape (N, T, P)")
+    if (
+        actions.shape[0] != observations.shape[0]
+        or actions.shape[2] != observations.shape[2]
+        or observations.shape[1] not in {actions.shape[1], actions.shape[1] + 1}
+    ):
+        raise ValueError(
+            "pred_obs must align with pred_act and contain T or T + 1 states"
+        )
+    if not np.all(np.isfinite(observations)):
+        raise ValueError("pred_obs must contain only finite values")
+
+    n_episodes, _, n_predators, observation_dim = observations.shape
+    horizon = int(actions.shape[1])
+    stop = horizon if t1 is None else int(t1)
+    if t0 < 0 or stop <= t0 or stop > horizon:
+        raise ValueError(f"invalid observation step range [{t0}, {stop})")
+
+    if "valid_length" in ds:
+        raw_lengths = np.asarray(ds["valid_length"])
+        if raw_lengths.shape != (n_episodes,):
+            raise ValueError("valid_length must have shape (N,)")
+        if not np.issubdtype(raw_lengths.dtype, np.integer):
+            if not np.all(np.equal(raw_lengths, np.floor(raw_lengths))):
+                raise ValueError("valid_length must contain integers")
+        lengths = raw_lengths.astype(np.int32)
+    elif "capture_t" in ds:
+        capture_t = np.asarray(ds["capture_t"])
+        if capture_t.shape != (n_episodes,):
+            raise ValueError("capture_t must have shape (N,)")
+        lengths = np.where(capture_t >= 0, capture_t, horizon).astype(np.int32)
+    else:
+        lengths = np.full(n_episodes, horizon, dtype=np.int32)
+    if np.any(lengths < 0) or np.any(lengths > horizon):
+        raise ValueError("valid lengths must lie within the action horizon")
+
+    sample_observations: list[np.ndarray] = []
+    sample_actions: list[np.ndarray] = []
+    sample_episodes: list[np.ndarray] = []
+    sample_timesteps: list[np.ndarray] = []
+    sample_predator_ids: list[np.ndarray] = []
+    episode_ids = np.arange(n_episodes, dtype=np.int32)
+    for timestep in range(t0, stop):
+        keep = timestep < lengths
+        if not np.any(keep):
+            continue
+        kept_episodes = episode_ids[keep]
+        for predator_id in range(n_predators):
+            sample_observations.append(observations[keep, timestep, predator_id])
+            sample_actions.append(actions[keep, timestep, predator_id])
+            sample_episodes.append(kept_episodes)
+            sample_timesteps.append(
+                np.full(len(kept_episodes), timestep, dtype=np.int32)
+            )
+            sample_predator_ids.append(
+                np.full(len(kept_episodes), predator_id, dtype=np.int32)
+            )
+
+    if not sample_observations:
+        return (
+            np.zeros((0, observation_dim), dtype=np.float32),
+            np.zeros((0,), dtype=np.int32),
+            np.zeros((0,), dtype=np.int32),
+            np.zeros((0,), dtype=np.int32),
+            np.zeros((0,), dtype=np.int32),
+        )
+    return (
+        np.concatenate(sample_observations).astype(np.float32),
+        np.concatenate(sample_actions).astype(np.int32),
+        np.concatenate(sample_episodes).astype(np.int32),
+        np.concatenate(sample_timesteps).astype(np.int32),
+        np.concatenate(sample_predator_ids).astype(np.int32),
+    )
+
+
 def build_predator_samples_with_time(
     ds: dict[str, np.ndarray],
     t0: int,
