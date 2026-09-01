@@ -109,6 +109,7 @@ def test_synthetic_smoke_runs_the_complete_pipeline(tmp_path):
         "fixed_window_jepa",
         "beta_vae",
         "random_projection",
+        "sa_short_seq_action_decoder_vae",
         "supervised_oracle",
     }
     assert set(metrics["representations"]) == expected_models
@@ -121,6 +122,15 @@ def test_synthetic_smoke_runs_the_complete_pipeline(tmp_path):
 
     assert metrics["anytime"]["requested_prefixes"] == [2, 4]
     assert set(metrics["anytime"]["gru_jepa"]) == {"2", "4"}
+    action_decoder = metrics["representations"][
+        "sa_short_seq_action_decoder_vae"
+    ]
+    assert action_decoder["state_feature_mode"] == "causal_past"
+    assert action_decoder["contains_current_actions"] is True
+    assert action_decoder["contains_future_state"] is False
+    assert action_decoder["temporal_scope"] == "full_valid_episode_post_hoc"
+    assert len(action_decoder["window_unit_probe"]["runs"]) == 1
+    assert len(action_decoder["decoder_action_accuracy"]["runs"]) == 1
     assert metrics["bc"]["point_z"]["conditioning"].endswith("t_minus_1")
     assert metrics["bc"]["point_z"]["contains_future_episode_information"] is False
     assert metrics["sequential_belief_mixture"]["belief_timing"] == (
@@ -165,5 +175,25 @@ def test_full_run_rejects_underpowered_or_confounded_settings(tmp_path):
             "matched",
             "--out",
             str(tmp_path / "confounded.json"),
+        ]
+    ) == 2
+    assert driver.main(
+        [
+            "--run-kind",
+            "full",
+            "--action-decoder-state-mode",
+            "legacy_forward",
+            "--out",
+            str(tmp_path / "leaky.json"),
+        ]
+    ) == 2
+    assert driver.main(
+        [
+            "--run-kind",
+            "full",
+            "--action-decoder-steps",
+            "0",
+            "--out",
+            str(tmp_path / "zero_steps.json"),
         ]
     ) == 2

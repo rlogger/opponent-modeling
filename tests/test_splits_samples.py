@@ -151,6 +151,31 @@ def test_length_matched_prefix_and_sequence_zero_pad():
     np.testing.assert_array_equal(length_matched_prefix(lengths, 3), [2, 3])
 
 
+def test_causal_sequence_features_do_not_read_the_next_state():
+    prey = np.arange(8, dtype=np.float32).reshape(1, 4, 2)
+    pred = (prey + 0.5)[:, :, None, :]
+    changed_prey = prey.copy()
+    changed_pred = pred.copy()
+    changed_prey[:, 2:] += 100.0
+    changed_pred[:, 2:] -= 100.0
+
+    causal = predator_sequence_features(
+        prey, pred, velocity_mode="causal_past"
+    )
+    changed_causal = predator_sequence_features(
+        changed_prey, changed_pred, velocity_mode="causal_past"
+    )
+    np.testing.assert_allclose(causal[:, :2], changed_causal[:, :2])
+
+    legacy = predator_sequence_features(
+        prey, pred, velocity_mode="legacy_forward"
+    )
+    changed_legacy = predator_sequence_features(
+        changed_prey, changed_pred, velocity_mode="legacy_forward"
+    )
+    assert not np.allclose(legacy[:, 1], changed_legacy[:, 1])
+
+
 def test_trailing_sequence_slice_moves_with_the_available_prefix():
     sequence = np.arange(2 * 6, dtype=np.float32).reshape(2, 6, 1)
     packed = trailing_sequence_slice(sequence, np.array([2, 5]), width=3)

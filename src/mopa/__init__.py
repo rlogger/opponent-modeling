@@ -7,6 +7,12 @@ from __future__ import annotations
 
 __version__ = "0.2.0"
 
+from mopa.action_decoder import (
+    ActionDecoderConfig,
+    encode_action_decoder_vae,
+    fit_action_decoder_vae,
+    pool_episode_prefix_latents,
+)
 from mopa.belief import Belief, categorical_entropy, fit_latent_belief
 from mopa.cpl import (
     BluePlannerRequest,
@@ -66,6 +72,7 @@ from mopa.strategy import (
 from mopa.types import BCRunStats, CheckpointRef, ObjectiveDataset
 
 __all__ = [
+    "ActionDecoderConfig",
     "BCRunStats",
     "BayesianStrategyFilter",
     "Belief",
@@ -94,12 +101,14 @@ __all__ = [
     "checkpoint_validation_mask",
     "collapse_diagnostics",
     "cpl_loss",
+    "encode_action_decoder_vae",
     "encode_jepa",
     "encode_jepa_gru",
     "encode_vae",
     "episode_validation_mask",
     "expected_calibration_error",
     "fit_latent_belief",
+    "fit_action_decoder_vae",
     "generate_counterfactual",
     "metrics",
     "mixture_policy_metrics",
@@ -109,6 +118,7 @@ __all__ = [
     "open_set_auroc",
     "oracle_acc",
     "probe_acc",
+    "pool_episode_prefix_latents",
     "reliability_bins",
     "softmax_with_temperature",
     "squared_l2_prediction_loss",

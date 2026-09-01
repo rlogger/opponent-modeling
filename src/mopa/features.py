@@ -41,11 +41,16 @@ def predator_sequence_features(
     prey_pos: np.ndarray,
     pred_pos: np.ndarray,
     lengths: np.ndarray | None = None,
+    *,
+    velocity_mode: str = "legacy_forward",
 ) -> np.ndarray:
     """Build per-step sequence features ``(N, T, F)`` from positions.
 
     Uses action-horizon steps ``t = 0..T-1`` with positions at ``t`` (after the
-    previous transition / initial state). Post-length steps are zeroed when
+    previous transition / initial state). ``velocity_mode='legacy_forward'``
+    preserves the original feature ``p[t + 1] - p[t]``.  The causal mode uses
+    only information available at state ``t``: zero velocity initially and
+    ``p[t] - p[t - 1]`` thereafter. Post-length steps are zeroed when
     ``lengths`` is provided.
     """
     if prey_pos.ndim != 3 or prey_pos.shape[-1] != 2:
@@ -57,13 +62,25 @@ def predator_sequence_features(
 
     n, t_plus, _ = prey_pos.shape
     t_max = t_plus - 1
+    if velocity_mode not in {"causal_past", "legacy_forward"}:
+        raise ValueError(
+            "velocity_mode must be 'causal_past' or 'legacy_forward'"
+        )
+
     # Absolute positions at each action step + one-step velocity proxy.
     prey_t = prey_pos[:, :t_max]
     pred_t = pred_pos[:, :t_max].reshape(n, t_max, -1)
-    prey_v = prey_pos[:, 1 : t_max + 1] - prey_pos[:, :t_max]
-    pred_v = (
-        pred_pos[:, 1 : t_max + 1] - pred_pos[:, :t_max]
-    ).reshape(n, t_max, -1)
+    if velocity_mode == "legacy_forward":
+        prey_v = prey_pos[:, 1 : t_max + 1] - prey_pos[:, :t_max]
+        pred_v = (
+            pred_pos[:, 1 : t_max + 1] - pred_pos[:, :t_max]
+        ).reshape(n, t_max, -1)
+    else:
+        prey_v = np.zeros_like(prey_t)
+        pred_v = np.zeros_like(pred_pos[:, :t_max])
+        prey_v[:, 1:] = prey_pos[:, 1:t_max] - prey_pos[:, : t_max - 1]
+        pred_v[:, 1:] = pred_pos[:, 1:t_max] - pred_pos[:, : t_max - 1]
+        pred_v = pred_v.reshape(n, t_max, -1)
     seq = np.concatenate([prey_t, pred_t, prey_v, pred_v], axis=-1).astype(np.float32)
     if lengths is not None:
         lens = np.clip(np.asarray(lengths, np.int32), 1, t_max)

@@ -48,6 +48,24 @@ def build_parser() -> argparse.ArgumentParser:
         "--split", choices=("checkpoint", "episode"), default="checkpoint"
     )
     parser.add_argument("--encoder-steps", type=int, default=200)
+    parser.add_argument(
+        "--action-decoder-steps",
+        type=int,
+        default=None,
+        help="0s updates; defaults to --encoder-steps (legacy report used 1500).",
+    )
+    parser.add_argument("--action-decoder-window", type=int, default=8)
+    parser.add_argument("--action-decoder-lat", type=int, default=8)
+    parser.add_argument("--action-decoder-hid", type=int, default=64)
+    parser.add_argument(
+        "--action-decoder-state-mode",
+        choices=("causal_past", "legacy_forward"),
+        default="causal_past",
+        help=(
+            "Use past displacement by default. legacy_forward reproduces "
+            "Shashank's action-consequence feature and is replication-only."
+        ),
+    )
     parser.add_argument("--bc-steps", type=int, default=200)
     parser.add_argument("--hid", type=int, default=32)
     parser.add_argument("--calibration-bins", type=int, default=10)
@@ -250,8 +268,16 @@ def _validate_args(
 ) -> None:
     if args.n_eps < 1 or args.lat < 1 or args.hid < 1 or args.ctx < 1:
         raise ValueError("n-eps, lat, hid, and ctx must be positive")
+    if (
+        args.action_decoder_window < 2
+        or args.action_decoder_lat < 1
+        or args.action_decoder_hid < 1
+    ):
+        raise ValueError("0s window must be >= 2 and its latent/hidden sizes positive")
     if args.encoder_steps < 0 or args.bc_steps < 0:
         raise ValueError("training steps must be non-negative")
+    if args.action_decoder_steps is not None and args.action_decoder_steps < 0:
+        raise ValueError("action-decoder-steps must be non-negative")
     if not 0.0 < args.val_frac < 1.0:
         raise ValueError("val-frac must be between zero and one")
     if args.calibration_bins < 1:
@@ -278,6 +304,11 @@ def _validate_args(
             raise ValueError(
                 "a full run requires one fixed --prey-objective to avoid policy-ID leakage"
             )
+        if args.action_decoder_state_mode != "causal_past":
+            raise ValueError(
+                "a full run requires causal_past 0s state features; "
+                "legacy_forward is replication-only"
+            )
         if args.dataset_cache is not None and args.dataset_cache.exists():
             raise ValueError(
                 "a full run must generate fresh, checkpoint-bound rollouts; "
@@ -293,6 +324,8 @@ def _validate_args(
             )
         if args.encoder_steps < 1 or args.bc_steps < 1:
             raise ValueError("a full run requires positive encoder and BC steps")
+        if args.action_decoder_steps is not None and args.action_decoder_steps < 1:
+            raise ValueError("a full run requires positive 0s training steps")
 
 
 def _summary(values: list[float]) -> dict[str, Any]:
@@ -609,6 +642,12 @@ def main(argv: list[str] | None = None) -> int:
         print(str(error), file=sys.stderr)
         return 2
 
+    action_decoder_steps = (
+        args.encoder_steps
+        if args.action_decoder_steps is None
+        else args.action_decoder_steps
+    )
+
     from mopa.manifest import build_manifest, file_sha256, git_dirty, write_manifest
 
     # Synthetic data can validate plumbing, but can never make a full claim.
@@ -633,6 +672,24 @@ def main(argv: list[str] | None = None) -> int:
         "split": args.split,
         "logdir": str(args.logdir),
         "encoder_steps": args.encoder_steps,
+        "action_decoder_0s": {
+            "strategy_key": "sa_short_seq_action_decoder_vae",
+            "source_commit": "7bae281091a96fc83cadad3671bef070bd371675",
+            "steps": action_decoder_steps,
+            "window": args.action_decoder_window,
+            "lat": args.action_decoder_lat,
+            "hid": args.action_decoder_hid,
+            "batch": 128,
+            "beta_max": 1.0,
+            "free_bits": 0.2,
+            "state_mode": args.action_decoder_state_mode,
+            "legacy_reference": {
+                "steps": 1500,
+                "window": 8,
+                "lat": 8,
+                "hid": 64,
+            },
+        },
         "bc_steps": args.bc_steps,
         "hid": args.hid,
         "calibration_bins": args.calibration_bins,
@@ -667,6 +724,11 @@ def main(argv: list[str] | None = None) -> int:
 
     import jax
 
+    from mopa.action_decoder import (
+        ActionDecoderConfig,
+        fit_action_decoder_vae,
+        pool_episode_prefix_latents,
+    )
     from mopa.encoders import (
         encode_jepa,
         encode_jepa_gru,
@@ -684,6 +746,7 @@ def main(argv: list[str] | None = None) -> int:
         trailing_sequence_slice,
     )
     from mopa.metrics import (
+        train_only_metrics,
         train_only_oracle_acc,
         train_only_survival_time_probe_acc,
     )
@@ -711,6 +774,15 @@ def main(argv: list[str] | None = None) -> int:
     sequence_raw = predator_sequence_features(
         dataset.prey_pos, dataset.pred_pos, lengths
     )
+    action_decoder_state_raw = predator_sequence_features(
+        dataset.prey_pos,
+        dataset.pred_pos,
+        lengths,
+        velocity_mode=args.action_decoder_state_mode,
+    )
+    if dataset.pred_act.ndim != 3 or dataset.pred_act.shape[-1] != 1:
+        print("0s currently requires exactly one predator", file=sys.stderr)
+        return 2
     if args.split == "checkpoint":
         validation_episodes = checkpoint_validation_mask(
             dataset.ckpt_seed, rng_seed=0, val_frac=args.val_frac
@@ -765,11 +837,13 @@ def main(argv: list[str] | None = None) -> int:
     context = ((context_raw - window_mu) / window_sd).astype(np.float32)
     target = ((target_raw - window_mu) / window_sd).astype(np.float32)
 
+    action_decoder_name = "sa_short_seq_action_decoder_vae"
     model_names = (
         "gru_jepa",
         "fixed_window_jepa",
         "beta_vae",
         "random_projection",
+        action_decoder_name,
     )
     representation_runs: dict[str, list[dict[str, Any]]] = {
         name: [] for name in model_names
@@ -779,6 +853,15 @@ def main(argv: list[str] | None = None) -> int:
     }
     oracle_runs: list[float] = []
     gru_prefix_latents: dict[int, np.ndarray] = {}
+    action_decoder_accuracy_runs: list[float] = []
+    action_decoder_unit_runs: list[dict[str, float | int]] = []
+    action_decoder_fit_metadata: dict[str, Any] | None = None
+    action_decoder_config = ActionDecoderConfig(
+        lat=args.action_decoder_lat,
+        hid=args.action_decoder_hid,
+        window=args.action_decoder_window,
+        steps=action_decoder_steps,
+    )
 
     for seed in encoder_seeds:
         _, gru_params, _ = train_jepa_gru_with_params(
@@ -815,12 +898,56 @@ def main(argv: list[str] | None = None) -> int:
         projection = random.normal(
             size=(context.shape[1], args.lat)
         ).astype(np.float32) / np.sqrt(context.shape[1])
+        action_decoder_fit = fit_action_decoder_vae(
+            action_decoder_state_raw,
+            np.asarray(dataset.pred_act[:, :, 0], dtype=np.int32),
+            lengths,
+            train_idx,
+            jax.random.PRNGKey(1_000 + seed),
+            config=action_decoder_config,
+        )
+        action_decoder_accuracy_runs.append(
+            action_decoder_fit.decoder_action_accuracy
+        )
+        action_window_episode = action_decoder_fit.encoding.windows.episode
+        train_window = np.isin(action_window_episode, train_idx)
+        val_window = np.isin(action_window_episode, val_idx)
+        unit_scores = train_only_metrics(
+            action_decoder_fit.window_latents[train_window],
+            labels[action_window_episode[train_window]],
+            action_decoder_fit.window_latents[val_window],
+            labels[action_window_episode[val_window]],
+            n_classes=3,
+            seed=seed,
+        )
+        action_decoder_unit_runs.append(
+            {
+                "seed": int(seed),
+                "probe": float(unit_scores["probe"]),
+                "gmm_ari": float(unit_scores["ari"]),
+            }
+        )
+        if action_decoder_fit_metadata is None:
+            action_decoder_fit_metadata = {
+                "n_windows": int(len(action_window_episode)),
+                "n_train_windows": int(train_window.sum()),
+                "n_validation_windows": int(val_window.sum()),
+                "state_train_mean": [
+                    float(value)
+                    for value in action_decoder_fit.encoder.state_mean
+                ],
+                "state_train_std": [
+                    float(value)
+                    for value in action_decoder_fit.encoder.state_std
+                ],
+            }
 
         full_latents = {
             "gru_jepa": gather_prefix_latents(gru_all, comparison_lengths),
             "fixed_window_jepa": encode_jepa(jepa_params, context, lat=args.lat),
             "beta_vae": encode_vae(vae_params, context, lat=args.lat),
             "random_projection": context @ projection,
+            action_decoder_name: action_decoder_fit.episode_latents,
         }
         for name, latent in full_latents.items():
             representation_runs[name].append(
@@ -864,6 +991,12 @@ def main(argv: list[str] | None = None) -> int:
                     vae_params, prefix_context, lat=args.lat
                 ),
                 "random_projection": prefix_context @ projection,
+                action_decoder_name: pool_episode_prefix_latents(
+                    action_decoder_fit.prefix_latents,
+                    action_decoder_fit.encoding.windows,
+                    prefix_lengths,
+                    n_episodes=len(labels),
+                ),
             }
             for name, latent in prefix_latents.items():
                 anytime_runs[name][prefix].append(
@@ -887,6 +1020,34 @@ def main(argv: list[str] | None = None) -> int:
         }
         for name, runs in representation_runs.items()
     }
+    if action_decoder_fit_metadata is None:
+        raise RuntimeError("0s training produced no fit metadata")
+    representations[action_decoder_name].update(
+        {
+            "source_strategy": "0s",
+            "source_commit": "7bae281091a96fc83cadad3671bef070bd371675",
+            "feature_schema": "standardized_state_plus_current_action_onehot",
+            "state_feature_mode": args.action_decoder_state_mode,
+            "contains_current_actions": True,
+            "contains_future_state": (
+                args.action_decoder_state_mode == "legacy_forward"
+            ),
+            "temporal_scope": "full_valid_episode_post_hoc",
+            "comparison_prefix": "full_valid_episode",
+            "window_pooling": "equal_weight_mean",
+            "window_unit_probe": _summary(
+                [run["probe"] for run in action_decoder_unit_runs]
+            ),
+            "window_unit_gmm_ari": _summary(
+                [run["gmm_ari"] for run in action_decoder_unit_runs]
+            ),
+            "decoder_action_accuracy": _summary(
+                action_decoder_accuracy_runs
+            ),
+            "window_unit_per_seed": action_decoder_unit_runs,
+            **action_decoder_fit_metadata,
+        }
+    )
     representations["supervised_oracle"] = {
         "heldout_accuracy": _summary(oracle_runs),
         "training_scope": "train_fold_only",
@@ -903,7 +1064,7 @@ def main(argv: list[str] | None = None) -> int:
                 **_aggregate_latent_runs(anytime_runs[name][prefix]),
                 "effective_steps": int(
                     min(prefix, num_steps)
-                    if name == "gru_jepa"
+                    if name in {"gru_jepa", action_decoder_name}
                     else min(prefix, num_steps, window_width)
                 ),
             }
@@ -1053,6 +1214,7 @@ def main(argv: list[str] | None = None) -> int:
         "Strategy labels are evaluation targets and supervised-oracle/policy-fit labels; they are not SSL encoder inputs.",
         "All learned encoders fit on the training fold and encode held-out episodes with frozen parameters.",
         "Point-z BC uses the prefix latent available before each action, never a full-episode latent.",
+        "The 0s headline representation mean-pools every valid action window and is post-hoc; it is not used by causal BC.",
         "The sequential mixture scores each action with the predictive belief before that action is observed.",
         "A dry or smoke run is infrastructure evidence, not a full experiment result.",
         "full_run_finished records execution only; scientific adequacy still depends on the declared protocol and success criteria.",
@@ -1063,6 +1225,10 @@ def main(argv: list[str] | None = None) -> int:
         )
     if args.synthetic and args.run_kind == "full":
         notes.append("Requested full status was downgraded to smoke for synthetic data.")
+    if args.action_decoder_state_mode == "legacy_forward":
+        notes.append(
+            "0s legacy_forward mode exposes the transition caused by the current action and is replication-only."
+        )
 
     manifest = build_manifest(
         config={
@@ -1073,6 +1239,9 @@ def main(argv: list[str] | None = None) -> int:
             "window_jepa_train_episodes": int(len(jepa_train_idx)),
             "window_jepa_target_requirement": "valid_length_at_least_2x_window",
             "sequence_feature_dim": int(sequence.shape[-1]),
+            "action_decoder_input_dim": int(
+                action_decoder_state_raw.shape[-1] + 5
+            ),
             "sequence_train_mean": [float(value) for value in sequence_mu],
             "sequence_train_std": [float(value) for value in sequence_sd],
         },
