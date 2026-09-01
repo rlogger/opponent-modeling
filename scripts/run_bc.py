@@ -349,7 +349,7 @@ def _checkpoint_manifest(
                 "objective": objective,
                 "team": team,
                 "seed": int(seed),
-                "path": str(path.resolve()),
+                "path": str(path),
                 "sha256": file_sha256(path),
             }
         )

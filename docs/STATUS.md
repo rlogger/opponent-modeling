@@ -28,13 +28,13 @@ reproducible manifests. Within that scope, the implementation is complete:
 
 ## Evidence boundary
 
-Implementation is not a scientific result. The repository does not contain
-full MAPPO checkpoints, real rollout datasets, multi-seed result manifests, or
-learning curves. A synthetic run and a one-update MAPPO run prove plumbing
-only. Comparative claims require a full run with at least three specialist,
-encoder, and policy seeds, one fixed prey checkpoint family, fresh rollouts,
-fixed checkpoint-held-out splits, and manifests that bind every result to its
-checkpoints and clean commit.
+Implementation is not a scientific result. The repository includes one
+source-bound, multi-seed [BC experiment](../experiments/bc/README.md), but not
+the source checkpoints, raw rollout dataset, or learning curves. Its evidence
+supports only the reported BC comparison. Other comparative claims require a
+full run with at least three specialist, encoder, and policy seeds, one fixed
+prey checkpoint family, fresh rollouts, fixed checkpoint-held-out splits, and
+manifests that bind every result to its checkpoints and clean commit.
 
 The following must be true before claiming that strategy was recovered:
 
