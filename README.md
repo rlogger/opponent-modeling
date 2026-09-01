@@ -5,8 +5,8 @@ uncertainty-aware opponent-modeling pipeline. The repository includes:
 
 - capture, risk-averse, and curious predator objectives;
 - MAPPO specialist training and capture-aware rollouts;
-- variable-length GRU-JEPA, fixed-window JEPA, beta-VAE, random, and supervised
-  controls;
+- variable-length GRU-JEPA, the short-window `0s` action-decoder VAE,
+  fixed-window JEPA, beta-VAE, random, and supervised controls;
 - online Bayesian strategy beliefs and belief-mixture action prediction;
 - causal latent-conditioned behavior cloning; and
 - validated replay, counterfactual, and CPL foundations for a future planner.
@@ -74,6 +74,27 @@ The reference protocol holds out whole checkpoint seeds and uses one fixed prey
 checkpoint family across all predator objectives. This prevents the strategy
 label from merely identifying three separately co-trained prey policies.
 
+## Export a trajectory dataset and representative figure
+
+After training, generate a share-ready bundle containing 1,800 fixed-prey
+episodes, a matched-reset PNG/PDF figure, checkpoint hashes, and schema metadata:
+
+```bash
+uv run python scripts/export_trajectory_bundle.py \
+  --out-dir artifacts/trajectory_share \
+  --n-eps 200 \
+  --ckpt-seeds 0,1,2 \
+  --rollout-seed 0 \
+  --num-steps 100 \
+  --prey-objective capture
+```
+
+The figure selects one deterministic matched reset: all three panels use the
+same initial scene, checkpoint seed, and fixed capture-prey policy. Paths stop
+at capture rather than drawing the frozen padding tail. To re-render a dataset
+from a completed pipeline run, pass both `--dataset` and `--source-manifest`;
+their SHA-256 binding is checked before export.
+
 ## Run the real pipeline
 
 Start with `--run-kind smoke` and small declared budgets. A full execution must
@@ -98,6 +119,11 @@ uv run python scripts/run_part1.py \
 The source documents do not settle the full budgets or scientific success
 thresholds. Accordingly, a successful full execution is recorded as
 `full_run_finished`, not as proof of strategy recovery or robustness.
+
+`0s` defaults to causal past-displacement state features. Its legacy forward-
+displacement mode is available only for parity checks and is rejected by full
+runs because it exposes the transition caused by the current action. Shashank's
+model budget is 1,500 updates, window 8, latent size 8, and hidden size 64.
 
 ## Layout
 
