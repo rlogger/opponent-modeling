@@ -1017,6 +1017,9 @@ dev = [
     { name = "pytest" },
     { name = "ruff" },
 ]
+plot = [
+    { name = "matplotlib" },
+]
 train = [
     { name = "distrax" },
     { name = "hydra-core" },
@@ -1035,6 +1038,7 @@ requires-dist = [
     { name = "jax", specifier = ">=0.4.25,<=0.4.38" },
     { name = "jaxlib", specifier = ">=0.4.25,<=0.4.38" },
     { name = "jaxmarl", marker = "extra == 'train'", specifier = "==0.1.0" },
+    { name = "matplotlib", marker = "extra == 'plot'", specifier = ">=3.8,<4" },
     { name = "numpy", specifier = ">=1.26,<3" },
     { name = "omegaconf", marker = "extra == 'train'", specifier = ">=2.3,<3" },
     { name = "optax", specifier = ">=0.2.4,<0.3" },
@@ -1044,7 +1048,7 @@ requires-dist = [
     { name = "scikit-learn", specifier = ">=1.5,<2" },
     { name = "wandb", marker = "extra == 'train'", specifier = ">=0.19,<0.24" },
 ]
-provides-extras = ["dev", "train"]
+provides-extras = ["dev", "plot", "train"]
 
 [[package]]
 name = "opt-einsum"

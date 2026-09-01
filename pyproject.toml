@@ -20,6 +20,7 @@ dependencies = [
 
 [project.optional-dependencies]
 dev = ["pytest>=8,<9", "ruff>=0.12,<0.13"]
+plot = ["matplotlib>=3.8,<4"]
 train = [
     "jaxmarl==0.1.0",
     "hydra-core>=1.3.2,<2",
