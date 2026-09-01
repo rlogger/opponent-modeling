@@ -1,0 +1,92 @@
+{
+  "schema": "objective-trajectory-animations/v1",
+  "source": {
+    "dataset_sha256": "d0cb511465d1a5db980979eec907e03879314b575c343404cb0ecd65a073cdd3",
+    "metadata_sha256": "98268507e78cfb9280124a43407c9a637e713c78ebea3c34ecff1b495a0ff147",
+    "git_sha": "1fac6e878ffb5f69ddae2f076468320359cca9ab",
+    "episodes": 1800,
+    "episodes_per_label": 600,
+    "horizon": 100,
+    "prey_policy_control": "fixed capture checkpoint family",
+    "matched_reset_keys_across_labels": true
+  },
+  "representative_selection": {
+    "algorithm": "matched-class-median-v1",
+    "checkpoint_seed": 2,
+    "environment_key": [1588393533, 1282896614],
+    "indices": {
+      "prey-seeking": 581,
+      "risk-averse": 1181,
+      "curious": 1781
+    },
+    "valid_position_points": {
+      "prey-seeking": 32,
+      "risk-averse": 101,
+      "curious": 101
+    },
+    "resource_positions": [
+      [1.586616039, -0.562647045],
+      [1.513335943, -0.018829405],
+      [1.707189679, -0.911397099],
+      [1.819158912, -0.870927691],
+      [-1.951033354, 0.851152539],
+      [0.879441321, 0.756948233],
+      [-1.946308613, 0.705905974],
+      [-1.835262895, 0.848819613],
+      [-1.695787430, 1.783960342],
+      [1.458191395, 0.208269119],
+      [1.994724751, 0.349620342],
+      [-0.744237423, -0.652880669],
+      [-0.281802654, 1.795390129],
+      [0.745211601, -1.509476662],
+      [1.272222042, -1.060462952],
+      [-0.259737968, 0.491518974]
+    ],
+    "common_abs_axis_limit": 2.6437593269348145
+  },
+  "animation": {
+    "logical_frames": 68,
+    "frame_duration_ms": 100,
+    "total_duration_ms": 6800,
+    "loop": "forever",
+    "timeline": "four-frame start hold; t=0,2,...,100 plus exact capture t=31; twelve-frame final hold",
+    "post_capture_rule": "freeze at valid_length; never draw padded positions",
+    "resource_scene": "exact reset resources reconstructed from the recorded JAX environment key"
+  },
+  "artifacts": {
+    "all-trajectories.gif": {
+      "sha256": "abab94c95a20c6fff3906b375fab6439a3caa3caac7aa89a4a0431adf2fe87f2",
+      "bytes": 2343995,
+      "dimensions": [1240, 540],
+      "encoded_frames": 52
+    },
+    "prey-seeking.gif": {
+      "sha256": "94e476b35322d72b2257512a07da550310d400fd8e674109a7394f5258c25b3b",
+      "bytes": 358428,
+      "dimensions": [560, 620],
+      "encoded_frames": 17
+    },
+    "risk-averse.gif": {
+      "sha256": "f1521e5eaf0d11f568c5f81540e857ac2b51031dda3896a2e6ebb737455081e1",
+      "bytes": 1150691,
+      "dimensions": [560, 620],
+      "encoded_frames": 52
+    },
+    "curious.gif": {
+      "sha256": "ec22a59bfb39a8992f02cfedd3555275f2015e017c871e5e2e3d424320589493",
+      "bytes": 1202208,
+      "dimensions": [560, 620],
+      "encoded_frames": 52
+    },
+    "representative-trajectories.png": {
+      "sha256": "8bda08b43c3e694264530312b5c12aa577e5af42339b72cb24274287cbe8d62a",
+      "bytes": 186227,
+      "dimensions": [2698, 1144]
+    },
+    "representative-trajectories.pdf": {
+      "sha256": "767921fa875f30f0a9d08a898c91875cc8eb8aa1580de9e5c18f46ff148f78b0",
+      "bytes": 37750
+    }
+  },
+  "claim_boundary": "Behavior-rollout evidence only; not representation-level validation."
+}

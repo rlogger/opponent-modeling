@@ -125,6 +125,12 @@ displacement mode is available only for parity checks and is rejected by full
 runs because it exposes the transition caused by the current action. Shashank's
 model budget is 1,500 updates, window 8, latent size 8, and hidden size 64.
 
+## Trajectory visualizations
+
+See [`plots/`](plots/) for synchronized and individual GIFs of the
+prey-seeking, risk-averse, and curious specialists, plus the static comparison
+plot and provenance manifest.
+
 ## Layout
 
 ```text
@@ -133,6 +139,7 @@ src/mopa/             rollouts, encoders, beliefs, policies, BC, CPL, manifests
 scripts/              MAPPO training and the end-to-end Part 1 driver
 configs/alg/          capture, risk, and curious MAPPO configurations
 docs/                 environment and implementation status
+plots/                trajectory GIFs, static comparisons, and provenance
 tests/                unit, regression, synthetic pipeline, and env tests
 .github/workflows/    locked lint, test, and MAPPO smoke CI
 ```
