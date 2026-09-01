@@ -346,6 +346,44 @@ def reconstruct_resources(
     return np.asarray(state.resource_pos, dtype=np.float32)
 
 
+def resource_visibility(
+    prey_pos: np.ndarray,
+    resource_pos: np.ndarray,
+    collect_radius: float,
+    *,
+    expected_collected: int | None = None,
+) -> np.ndarray:
+    """Return whether each resource is visible after every saved state."""
+    prey = np.asarray(prey_pos, dtype=np.float32)
+    resources = np.asarray(resource_pos, dtype=np.float32)
+    if prey.ndim != 2 or prey.shape[1:] != (2,) or len(prey) < 1:
+        raise ValueError("prey_pos must have shape (T, 2) with T >= 1")
+    if resources.ndim != 2 or resources.shape[1:] != (2,):
+        raise ValueError("resource_pos must have shape (R, 2)")
+    if not np.isfinite(collect_radius) or collect_radius <= 0:
+        raise ValueError("collect_radius must be positive and finite")
+
+    collected = np.zeros((len(prey), len(resources)), dtype=bool)
+    if len(prey) > 1 and len(resources) > 0:
+        distance = np.linalg.norm(
+            prey[1:, None, :] - resources[None, :, :], axis=-1
+        )
+        collected[1:] = np.logical_or.accumulate(
+            distance < np.float32(collect_radius), axis=0
+        )
+
+    if expected_collected is not None:
+        expected = int(expected_collected)
+        if expected != expected_collected or not 0 <= expected <= len(resources):
+            raise ValueError("expected_collected must be a valid integer count")
+        actual = int(collected[-1].sum())
+        if actual != expected:
+            raise ValueError(
+                f"resource trace implies {actual} collections; expected {expected}"
+            )
+    return ~collected
+
+
 def render_representative_figure(
     dataset: ObjectiveDataset | Mapping[str, np.ndarray],
     selection: Mapping[str, Any],
@@ -354,6 +392,7 @@ def render_representative_figure(
     *,
     resource_pos: np.ndarray,
     prey_objective: str,
+    collect_radius: float = 0.15,
     dpi: int = 220,
 ) -> dict[str, Any]:
     """Render one controlled, matched-reset trajectory for each objective."""
@@ -376,6 +415,7 @@ def render_representative_figure(
     muted = "#5a5a5a"
     fig, axes = plt.subplots(1, 3, figsize=(13.2, 5.0), sharex=True, sharey=True)
     line_point_counts: dict[str, int] = {}
+    visible_resource_counts: dict[str, int] = {}
 
     selected_points = [np.asarray(resource_pos, dtype=np.float64)]
     selected_lava_extent = []
@@ -407,6 +447,13 @@ def render_representative_figure(
         line_point_counts[str(label)] = end
         prey = data["prey_pos"][index, :end]
         predator = data["pred_pos"][index, :end, 0]
+        visible_resources = resource_visibility(
+            prey,
+            resource_pos,
+            collect_radius,
+            expected_collected=int(data["resources_collected"][index]),
+        )[-1]
+        visible_resource_counts[str(label)] = int(visible_resources.sum())
 
         for center, radius in zip(data["lava_pos"][index], data["lava_rad"][index]):
             ax.add_patch(
@@ -421,8 +468,8 @@ def render_representative_figure(
                 )
             )
         ax.scatter(
-            resource_pos[:, 0],
-            resource_pos[:, 1],
+            resource_pos[visible_resources, 0],
+            resource_pos[visible_resources, 1],
             s=13,
             c=resource_color,
             marker="s",
@@ -584,6 +631,7 @@ def render_representative_figure(
         "pixel_height": int(pixels.shape[0]),
         "common_abs_axis_limit": float(axis_limit),
         "line_point_counts": line_point_counts,
+        "visible_resource_counts": visible_resource_counts,
     }
 
 

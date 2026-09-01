@@ -8,6 +8,7 @@ import numpy as np
 
 from mopa.trajectory_export import (
     render_representative_figure,
+    resource_visibility,
     select_representative_group,
     validate_objective_dataset,
 )
@@ -123,7 +124,7 @@ def test_headless_figure_uses_only_valid_position_prefixes(tmp_path: Path):
         selection,
         png,
         pdf,
-        resource_pos=np.array([[0.0, 0.0], [0.8, -0.8]], dtype=np.float32),
+        resource_pos=np.array([[0.8, -0.8], [-0.8, 0.8]], dtype=np.float32),
         prey_objective="capture",
         dpi=80,
     )
@@ -132,6 +133,44 @@ def test_headless_figure_uses_only_valid_position_prefixes(tmp_path: Path):
     assert info["common_abs_axis_limit"] > 2.0
     for label, index in selection["indices"].items():
         assert info["line_point_counts"][label] == dataset.valid_length[index] + 1
+        assert info["visible_resource_counts"][label] == 2
+
+
+def test_resource_visibility_matches_collection_timing():
+    resources = np.array([[0.0, 0.0], [1.0, 0.0]], dtype=np.float32)
+    prey = np.array(
+        [
+            [0.0, 0.0],  # Reset proximity does not collect.
+            [0.15, 0.0],  # The environment uses a strict radius.
+            [0.149, 0.0],
+            [1.0, 0.0],
+            [2.0, 0.0],
+        ],
+        dtype=np.float32,
+    )
+    visible = resource_visibility(
+        prey, resources, 0.15, expected_collected=2
+    )
+    np.testing.assert_array_equal(
+        visible,
+        [
+            [True, True],
+            [True, True],
+            [False, True],
+            [False, False],
+            [False, False],
+        ],
+    )
+
+
+def test_resource_visibility_rejects_a_wrong_final_count():
+    with np.testing.assert_raises_regex(ValueError, "implies 1 collections"):
+        resource_visibility(
+            np.array([[2.0, 0.0], [0.0, 0.0]], dtype=np.float32),
+            np.array([[0.0, 0.0]], dtype=np.float32),
+            0.15,
+            expected_collected=0,
+        )
 
 
 def test_validation_rejects_malformed_lava_rank_and_dtype():

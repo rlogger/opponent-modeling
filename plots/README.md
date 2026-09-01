@@ -48,7 +48,8 @@ are directly comparable.
 
 The GIFs share a 100-step clock. Paths reveal only their valid prefix: the
 prey-seeking example captures at step 31 and then freezes, while the risk-averse
-and curious examples continue to the horizon. See `animation-manifest.json` for
+and curious examples continue to the horizon. Collected resources disappear on
+prey contact and remain absent. See `animation-manifest.json` for
 the source hash, selected episode indices, timing, dimensions, and output
 hashes.
 

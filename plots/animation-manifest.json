@@ -51,41 +51,42 @@
     "loop": "forever",
     "timeline": "four-frame start hold; t=0,2,...,100 plus exact capture t=31; twelve-frame final hold",
     "post_capture_rule": "freeze at valid_length; never draw padded positions",
-    "resource_scene": "exact reset resources reconstructed from the recorded JAX environment key"
+    "resource_scene": "exact reset resources reconstructed from the recorded JAX environment key",
+    "resource_visibility": "visible at reset; hidden permanently after prey endpoint distance < 0.15"
   },
   "artifacts": {
     "all-trajectories.gif": {
-      "sha256": "abab94c95a20c6fff3906b375fab6439a3caa3caac7aa89a4a0431adf2fe87f2",
-      "bytes": 2343995,
+      "sha256": "332220c523423f16394eb4c10c035058419e44d886f2116d03fc76e43cc1c9ac",
+      "bytes": 2320611,
       "dimensions": [1240, 540],
       "encoded_frames": 52
     },
     "prey-seeking.gif": {
-      "sha256": "94e476b35322d72b2257512a07da550310d400fd8e674109a7394f5258c25b3b",
-      "bytes": 358428,
+      "sha256": "b9f971404a90e8ba08d7fdf1ffa4d525fc7619679a59cdf8886273b460519195",
+      "bytes": 356130,
       "dimensions": [560, 620],
       "encoded_frames": 17
     },
     "risk-averse.gif": {
-      "sha256": "f1521e5eaf0d11f568c5f81540e857ac2b51031dda3896a2e6ebb737455081e1",
-      "bytes": 1150691,
+      "sha256": "f6f3dffb0a2c74f79a037d16f419cc998c1c08b25131a75d42114cbb3a7c3758",
+      "bytes": 1139909,
       "dimensions": [560, 620],
       "encoded_frames": 52
     },
     "curious.gif": {
-      "sha256": "ec22a59bfb39a8992f02cfedd3555275f2015e017c871e5e2e3d424320589493",
-      "bytes": 1202208,
+      "sha256": "c7cff106bd4ae7234af66083449889f2518e7b9b3a02110dfc0e7eedb92fae41",
+      "bytes": 1190318,
       "dimensions": [560, 620],
       "encoded_frames": 52
     },
     "representative-trajectories.png": {
-      "sha256": "8bda08b43c3e694264530312b5c12aa577e5af42339b72cb24274287cbe8d62a",
-      "bytes": 186227,
+      "sha256": "d11c02c24f698b836a4309715470375f2efd4a8d8226e223269b62c105d98fea",
+      "bytes": 186082,
       "dimensions": [2698, 1144]
     },
     "representative-trajectories.pdf": {
-      "sha256": "767921fa875f30f0a9d08a898c91875cc8eb8aa1580de9e5c18f46ff148f78b0",
-      "bytes": 37750
+      "sha256": "0f80290e0edebb8d06d7cb4de3b89ae55280c1142a698ec24e4c4d7e10b7f366",
+      "bytes": 37673
     }
   },
   "claim_boundary": "Behavior-rollout evidence only; not representation-level validation."
