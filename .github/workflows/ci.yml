@@ -35,3 +35,17 @@ jobs:
           SAVE_PATH=null
           hydra.run.dir=/tmp/opponent-modeling-hydra
           hydra.output_subdir=null
+      - name: One-update continuous MAPPO smoke
+        run: >-
+          uv run python scripts/train_mappo.py
+          alg=mappo_continuous_capture
+          NUM_SEEDS=1
+          alg.TOTAL_TIMESTEPS=8
+          alg.NUM_ENVS=2
+          alg.NUM_STEPS=4
+          alg.HIDDEN_SIZE=16
+          alg.UPDATE_EPOCHS=1
+          alg.NUM_MINIBATCHES=1
+          SAVE_PATH=null
+          hydra.run.dir=/tmp/opponent-modeling-hydra-continuous
+          hydra.output_subdir=null

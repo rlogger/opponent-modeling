@@ -16,6 +16,13 @@ import jax
 import jax.numpy as jnp
 import numpy as np
 
+from tag_objectives.actions import (
+    CONTINUOUS_ACTION_DIM,
+    clip_action,
+    from_mpe_action,
+    joint_action_dict,
+    to_mpe_action,
+)
 from tag_objectives.objectives import (
     OBJECTIVES,
     ObjectiveSpec,
@@ -28,16 +35,21 @@ from tag_objectives.types import EpisodeMetrics
 PolicyFn = Callable[[Mapping[str, Any], Any], Mapping[str, Any]]
 
 __all__ = [
+    "CONTINUOUS_ACTION_DIM",
     "OBJECTIVES",
     "EpisodeMetrics",
     "ObjectiveSpec",
     "PolicyFn",
     "SimpleTagObjectivesMPE",
+    "clip_action",
     "evaluate_policy",
+    "from_mpe_action",
+    "joint_action_dict",
     "list_objectives",
     "make_env",
     "random_policy",
     "register_objective",
+    "to_mpe_action",
 ]
 
 
@@ -46,13 +58,42 @@ def list_objectives() -> list[str]:
     return sorted(OBJECTIVES)
 
 
-def make_env(objective: str = "capture", **overrides: Any) -> SimpleTagObjectivesMPE:
-    """Build the environment for any registered objective."""
+def make_env(
+    objective: str = "capture", *, continuous: bool = False, **overrides: Any
+) -> SimpleTagObjectivesMPE:
+    """Build the environment for any registered objective.
+
+    ``continuous=True`` selects JaxMARL's continuous MPE action space. Callers
+    then pass two-dimensional ``[-1, 1]^2`` actions through
+    :func:`to_mpe_action` / :func:`joint_action_dict` at the env boundary.
+    """
+    if continuous:
+        overrides.setdefault("action_type", "Continuous")
     return SimpleTagObjectivesMPE(pred_type=objective, **overrides)
 
 
 def random_policy(env: SimpleTagObjectivesMPE) -> PolicyFn:
-    """Uniform-random joint policy in :func:`evaluate_policy`'s signature."""
+    """Uniform-random joint policy in :func:`evaluate_policy`'s signature.
+
+    Continuous environments receive uniform ``[-1, 1]^2`` actions converted at
+    the boundary; discrete environments receive uniform action indices.
+    """
+    if env.continuous_actions:
+
+        def policy(obs: Mapping[str, Any], rng: Any) -> dict[str, Any]:
+            acts: dict[str, Any] = {}
+            for a in env.agents:
+                rng, k = jax.random.split(rng)
+                n = obs[a].shape[0]
+                acts[a] = to_mpe_action(
+                    jax.random.uniform(
+                        k, (n, CONTINUOUS_ACTION_DIM), minval=-1.0, maxval=1.0
+                    )
+                )
+            return acts
+
+        return policy
+
     dims = {a: int(env.action_space(a).n) for a in env.agents}
 
     def policy(obs: Mapping[str, Any], rng: Any) -> dict[str, Any]:
@@ -93,7 +134,11 @@ def evaluate_policy(
     for _ in range(T):
         active = ~done
         key, kp, ks = jax.random.split(key, 3)
-        acts = {a: v.astype(jnp.int32) for a, v in policy(obs, kp).items()}
+        raw = policy(obs, kp)
+        if env.continuous_actions:
+            acts = {a: jnp.asarray(v, dtype=jnp.float32) for a, v in raw.items()}
+        else:
+            acts = {a: v.astype(jnp.int32) for a, v in raw.items()}
         new_obs, new_state, _, dones, info = jax.vmap(env.step_env)(
             jax.random.split(ks, n_eps), state, acts
         )

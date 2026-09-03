@@ -1,0 +1,282 @@
+{
+  "behaviour": {
+    "behaviour_probe": {
+      "chance": 0.3333333333333333,
+      "folds": [
+        {
+          "accuracy": 0.9483333333333334,
+          "heldout_checkpoint": 0
+        },
+        {
+          "accuracy": 0.965,
+          "heldout_checkpoint": 1
+        },
+        {
+          "accuracy": 0.9766666666666667,
+          "heldout_checkpoint": 2
+        }
+      ],
+      "mean_accuracy": 0.9633333333333334
+    },
+    "metrics": [
+      "captured",
+      "survival_time",
+      "pred_lava_steps",
+      "pred_coverage",
+      "resources_collected",
+      "prey_lava_steps"
+    ],
+    "per_type": {
+      "capture": {
+        "captured": {
+          "mean": 0.995,
+          "std": 0.07053367989832943
+        },
+        "n_episodes": 600,
+        "pred_coverage": {
+          "mean": 13.649999618530273,
+          "std": 6.441855430603027
+        },
+        "pred_lava_steps": {
+          "mean": 6.576666831970215,
+          "std": 7.459498405456543
+        },
+        "prey_lava_steps": {
+          "mean": 9.026666641235352,
+          "std": 8.167167663574219
+        },
+        "resources_collected": {
+          "mean": 2.2233333587646484,
+          "std": 1.7701568603515625
+        },
+        "survival_time": {
+          "mean": 27.428333282470703,
+          "std": 13.946739196777344
+        }
+      },
+      "curious": {
+        "captured": {
+          "mean": 0.145,
+          "std": 0.35210083782916507
+        },
+        "n_episodes": 600,
+        "pred_coverage": {
+          "mean": 49.18333435058594,
+          "std": 11.859864234924316
+        },
+        "pred_lava_steps": {
+          "mean": 11.591666221618652,
+          "std": 7.2540740966796875
+        },
+        "prey_lava_steps": {
+          "mean": 33.621665954589844,
+          "std": 15.58060359954834
+        },
+        "resources_collected": {
+          "mean": 6.300000190734863,
+          "std": 2.467792510986328
+        },
+        "survival_time": {
+          "mean": 92.44000244140625,
+          "std": 21.139055252075195
+        }
+      },
+      "risk": {
+        "captured": {
+          "mean": 0.04,
+          "std": 0.19595917942265426
+        },
+        "n_episodes": 600,
+        "pred_coverage": {
+          "mean": 12.176666259765625,
+          "std": 4.341519355773926
+        },
+        "pred_lava_steps": {
+          "mean": 0.2549999952316284,
+          "std": 2.17561674118042
+        },
+        "prey_lava_steps": {
+          "mean": 36.143333435058594,
+          "std": 16.624364852905273
+        },
+        "resources_collected": {
+          "mean": 6.241666793823242,
+          "std": 2.259040594100952
+        },
+        "survival_time": {
+          "mean": 98.24666595458984,
+          "std": 9.690330505371094
+        }
+      }
+    }
+  },
+  "checkpoints": [
+    {
+      "objective": "capture",
+      "path": "logs/MPE_simple_tag_v3_continuous/mappo_continuous_capture_MPE_simple_tag_v3_continuous_pred_actor_seed0_vmap0.safetensors",
+      "seed": 0,
+      "sha256": "e88a8d1e7d884c39c4b96df282071b3b483d6c3e2adaaf72010907e8885291a6",
+      "team": "pred"
+    },
+    {
+      "objective": "risk",
+      "path": "logs/MPE_simple_tag_v3_continuous/mappo_continuous_risk_MPE_simple_tag_v3_continuous_pred_actor_seed0_vmap0.safetensors",
+      "seed": 0,
+      "sha256": "6c720d97836c9b7175859985f2002d3734f529e9738e8205e67e85bb558e47c9",
+      "team": "pred"
+    },
+    {
+      "objective": "curious",
+      "path": "logs/MPE_simple_tag_v3_continuous/mappo_continuous_curious_MPE_simple_tag_v3_continuous_pred_actor_seed0_vmap0.safetensors",
+      "seed": 0,
+      "sha256": "70ce23992cf59fedaa9568314a83710feb4870e649b982900a42a169e7eea195",
+      "team": "pred"
+    },
+    {
+      "objective": "capture",
+      "path": "logs/MPE_simple_tag_v3_continuous/mappo_continuous_capture_MPE_simple_tag_v3_continuous_pred_actor_seed0_vmap1.safetensors",
+      "seed": 1,
+      "sha256": "def2c3aaa8d5a206b9e401ba9e757cf1348148b1c8fd34d0630acaaf335339fb",
+      "team": "pred"
+    },
+    {
+      "objective": "risk",
+      "path": "logs/MPE_simple_tag_v3_continuous/mappo_continuous_risk_MPE_simple_tag_v3_continuous_pred_actor_seed0_vmap1.safetensors",
+      "seed": 1,
+      "sha256": "f6bad7cbb9912986b2b201b156934fa4801f2aada4514b4992aed3a6d15787b0",
+      "team": "pred"
+    },
+    {
+      "objective": "curious",
+      "path": "logs/MPE_simple_tag_v3_continuous/mappo_continuous_curious_MPE_simple_tag_v3_continuous_pred_actor_seed0_vmap1.safetensors",
+      "seed": 1,
+      "sha256": "300eb2fe9a119f0b7d640f309d189e0bea55fabc5616a8c224aff9aa963784df",
+      "team": "pred"
+    },
+    {
+      "objective": "capture",
+      "path": "logs/MPE_simple_tag_v3_continuous/mappo_continuous_capture_MPE_simple_tag_v3_continuous_pred_actor_seed0_vmap2.safetensors",
+      "seed": 2,
+      "sha256": "bd17f86b36448bcb885e2eed04240892729883e0129c0b13b66706703c026940",
+      "team": "pred"
+    },
+    {
+      "objective": "risk",
+      "path": "logs/MPE_simple_tag_v3_continuous/mappo_continuous_risk_MPE_simple_tag_v3_continuous_pred_actor_seed0_vmap2.safetensors",
+      "seed": 2,
+      "sha256": "b895d4d645cb06d689f2feb862b8a1079063415cc471b7e887bc0a0bbdfb4b08",
+      "team": "pred"
+    },
+    {
+      "objective": "curious",
+      "path": "logs/MPE_simple_tag_v3_continuous/mappo_continuous_curious_MPE_simple_tag_v3_continuous_pred_actor_seed0_vmap2.safetensors",
+      "seed": 2,
+      "sha256": "07b9439945cfa656156fa62b767e0cd8068fe2c8b110803f0b61ec3e8372efba",
+      "team": "pred"
+    },
+    {
+      "objective": "capture",
+      "path": "logs/MPE_simple_tag_v3_continuous/mappo_continuous_capture_MPE_simple_tag_v3_continuous_prey_actor_seed0_vmap0.safetensors",
+      "seed": 0,
+      "sha256": "7ae4ab41ba1daac6654bf19473aa1a2be47298ef47f162a52fb0c34dc9ae05d7",
+      "team": "prey"
+    },
+    {
+      "objective": "capture",
+      "path": "logs/MPE_simple_tag_v3_continuous/mappo_continuous_capture_MPE_simple_tag_v3_continuous_prey_actor_seed0_vmap1.safetensors",
+      "seed": 1,
+      "sha256": "5400aebae9d18c85fdbb06af676df9b690e73f7b046361b8e728ac43edf289d6",
+      "team": "prey"
+    },
+    {
+      "objective": "capture",
+      "path": "logs/MPE_simple_tag_v3_continuous/mappo_continuous_capture_MPE_simple_tag_v3_continuous_prey_actor_seed0_vmap2.safetensors",
+      "seed": 2,
+      "sha256": "e20c31b26e8792b6cbb27a6b90aa39be4a11dc1153f1d14ceae3f033f6b075c7",
+      "team": "prey"
+    }
+  ],
+  "coverage": {
+    "blue_action": {
+      "abs_mean": [
+        0.8603867292404175,
+        0.8619229793548584
+      ],
+      "either_axis_saturated_fraction": 0.8707256875195807,
+      "max": [
+        1.0,
+        1.0
+      ],
+      "mean": [
+        0.011036572977900505,
+        0.0090072276070714
+      ],
+      "min": [
+        -1.0,
+        -1.0
+      ],
+      "saturation_fraction": [
+        0.6275206504214138,
+        0.6315475781124636
+      ],
+      "std": [
+        0.8933338522911072,
+        0.894486129283905
+      ]
+    },
+    "capture_transition_fraction": 0.00540999014281457,
+    "n_valid_transitions": 130869,
+    "pred_grid_cells_visited_fraction": 1.0,
+    "prey_grid_cells_visited_fraction": 1.0,
+    "red_action": {
+      "abs_mean": [
+        0.7897567749023438,
+        0.7924330830574036
+      ],
+      "either_axis_saturated_fraction": 0.6556480144266403,
+      "max": [
+        1.0,
+        1.0
+      ],
+      "mean": [
+        -0.04319481551647186,
+        0.0068070911802351475
+      ],
+      "min": [
+        -1.0,
+        -1.0
+      ],
+      "saturation_fraction": [
+        0.5145068732854993,
+        0.4967945044280922
+      ],
+      "std": [
+        0.8399669528007507,
+        0.8409909009933472
+      ]
+    },
+    "timeout_transition_fraction": 0.0083442220846801
+  },
+  "dataset_sha256": "928181027a9e5e86b106190b1487cda90c09e2cc5df08b569f7b93ba8350b5f5",
+  "git_dirty": true,
+  "git_sha": "f783426f118920ebd5eb5b68af7199f8bc9d7c21",
+  "manifest_sha256": "b3297b24108d97e17d8a1195997ff9772d8f6810bb5ef339da42de39f3b4ddb2",
+  "summary": {
+    "blue_observation_dim": 35,
+    "capture_rate": 0.3933333333333333,
+    "context_dim": 0,
+    "horizon": 100,
+    "n_episodes": 1800,
+    "n_valid_transitions": 130869,
+    "red_observation_dim": 17,
+    "replay": {
+      "max_abs_error_blue_observation": 0.0,
+      "max_abs_error_blue_reward": 0.0,
+      "max_abs_error_red_observation": 0.0,
+      "max_abs_error_state": 0.0,
+      "n_replayed": 1800,
+      "termination_flags_match_fraction": 1.0
+    },
+    "state_dim": 66
+  }
+}

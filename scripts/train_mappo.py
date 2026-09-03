@@ -5,6 +5,14 @@ builds SimpleTagObjectivesMPE from config (constructor defaults are SoT).
 
 Run from repo root:
     python scripts/train_mappo.py alg=mappo_objectives_capture NUM_SEEDS=3
+
+``ACTION_TYPE: Continuous`` switches both teams to a two-dimensional
+tanh-squashed diagonal Gaussian (``mopa.nets.ContinuousActor``). PPO then uses
+the joint log-probability summed over action dimensions with the tanh
+change-of-variables correction (``mopa.continuous``), stores the pre-squash
+sample ``u`` for exact ratio computation, and converts ``tanh(u)`` to the
+JaxMARL ``[0, 1]^5`` vector only at the environment boundary
+(``tag_objectives.to_mpe_action``).
 """
 from __future__ import annotations
 
@@ -35,9 +43,21 @@ _SRC = _REPO_ROOT / "src"
 if str(_SRC) not in sys.path:
     sys.path.insert(0, str(_SRC))
 
-from tag_objectives import SimpleTagObjectivesMPE  # noqa: E402
+from mopa.continuous import (  # noqa: E402
+    gaussian_entropy,
+    tanh_gaussian_log_prob,
+    tanh_gaussian_sample,
+)
+from mopa.nets import ContinuousActor  # noqa: E402
+from tag_objectives import (  # noqa: E402
+    CONTINUOUS_ACTION_DIM,
+    SimpleTagObjectivesMPE,
+    to_mpe_action,
+)
 
 _CONFIG_DIR = str(_REPO_ROOT / "configs")
+CONTINUOUS = "Continuous"
+DISCRETE = "Discrete"
 
 
 class Actor(nn.Module):
@@ -105,7 +125,13 @@ def make_train(config, env):
 
     obs_sizes = {a: env.observation_space(a).shape[0] for a in all_agents}
     max_obs = max(obs_sizes.values())
-    action_dim = env.action_space(all_agents[0]).n
+    continuous = config.get("ACTION_TYPE", DISCRETE) == CONTINUOUS
+    if continuous:
+        # Learned/planned action is (a_x, a_y) in [-1, 1]^2; the env receives
+        # the redundant [0, 1]^5 vector via to_mpe_action at the boundary.
+        action_dim = CONTINUOUS_ACTION_DIM
+    else:
+        action_dim = env.action_space(all_agents[0]).n
     world_state_dim = sum(obs_sizes[a] for a in all_agents)
 
     def pad_obs(obs_dict):
@@ -146,8 +172,9 @@ def make_train(config, env):
         original_seed = rng[0]
         rng, _rng = jax.random.split(rng)
 
+        actor_cls = ContinuousActor if continuous else Actor
         actors = {
-            t: Actor(action_dim=action_dim, hidden_dim=config["HIDDEN_SIZE"])
+            t: actor_cls(action_dim=action_dim, hidden_dim=config["HIDDEN_SIZE"])
             for t in team_names
         }
         critics = {
@@ -208,7 +235,8 @@ def make_train(config, env):
                 padded = pad_obs(last_obs)
                 ws = get_world_state(last_obs)
 
-                all_actions = {}
+                all_actions = {}  # what the env receives
+                stored_actions = {}  # what PPO stores (pre-tanh u if continuous)
                 all_log_probs = {}
                 all_values = {}
                 for t in team_names:
@@ -217,20 +245,31 @@ def make_train(config, env):
                     ws_t = jnp.broadcast_to(ws[None], (len(ags),) + ws.shape)
 
                     actor_state, critic_state = train_states[t]
-                    pi = jax.vmap(
-                        jax.vmap(actors[t].apply, in_axes=(None, 0)),
-                        in_axes=(None, 0),
-                    )(actor_state.params, obs_t)
                     rng, k = jax.random.split(rng)
                     keys = jax.random.split(k, len(ags) * config["NUM_ENVS"]).reshape(
                         len(ags), config["NUM_ENVS"], 2
                     )
-                    actions_t = jax.vmap(jax.vmap(lambda pi, k: pi.sample(seed=k)))(
-                        pi, keys
-                    )
-                    lp_t = jax.vmap(jax.vmap(lambda pi, a: pi.log_prob(a)))(
-                        pi, actions_t
-                    )
+                    if continuous:
+                        mean_t, log_std_t = actors[t].apply(actor_state.params, obs_t)
+                        u_t, a_t = jax.vmap(jax.vmap(tanh_gaussian_sample))(
+                            keys, mean_t, log_std_t
+                        )
+                        lp_t = tanh_gaussian_log_prob(mean_t, log_std_t, u_t)
+                        env_actions_t = to_mpe_action(a_t)
+                        stored_t = u_t
+                    else:
+                        pi = jax.vmap(
+                            jax.vmap(actors[t].apply, in_axes=(None, 0)),
+                            in_axes=(None, 0),
+                        )(actor_state.params, obs_t)
+                        actions_t = jax.vmap(
+                            jax.vmap(lambda pi, k: pi.sample(seed=k))
+                        )(pi, keys)
+                        lp_t = jax.vmap(jax.vmap(lambda pi, a: pi.log_prob(a)))(
+                            pi, actions_t
+                        )
+                        env_actions_t = actions_t
+                        stored_t = actions_t
 
                     v_t = jax.vmap(
                         jax.vmap(critics[t].apply, in_axes=(None, 0)),
@@ -238,7 +277,8 @@ def make_train(config, env):
                     )(critic_state.params, ws_t)
 
                     for i, a in enumerate(ags):
-                        all_actions[a] = actions_t[i]
+                        all_actions[a] = env_actions_t[i]
+                        stored_actions[a] = stored_t[i]
                         all_log_probs[a] = lp_t[i]
                         all_values[a] = v_t[i]
 
@@ -252,7 +292,7 @@ def make_train(config, env):
                     ags = teams[t]
                     transition_per_team[t] = Transition(
                         done=batchify_team(dones, ags),
-                        action=batchify_team(all_actions, ags),
+                        action=batchify_team(stored_actions, ags),
                         value=batchify_team(all_values, ags),
                         reward=batchify_team(rewards, ags),
                         log_prob=batchify_team(all_log_probs, ags),
@@ -347,13 +387,23 @@ def make_train(config, env):
                         mb_adv = (mb_adv - mb_adv.mean()) / (mb_adv.std() + 1e-8)
 
                         def actor_loss_fn(params):
-                            pi = actors[t].apply(params, mb_traj.obs)
-                            log_prob = pi.log_prob(mb_traj.action)
+                            if continuous:
+                                mean, log_std = actors[t].apply(params, mb_traj.obs)
+                                # Joint log-probability: summed over the two action
+                                # dimensions, with the tanh Jacobian correction, at
+                                # the stored pre-squash sample u.
+                                log_prob = tanh_gaussian_log_prob(
+                                    mean, log_std, mb_traj.action
+                                )
+                                entropy = gaussian_entropy(log_std).mean()
+                            else:
+                                pi = actors[t].apply(params, mb_traj.obs)
+                                log_prob = pi.log_prob(mb_traj.action)
+                                entropy = pi.entropy().mean()
                             ratio = jnp.exp(log_prob - mb_traj.log_prob)
                             l1 = ratio * mb_adv
                             l2 = jnp.clip(ratio, 1 - clip_eps, 1 + clip_eps) * mb_adv
                             pg_loss = -jnp.minimum(l1, l2).mean()
-                            entropy = pi.entropy().mean()
                             return pg_loss - config.get("ENT_COEF", 0.01) * entropy, (
                                 pg_loss,
                                 entropy,
@@ -478,7 +528,12 @@ def env_from_config(config):
     if not config.get("USE_OBJECTIVES", False):
         raise ValueError("This trainer only supports USE_OBJECTIVES=True")
     _kw = {py: config[k] for k, py in _OBJ_KEYS.items() if k in config}
-    env = SimpleTagObjectivesMPE(**_kw, **config["ENV_KWARGS"])
+    action_type = config.get("ACTION_TYPE", DISCRETE)
+    if action_type not in (DISCRETE, CONTINUOUS):
+        raise ValueError(f"ACTION_TYPE must be {DISCRETE!r} or {CONTINUOUS!r}")
+    env = SimpleTagObjectivesMPE(
+        **_kw, action_type=action_type, **config["ENV_KWARGS"]
+    )
     env = MPELogWrapper(env)
     return env, config["ENV_NAME"]
 

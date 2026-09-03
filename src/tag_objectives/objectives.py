@@ -34,6 +34,7 @@ import chex
 import jax
 import jax.numpy as jnp
 from flax import struct
+from jaxmarl.environments.mpe.default_params import CONTINUOUS_ACT, DISCRETE_ACT
 from jaxmarl.environments.mpe.simple_tag import SimpleTagMPE
 from jaxmarl.environments.spaces import Box
 
@@ -156,6 +157,13 @@ class SimpleTagObjectivesMPE(SimpleTagResourcesMPE):
         kwargs.setdefault("num_good_agents", 1)
         kwargs.setdefault("num_obs", 0)
         kwargs.setdefault("max_steps", max_steps)
+        kwargs.setdefault("action_type", DISCRETE_ACT)
+        if kwargs["action_type"] not in (DISCRETE_ACT, CONTINUOUS_ACT):
+            raise ValueError(
+                f"action_type must be {DISCRETE_ACT!r} or {CONTINUOUS_ACT!r}, "
+                f"got {kwargs['action_type']!r}"
+            )
+        self.action_type = kwargs["action_type"]
 
         super().__init__(
             num_resources=num_resources,
@@ -233,6 +241,11 @@ class SimpleTagObjectivesMPE(SimpleTagResourcesMPE):
             self.observation_spaces[a] = Box(
                 -jnp.inf, jnp.inf, (prey_base + resource_dim + lava_dim,)
             )
+
+    @property
+    def continuous_actions(self) -> bool:
+        """True when actions are JaxMARL ``[0, 1]^5`` vectors (see ``actions.py``)."""
+        return self.action_type == CONTINUOUS_ACT
 
     def _grid_index(self, pos: chex.Array) -> chex.Array:
         scaled = jnp.floor((pos + self.arena) / (2.0 * self.arena) * self.grid_size)

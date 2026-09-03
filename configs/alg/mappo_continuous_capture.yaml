@@ -1,0 +1,26 @@
+ALG_NAME: "mappo_continuous_capture"
+
+# training
+TOTAL_TIMESTEPS: 2_000_000
+NUM_ENVS: 32
+NUM_STEPS: 100
+HIDDEN_SIZE: 128
+MAX_GRAD_NORM: 0.5
+LR: 0.0003
+ANNEAL_LR: True
+GAMMA: 0.99
+GAE_LAMBDA: 0.95
+CLIP_EPS: 0.2
+ENT_COEF: 0.01
+VF_COEF: 0.5
+UPDATE_EPOCHS: 4
+NUM_MINIBATCHES: 4
+
+# env: objective-typed predator task. Only deviations from the
+# SimpleTagObjectivesMPE constructor defaults belong here.
+ENV_NAME: "MPE_simple_tag_v3_continuous"
+# continuous (a_x, a_y) in [-1, 1]^2 tanh-Gaussian actors; see scripts/train_mappo.py
+ACTION_TYPE: "Continuous"
+ENV_KWARGS: {}
+USE_OBJECTIVES: True
+PRED_TYPE: "capture"
