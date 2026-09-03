@@ -89,6 +89,7 @@ profiles:
       encoder_dim: 128
     world_model:
       latent_dim: 128
+      hidden_dim: 128  # head width; equals latent_dim for the mlp encoder (upstream)
       predict_continues: true
     tdmpc2:
       batch_size: 128

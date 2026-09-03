@@ -345,6 +345,7 @@ class WorldModel(struct.PyTreeNode):
         context_dim: int = 0,
         encoder_type: str = "mlp",
         red_hidden_dim: int = 128,
+        hidden_dim: Optional[int] = None,
         *,
         key: PRNGKey,
     ) -> "WorldModel":
@@ -354,6 +355,9 @@ class WorldModel(struct.PyTreeNode):
             raise ValueError(f"encoder_type must be one of {ENCODER_TYPES}")
         if opponent_mode != "implicit" and context_dim < 1:
             raise ValueError("conditioned/factored modes need context_dim >= 1")
+        # Upstream uses latent_dim as every head's hidden width; the identity
+        # baseline's latent is the raw state, so a separate width is allowed.
+        hidden = latent_dim if hidden_dim is None else int(hidden_dim)
         dynamics_key, reward_key, value_key, policy_key, continue_key = (
             jax.random.split(key, 5)
         )
@@ -369,13 +373,26 @@ class WorldModel(struct.PyTreeNode):
         policy_in = latent_dim + (0 if opponent_mode == "implicit" else context_dim)
 
         # Latent forward dynamics model
-        dynamics_module = nn.Sequential(
-            [
-                NormedLinear(latent_dim, activation=mish, dtype=dtype),
-                NormedLinear(latent_dim, activation=mish, dtype=dtype),
-                NormedLinear(latent_dim, activation=None, dtype=dtype),
-            ]
-        )
+        if encoder_type == "identity":
+            # Local state-space baseline: residual prediction ``x + f(x, a)``
+            # with a plain, zero-initialized output layer (the initial model is
+            # exactly persistence). Upstream's final LayerNorm is appropriate
+            # before SimNorm but would force a per-sample normalized *state*.
+            dynamics_module = nn.Sequential(
+                [
+                    NormedLinear(hidden, activation=mish, dtype=dtype),
+                    NormedLinear(hidden, activation=mish, dtype=dtype),
+                    nn.Dense(latent_dim, kernel_init=nn.initializers.zeros),
+                ]
+            )
+        else:
+            dynamics_module = nn.Sequential(
+                [
+                    NormedLinear(hidden, activation=mish, dtype=dtype),
+                    NormedLinear(hidden, activation=mish, dtype=dtype),
+                    NormedLinear(latent_dim, activation=None, dtype=dtype),
+                ]
+            )
         dynamics_model = TrainState.create(
             apply_fn=dynamics_module.apply,
             params=dynamics_module.init(dynamics_key, jnp.zeros(transition_in))["params"],
@@ -385,8 +402,8 @@ class WorldModel(struct.PyTreeNode):
         # Transition reward model
         reward_module = nn.Sequential(
             [
-                NormedLinear(latent_dim, activation=mish, dtype=dtype),
-                NormedLinear(latent_dim, activation=mish, dtype=dtype),
+                NormedLinear(hidden, activation=mish, dtype=dtype),
+                NormedLinear(hidden, activation=mish, dtype=dtype),
                 nn.Dense(num_bins, kernel_init=nn.initializers.zeros),
             ]
         )
@@ -399,8 +416,8 @@ class WorldModel(struct.PyTreeNode):
         # Policy model
         policy_module = nn.Sequential(
             [
-                NormedLinear(latent_dim, activation=mish, dtype=dtype),
-                NormedLinear(latent_dim, activation=mish, dtype=dtype),
+                NormedLinear(hidden, activation=mish, dtype=dtype),
+                NormedLinear(hidden, activation=mish, dtype=dtype),
                 nn.Dense(
                     2 * action_dim,
                     kernel_init=nn.initializers.truncated_normal(0.02),
@@ -419,12 +436,12 @@ class WorldModel(struct.PyTreeNode):
             nn.Sequential,
             [
                 NormedLinear(
-                    latent_dim,
+                    hidden,
                     activation=mish,
                     dropout_rate=value_dropout,
                     dtype=dtype,
                 ),
-                NormedLinear(latent_dim, activation=mish, dtype=dtype),
+                NormedLinear(hidden, activation=mish, dtype=dtype),
                 nn.Dense(num_bins, kernel_init=nn.initializers.zeros),
             ],
         )
@@ -447,8 +464,8 @@ class WorldModel(struct.PyTreeNode):
             # Local: same transition inputs as dynamics, ``continue(x, u[, c | v])``.
             continue_module = nn.Sequential(
                 [
-                    NormedLinear(latent_dim, activation=mish, dtype=dtype),
-                    NormedLinear(latent_dim, activation=mish, dtype=dtype),
+                    NormedLinear(hidden, activation=mish, dtype=dtype),
+                    NormedLinear(hidden, activation=mish, dtype=dtype),
                     nn.Dense(1, kernel_init=nn.initializers.zeros),
                 ]
             )
@@ -512,11 +529,17 @@ class WorldModel(struct.PyTreeNode):
 
     @jax.jit
     def next(self, x: jax.Array, a: jax.Array, params: Params) -> jax.Array:
-        """``x_next = d(x, a)`` where ``a = transition_inputs(u, c, v)``."""
-        x = self.dynamics_model.apply_fn(
+        """``x_next = d(x, a)`` where ``a = transition_inputs(u, c, v)``.
+
+        Identity encoder: residual ``x + f(x, a)``; learned encoder: upstream
+        ``simnorm(f(x, a))``.
+        """
+        out = self.dynamics_model.apply_fn(
             {"params": params}, jnp.concatenate([x, a], axis=-1)
         ).astype(jnp.float32)
-        return self.latent_activation(x)
+        if self.encoder_type == "identity":
+            return x + out
+        return self.latent_activation(out)
 
     @jax.jit
     def reward(
@@ -1212,6 +1235,7 @@ def create_agent(
         context_dim=context_dim,
         encoder_type=encoder_type,
         red_hidden_dim=int(factored_cfg.get("red_hidden_dim", 128)),
+        hidden_dim=model_cfg.get("hidden_dim"),
         key=model_key,
     )
     if model.action_dim >= 20:

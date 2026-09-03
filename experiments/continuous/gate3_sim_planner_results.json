@@ -1,0 +1,6311 @@
+{
+  "artifacts": {
+    "0": {
+      "context_encoder": "89f9794888893a261c29e51b1e29e3df582dd44bc8d49e42687fcaec020b8870",
+      "no_c": "73ed51b9f522ec7cb2dd7e75315cfb7a009e2e8f51ffe611f44f9213573d3324",
+      "oracle": "8a58a99d440e07d9a9695f3ea1b04debc70b75191a66c8fcca080263f86d0b30",
+      "real_c": "397837457a3d883c63fcc3fd2f4e1241aba69cfbd4db76e35d99ef9bd5c3bf93"
+    },
+    "1": {
+      "context_encoder": "279d6fb9701bc067deeb44856421aa1610bd4980a3a3f14b426cdff07346ee67",
+      "no_c": "de84754a4b4bdad5c39a337bacc050b4cbaa0a22bb348a30dc433215959b1d1a",
+      "oracle": "6268ed8dbcdb4423ead8184e74ebc3eee097b629668ceba576a9b0e8a690e3ad",
+      "real_c": "4e31ed6e23593a8cbd6a8973da6809d9a38d3be1f1b6a5c9d424fe84259efc88"
+    },
+    "2": {
+      "context_encoder": "6669a8f43aab2cd9235fe6bf203f654c5884eb110b66b1a2d54f74de1b0925b6",
+      "no_c": "cdd70b1541536b0453c438ca3b961d27f7d9ff43479bc67b3e8e8d1dad31fd82",
+      "oracle": "3f8814655d70c4ba0c0d2608699666113d9083ff7d6e4ff6bfb58ba594a92089",
+      "real_c": "808f8534bcf6e1dd353c3afd685852ce00413e4cc0fc8c0bc77d2ac537239e41"
+    }
+  },
+  "claim_gates": {
+    "actions_within_bounds": true,
+    "gate3_pass": true,
+    "planner_true_red_mean_return_delta_vs_fixed_policy": 12.69593205799659,
+    "planner_true_red_mean_return_delta_vs_random": 47.4044707160857,
+    "planner_true_red_return_beats_fixed_policy_all_groups": true,
+    "planner_true_red_return_beats_random_all_groups": true
+  },
+  "comparisons": {
+    "planner_bc_oracle_correct_vs_true_red": {
+      "blue_return": {
+        "all_groups_better": false,
+        "delta_mean": -2.1331901605482457,
+        "groups": [
+          {
+            "delta_mean": -4.398541887601216,
+            "heldout": 0,
+            "n": 48,
+            "opponent": "capture"
+          },
+          {
+            "delta_mean": 0.0,
+            "heldout": 0,
+            "n": 48,
+            "opponent": "risk"
+          },
+          {
+            "delta_mean": -0.9269551436106364,
+            "heldout": 0,
+            "n": 48,
+            "opponent": "curious"
+          },
+          {
+            "delta_mean": -6.252436498800914,
+            "heldout": 1,
+            "n": 48,
+            "opponent": "capture"
+          },
+          {
+            "delta_mean": 0.10094428062438965,
+            "heldout": 1,
+            "n": 48,
+            "opponent": "risk"
+          },
+          {
+            "delta_mean": -2.1162690818309784,
+            "heldout": 1,
+            "n": 48,
+            "opponent": "curious"
+          },
+          {
+            "delta_mean": -6.0281959772109985,
+            "heldout": 2,
+            "n": 48,
+            "opponent": "capture"
+          },
+          {
+            "delta_mean": 0.0,
+            "heldout": 2,
+            "n": 48,
+            "opponent": "risk"
+          },
+          {
+            "delta_mean": 0.4227428634961446,
+            "heldout": 2,
+            "n": 48,
+            "opponent": "curious"
+          }
+        ]
+      },
+      "captured": {
+        "all_groups_better": false,
+        "delta_mean": 0.1087962962962963,
+        "groups": [
+          {
+            "delta_mean": 0.25,
+            "heldout": 0,
+            "n": 48,
+            "opponent": "capture"
+          },
+          {
+            "delta_mean": 0.0,
+            "heldout": 0,
+            "n": 48,
+            "opponent": "risk"
+          },
+          {
+            "delta_mean": 0.08333333333333333,
+            "heldout": 0,
+            "n": 48,
+            "opponent": "curious"
+          },
+          {
+            "delta_mean": 0.3333333333333333,
+            "heldout": 1,
+            "n": 48,
+            "opponent": "capture"
+          },
+          {
+            "delta_mean": 0.0,
+            "heldout": 1,
+            "n": 48,
+            "opponent": "risk"
+          },
+          {
+            "delta_mean": 0.08333333333333333,
+            "heldout": 1,
+            "n": 48,
+            "opponent": "curious"
+          },
+          {
+            "delta_mean": 0.1875,
+            "heldout": 2,
+            "n": 48,
+            "opponent": "capture"
+          },
+          {
+            "delta_mean": 0.0,
+            "heldout": 2,
+            "n": 48,
+            "opponent": "risk"
+          },
+          {
+            "delta_mean": 0.041666666666666664,
+            "heldout": 2,
+            "n": 48,
+            "opponent": "curious"
+          }
+        ]
+      },
+      "pred_lava_steps": {
+        "all_groups_better": false,
+        "delta_mean": -1.4212962962962965,
+        "groups": [
+          {
+            "delta_mean": -2.9375,
+            "heldout": 0,
+            "n": 48,
+            "opponent": "capture"
+          },
+          {
+            "delta_mean": 0.0,
+            "heldout": 0,
+            "n": 48,
+            "opponent": "risk"
+          },
+          {
+            "delta_mean": -1.3541666666666667,
+            "heldout": 0,
+            "n": 48,
+            "opponent": "curious"
+          },
+          {
+            "delta_mean": -1.9166666666666667,
+            "heldout": 1,
+            "n": 48,
+            "opponent": "capture"
+          },
+          {
+            "delta_mean": 0.0,
+            "heldout": 1,
+            "n": 48,
+            "opponent": "risk"
+          },
+          {
+            "delta_mean": -0.2916666666666667,
+            "heldout": 1,
+            "n": 48,
+            "opponent": "curious"
+          },
+          {
+            "delta_mean": -5.958333333333333,
+            "heldout": 2,
+            "n": 48,
+            "opponent": "capture"
+          },
+          {
+            "delta_mean": 0.0,
+            "heldout": 2,
+            "n": 48,
+            "opponent": "risk"
+          },
+          {
+            "delta_mean": -0.3333333333333333,
+            "heldout": 2,
+            "n": 48,
+            "opponent": "curious"
+          }
+        ]
+      },
+      "prey_lava_steps": {
+        "all_groups_better": false,
+        "delta_mean": -1.0949074074074074,
+        "groups": [
+          {
+            "delta_mean": -0.3541666666666667,
+            "heldout": 0,
+            "n": 48,
+            "opponent": "capture"
+          },
+          {
+            "delta_mean": 0.10416666666666667,
+            "heldout": 0,
+            "n": 48,
+            "opponent": "risk"
+          },
+          {
+            "delta_mean": 0.3125,
+            "heldout": 0,
+            "n": 48,
+            "opponent": "curious"
+          },
+          {
+            "delta_mean": -4.020833333333333,
+            "heldout": 1,
+            "n": 48,
+            "opponent": "capture"
+          },
+          {
+            "delta_mean": -0.041666666666666664,
+            "heldout": 1,
+            "n": 48,
+            "opponent": "risk"
+          },
+          {
+            "delta_mean": -1.75,
+            "heldout": 1,
+            "n": 48,
+            "opponent": "curious"
+          },
+          {
+            "delta_mean": -4.375,
+            "heldout": 2,
+            "n": 48,
+            "opponent": "capture"
+          },
+          {
+            "delta_mean": 0.6458333333333334,
+            "heldout": 2,
+            "n": 48,
+            "opponent": "risk"
+          },
+          {
+            "delta_mean": -0.375,
+            "heldout": 2,
+            "n": 48,
+            "opponent": "curious"
+          }
+        ]
+      },
+      "resources_collected": {
+        "all_groups_better": false,
+        "delta_mean": -0.20833333333333337,
+        "groups": [
+          {
+            "delta_mean": -0.375,
+            "heldout": 0,
+            "n": 48,
+            "opponent": "capture"
+          },
+          {
+            "delta_mean": 0.0,
+            "heldout": 0,
+            "n": 48,
+            "opponent": "risk"
+          },
+          {
+            "delta_mean": -0.020833333333333332,
+            "heldout": 0,
+            "n": 48,
+            "opponent": "curious"
+          },
+          {
+            "delta_mean": -0.5833333333333334,
+            "heldout": 1,
+            "n": 48,
+            "opponent": "capture"
+          },
+          {
+            "delta_mean": 0.020833333333333332,
+            "heldout": 1,
+            "n": 48,
+            "opponent": "risk"
+          },
+          {
+            "delta_mean": -0.25,
+            "heldout": 1,
+            "n": 48,
+            "opponent": "curious"
+          },
+          {
+            "delta_mean": -0.8333333333333334,
+            "heldout": 2,
+            "n": 48,
+            "opponent": "capture"
+          },
+          {
+            "delta_mean": 0.0,
+            "heldout": 2,
+            "n": 48,
+            "opponent": "risk"
+          },
+          {
+            "delta_mean": 0.16666666666666666,
+            "heldout": 2,
+            "n": 48,
+            "opponent": "curious"
+          }
+        ]
+      },
+      "survival_time": {
+        "all_groups_better": false,
+        "delta_mean": -6.083333333333333,
+        "groups": [
+          {
+            "delta_mean": -12.0,
+            "heldout": 0,
+            "n": 48,
+            "opponent": "capture"
+          },
+          {
+            "delta_mean": 0.0,
+            "heldout": 0,
+            "n": 48,
+            "opponent": "risk"
+          },
+          {
+            "delta_mean": -4.833333333333333,
+            "heldout": 0,
+            "n": 48,
+            "opponent": "curious"
+          },
+          {
+            "delta_mean": -16.208333333333332,
+            "heldout": 1,
+            "n": 48,
+            "opponent": "capture"
+          },
+          {
+            "delta_mean": 0.0,
+            "heldout": 1,
+            "n": 48,
+            "opponent": "risk"
+          },
+          {
+            "delta_mean": -5.895833333333333,
+            "heldout": 1,
+            "n": 48,
+            "opponent": "curious"
+          },
+          {
+            "delta_mean": -12.8125,
+            "heldout": 2,
+            "n": 48,
+            "opponent": "capture"
+          },
+          {
+            "delta_mean": 0.0,
+            "heldout": 2,
+            "n": 48,
+            "opponent": "risk"
+          },
+          {
+            "delta_mean": -3.0,
+            "heldout": 2,
+            "n": 48,
+            "opponent": "curious"
+          }
+        ]
+      }
+    },
+    "planner_bc_oracle_correct_vs_wrong": {
+      "blue_return": {
+        "all_groups_better": false,
+        "delta_mean": 2.6165641877386303,
+        "groups": [
+          {
+            "delta_mean": 2.8784769773483276,
+            "heldout": 0,
+            "n": 48,
+            "opponent": "capture"
+          },
+          {
+            "delta_mean": 0.21322139104207358,
+            "heldout": 0,
+            "n": 48,
+            "opponent": "risk"
+          },
+          {
+            "delta_mean": 5.402049700419108,
+            "heldout": 0,
+            "n": 48,
+            "opponent": "curious"
+          },
+          {
+            "delta_mean": 3.8876777788003287,
+            "heldout": 1,
+            "n": 48,
+            "opponent": "capture"
+          },
+          {
+            "delta_mean": 0.42423439025878906,
+            "heldout": 1,
+            "n": 48,
+            "opponent": "risk"
+          },
+          {
+            "delta_mean": 2.333131084839503,
+            "heldout": 1,
+            "n": 48,
+            "opponent": "curious"
+          },
+          {
+            "delta_mean": 5.001754482587178,
+            "heldout": 2,
+            "n": 48,
+            "opponent": "capture"
+          },
+          {
+            "delta_mean": -0.20833333333333334,
+            "heldout": 2,
+            "n": 48,
+            "opponent": "risk"
+          },
+          {
+            "delta_mean": 3.6168652176856995,
+            "heldout": 2,
+            "n": 48,
+            "opponent": "curious"
+          }
+        ]
+      },
+      "captured": {
+        "all_groups_better": false,
+        "delta_mean": -0.1087962962962963,
+        "groups": [
+          {
+            "delta_mean": -0.14583333333333334,
+            "heldout": 0,
+            "n": 48,
+            "opponent": "capture"
+          },
+          {
+            "delta_mean": 0.0,
+            "heldout": 0,
+            "n": 48,
+            "opponent": "risk"
+          },
+          {
+            "delta_mean": -0.16666666666666666,
+            "heldout": 0,
+            "n": 48,
+            "opponent": "curious"
+          },
+          {
+            "delta_mean": -0.14583333333333334,
+            "heldout": 1,
+            "n": 48,
+            "opponent": "capture"
+          },
+          {
+            "delta_mean": 0.0,
+            "heldout": 1,
+            "n": 48,
+            "opponent": "risk"
+          },
+          {
+            "delta_mean": -0.10416666666666667,
+            "heldout": 1,
+            "n": 48,
+            "opponent": "curious"
+          },
+          {
+            "delta_mean": -0.2916666666666667,
+            "heldout": 2,
+            "n": 48,
+            "opponent": "capture"
+          },
+          {
+            "delta_mean": -0.020833333333333332,
+            "heldout": 2,
+            "n": 48,
+            "opponent": "risk"
+          },
+          {
+            "delta_mean": -0.10416666666666667,
+            "heldout": 2,
+            "n": 48,
+            "opponent": "curious"
+          }
+        ]
+      },
+      "pred_lava_steps": {
+        "all_groups_better": false,
+        "delta_mean": 1.6319444444444446,
+        "groups": [
+          {
+            "delta_mean": 2.6041666666666665,
+            "heldout": 0,
+            "n": 48,
+            "opponent": "capture"
+          },
+          {
+            "delta_mean": 0.0,
+            "heldout": 0,
+            "n": 48,
+            "opponent": "risk"
+          },
+          {
+            "delta_mean": 0.6666666666666666,
+            "heldout": 0,
+            "n": 48,
+            "opponent": "curious"
+          },
+          {
+            "delta_mean": 5.229166666666667,
+            "heldout": 1,
+            "n": 48,
+            "opponent": "capture"
+          },
+          {
+            "delta_mean": 0.0,
+            "heldout": 1,
+            "n": 48,
+            "opponent": "risk"
+          },
+          {
+            "delta_mean": 1.8333333333333333,
+            "heldout": 1,
+            "n": 48,
+            "opponent": "curious"
+          },
+          {
+            "delta_mean": 3.0833333333333335,
+            "heldout": 2,
+            "n": 48,
+            "opponent": "capture"
+          },
+          {
+            "delta_mean": 0.0,
+            "heldout": 2,
+            "n": 48,
+            "opponent": "risk"
+          },
+          {
+            "delta_mean": 1.2708333333333333,
+            "heldout": 2,
+            "n": 48,
+            "opponent": "curious"
+          }
+        ]
+      },
+      "prey_lava_steps": {
+        "all_groups_better": false,
+        "delta_mean": 1.6851851851851851,
+        "groups": [
+          {
+            "delta_mean": 2.4791666666666665,
+            "heldout": 0,
+            "n": 48,
+            "opponent": "capture"
+          },
+          {
+            "delta_mean": 1.375,
+            "heldout": 0,
+            "n": 48,
+            "opponent": "risk"
+          },
+          {
+            "delta_mean": 4.5,
+            "heldout": 0,
+            "n": 48,
+            "opponent": "curious"
+          },
+          {
+            "delta_mean": 2.25,
+            "heldout": 1,
+            "n": 48,
+            "opponent": "capture"
+          },
+          {
+            "delta_mean": -1.6041666666666667,
+            "heldout": 1,
+            "n": 48,
+            "opponent": "risk"
+          },
+          {
+            "delta_mean": 0.7083333333333334,
+            "heldout": 1,
+            "n": 48,
+            "opponent": "curious"
+          },
+          {
+            "delta_mean": 3.0833333333333335,
+            "heldout": 2,
+            "n": 48,
+            "opponent": "capture"
+          },
+          {
+            "delta_mean": 0.5625,
+            "heldout": 2,
+            "n": 48,
+            "opponent": "risk"
+          },
+          {
+            "delta_mean": 1.8125,
+            "heldout": 2,
+            "n": 48,
+            "opponent": "curious"
+          }
+        ]
+      },
+      "resources_collected": {
+        "all_groups_better": false,
+        "delta_mean": 0.31018518518518523,
+        "groups": [
+          {
+            "delta_mean": 0.2916666666666667,
+            "heldout": 0,
+            "n": 48,
+            "opponent": "capture"
+          },
+          {
+            "delta_mean": 0.041666666666666664,
+            "heldout": 0,
+            "n": 48,
+            "opponent": "risk"
+          },
+          {
+            "delta_mean": 0.75,
+            "heldout": 0,
+            "n": 48,
+            "opponent": "curious"
+          },
+          {
+            "delta_mean": 0.5,
+            "heldout": 1,
+            "n": 48,
+            "opponent": "capture"
+          },
+          {
+            "delta_mean": 0.08333333333333333,
+            "heldout": 1,
+            "n": 48,
+            "opponent": "risk"
+          },
+          {
+            "delta_mean": 0.2708333333333333,
+            "heldout": 1,
+            "n": 48,
+            "opponent": "curious"
+          },
+          {
+            "delta_mean": 0.4166666666666667,
+            "heldout": 2,
+            "n": 48,
+            "opponent": "capture"
+          },
+          {
+            "delta_mean": -0.08333333333333333,
+            "heldout": 2,
+            "n": 48,
+            "opponent": "risk"
+          },
+          {
+            "delta_mean": 0.5208333333333334,
+            "heldout": 2,
+            "n": 48,
+            "opponent": "curious"
+          }
+        ]
+      },
+      "survival_time": {
+        "all_groups_better": false,
+        "delta_mean": 6.9282407407407405,
+        "groups": [
+          {
+            "delta_mean": 9.666666666666666,
+            "heldout": 0,
+            "n": 48,
+            "opponent": "capture"
+          },
+          {
+            "delta_mean": 0.0,
+            "heldout": 0,
+            "n": 48,
+            "opponent": "risk"
+          },
+          {
+            "delta_mean": 9.75,
+            "heldout": 0,
+            "n": 48,
+            "opponent": "curious"
+          },
+          {
+            "delta_mean": 14.854166666666666,
+            "heldout": 1,
+            "n": 48,
+            "opponent": "capture"
+          },
+          {
+            "delta_mean": 0.0,
+            "heldout": 1,
+            "n": 48,
+            "opponent": "risk"
+          },
+          {
+            "delta_mean": 5.520833333333333,
+            "heldout": 1,
+            "n": 48,
+            "opponent": "curious"
+          },
+          {
+            "delta_mean": 16.8125,
+            "heldout": 2,
+            "n": 48,
+            "opponent": "capture"
+          },
+          {
+            "delta_mean": 0.16666666666666666,
+            "heldout": 2,
+            "n": 48,
+            "opponent": "risk"
+          },
+          {
+            "delta_mean": 5.583333333333333,
+            "heldout": 2,
+            "n": 48,
+            "opponent": "curious"
+          }
+        ]
+      }
+    },
+    "planner_bc_oracle_correct_vs_zero": {
+      "blue_return": {
+        "all_groups_better": false,
+        "delta_mean": 1.606864183037369,
+        "groups": [
+          {
+            "delta_mean": 3.4006596207618713,
+            "heldout": 0,
+            "n": 48,
+            "opponent": "capture"
+          },
+          {
+            "delta_mean": 0.9375,
+            "heldout": 0,
+            "n": 48,
+            "opponent": "risk"
+          },
+          {
+            "delta_mean": 2.299851735432943,
+            "heldout": 0,
+            "n": 48,
+            "opponent": "curious"
+          },
+          {
+            "delta_mean": 1.5190869669119518,
+            "heldout": 1,
+            "n": 48,
+            "opponent": "capture"
+          },
+          {
+            "delta_mean": 1.1534521579742432,
+            "heldout": 1,
+            "n": 48,
+            "opponent": "risk"
+          },
+          {
+            "delta_mean": -2.210654685894648,
+            "heldout": 1,
+            "n": 48,
+            "opponent": "curious"
+          },
+          {
+            "delta_mean": 7.0747881432374315,
+            "heldout": 2,
+            "n": 48,
+            "opponent": "capture"
+          },
+          {
+            "delta_mean": -0.9375,
+            "heldout": 2,
+            "n": 48,
+            "opponent": "risk"
+          },
+          {
+            "delta_mean": 1.2245937089125316,
+            "heldout": 2,
+            "n": 48,
+            "opponent": "curious"
+          }
+        ]
+      },
+      "captured": {
+        "all_groups_better": false,
+        "delta_mean": -0.08564814814814815,
+        "groups": [
+          {
+            "delta_mean": -0.14583333333333334,
+            "heldout": 0,
+            "n": 48,
+            "opponent": "capture"
+          },
+          {
+            "delta_mean": -0.020833333333333332,
+            "heldout": 0,
+            "n": 48,
+            "opponent": "risk"
+          },
+          {
+            "delta_mean": -0.0625,
+            "heldout": 0,
+            "n": 48,
+            "opponent": "curious"
+          },
+          {
+            "delta_mean": -0.16666666666666666,
+            "heldout": 1,
+            "n": 48,
+            "opponent": "capture"
+          },
+          {
+            "delta_mean": 0.0,
+            "heldout": 1,
+            "n": 48,
+            "opponent": "risk"
+          },
+          {
+            "delta_mean": -0.020833333333333332,
+            "heldout": 1,
+            "n": 48,
+            "opponent": "curious"
+          },
+          {
+            "delta_mean": -0.3125,
+            "heldout": 2,
+            "n": 48,
+            "opponent": "capture"
+          },
+          {
+            "delta_mean": 0.0,
+            "heldout": 2,
+            "n": 48,
+            "opponent": "risk"
+          },
+          {
+            "delta_mean": -0.041666666666666664,
+            "heldout": 2,
+            "n": 48,
+            "opponent": "curious"
+          }
+        ]
+      },
+      "pred_lava_steps": {
+        "all_groups_better": false,
+        "delta_mean": 1.1180555555555558,
+        "groups": [
+          {
+            "delta_mean": 0.9791666666666666,
+            "heldout": 0,
+            "n": 48,
+            "opponent": "capture"
+          },
+          {
+            "delta_mean": 0.0,
+            "heldout": 0,
+            "n": 48,
+            "opponent": "risk"
+          },
+          {
+            "delta_mean": 0.10416666666666667,
+            "heldout": 0,
+            "n": 48,
+            "opponent": "curious"
+          },
+          {
+            "delta_mean": 1.8541666666666667,
+            "heldout": 1,
+            "n": 48,
+            "opponent": "capture"
+          },
+          {
+            "delta_mean": 0.0,
+            "heldout": 1,
+            "n": 48,
+            "opponent": "risk"
+          },
+          {
+            "delta_mean": 0.6041666666666666,
+            "heldout": 1,
+            "n": 48,
+            "opponent": "curious"
+          },
+          {
+            "delta_mean": 6.125,
+            "heldout": 2,
+            "n": 48,
+            "opponent": "capture"
+          },
+          {
+            "delta_mean": 0.0,
+            "heldout": 2,
+            "n": 48,
+            "opponent": "risk"
+          },
+          {
+            "delta_mean": 0.3958333333333333,
+            "heldout": 2,
+            "n": 48,
+            "opponent": "curious"
+          }
+        ]
+      },
+      "prey_lava_steps": {
+        "all_groups_better": false,
+        "delta_mean": 0.7152777777777778,
+        "groups": [
+          {
+            "delta_mean": 1.625,
+            "heldout": 0,
+            "n": 48,
+            "opponent": "capture"
+          },
+          {
+            "delta_mean": 0.75,
+            "heldout": 0,
+            "n": 48,
+            "opponent": "risk"
+          },
+          {
+            "delta_mean": -0.041666666666666664,
+            "heldout": 0,
+            "n": 48,
+            "opponent": "curious"
+          },
+          {
+            "delta_mean": 0.25,
+            "heldout": 1,
+            "n": 48,
+            "opponent": "capture"
+          },
+          {
+            "delta_mean": -0.16666666666666666,
+            "heldout": 1,
+            "n": 48,
+            "opponent": "risk"
+          },
+          {
+            "delta_mean": -2.9583333333333335,
+            "heldout": 1,
+            "n": 48,
+            "opponent": "curious"
+          },
+          {
+            "delta_mean": 5.479166666666667,
+            "heldout": 2,
+            "n": 48,
+            "opponent": "capture"
+          },
+          {
+            "delta_mean": 0.8125,
+            "heldout": 2,
+            "n": 48,
+            "opponent": "risk"
+          },
+          {
+            "delta_mean": 0.6875,
+            "heldout": 2,
+            "n": 48,
+            "opponent": "curious"
+          }
+        ]
+      },
+      "resources_collected": {
+        "all_groups_better": false,
+        "delta_mean": 0.15046296296296297,
+        "groups": [
+          {
+            "delta_mean": 0.3958333333333333,
+            "heldout": 0,
+            "n": 48,
+            "opponent": "capture"
+          },
+          {
+            "delta_mean": 0.14583333333333334,
+            "heldout": 0,
+            "n": 48,
+            "opponent": "risk"
+          },
+          {
+            "delta_mean": 0.3333333333333333,
+            "heldout": 0,
+            "n": 48,
+            "opponent": "curious"
+          },
+          {
+            "delta_mean": -0.041666666666666664,
+            "heldout": 1,
+            "n": 48,
+            "opponent": "capture"
+          },
+          {
+            "delta_mean": 0.22916666666666666,
+            "heldout": 1,
+            "n": 48,
+            "opponent": "risk"
+          },
+          {
+            "delta_mean": -0.4791666666666667,
+            "heldout": 1,
+            "n": 48,
+            "opponent": "curious"
+          },
+          {
+            "delta_mean": 0.7916666666666666,
+            "heldout": 2,
+            "n": 48,
+            "opponent": "capture"
+          },
+          {
+            "delta_mean": -0.1875,
+            "heldout": 2,
+            "n": 48,
+            "opponent": "risk"
+          },
+          {
+            "delta_mean": 0.16666666666666666,
+            "heldout": 2,
+            "n": 48,
+            "opponent": "curious"
+          }
+        ]
+      },
+      "survival_time": {
+        "all_groups_better": false,
+        "delta_mean": 4.576388888888888,
+        "groups": [
+          {
+            "delta_mean": 9.354166666666666,
+            "heldout": 0,
+            "n": 48,
+            "opponent": "capture"
+          },
+          {
+            "delta_mean": 0.3541666666666667,
+            "heldout": 0,
+            "n": 48,
+            "opponent": "risk"
+          },
+          {
+            "delta_mean": 2.5416666666666665,
+            "heldout": 0,
+            "n": 48,
+            "opponent": "curious"
+          },
+          {
+            "delta_mean": 11.020833333333334,
+            "heldout": 1,
+            "n": 48,
+            "opponent": "capture"
+          },
+          {
+            "delta_mean": 0.0,
+            "heldout": 1,
+            "n": 48,
+            "opponent": "risk"
+          },
+          {
+            "delta_mean": 0.3333333333333333,
+            "heldout": 1,
+            "n": 48,
+            "opponent": "curious"
+          },
+          {
+            "delta_mean": 16.729166666666668,
+            "heldout": 2,
+            "n": 48,
+            "opponent": "capture"
+          },
+          {
+            "delta_mean": 0.0,
+            "heldout": 2,
+            "n": 48,
+            "opponent": "risk"
+          },
+          {
+            "delta_mean": 0.8541666666666666,
+            "heldout": 2,
+            "n": 48,
+            "opponent": "curious"
+          }
+        ]
+      }
+    },
+    "planner_bc_real_online_vs_no_c": {
+      "blue_return": {
+        "all_groups_better": false,
+        "delta_mean": -0.024026056130727065,
+        "groups": [
+          {
+            "delta_mean": -2.099152445793152,
+            "heldout": 0,
+            "n": 48,
+            "opponent": "capture"
+          },
+          {
+            "delta_mean": 0.002764423688252767,
+            "heldout": 0,
+            "n": 48,
+            "opponent": "risk"
+          },
+          {
+            "delta_mean": -0.6174187262852987,
+            "heldout": 0,
+            "n": 48,
+            "opponent": "curious"
+          },
+          {
+            "delta_mean": 0.27083293596903485,
+            "heldout": 1,
+            "n": 48,
+            "opponent": "capture"
+          },
+          {
+            "delta_mean": -0.0022598902384440103,
+            "heldout": 1,
+            "n": 48,
+            "opponent": "risk"
+          },
+          {
+            "delta_mean": 2.1819077730178833,
+            "heldout": 1,
+            "n": 48,
+            "opponent": "curious"
+          },
+          {
+            "delta_mean": 0.541732390721639,
+            "heldout": 2,
+            "n": 48,
+            "opponent": "capture"
+          },
+          {
+            "delta_mean": 0.0,
+            "heldout": 2,
+            "n": 48,
+            "opponent": "risk"
+          },
+          {
+            "delta_mean": -0.49464096625645954,
+            "heldout": 2,
+            "n": 48,
+            "opponent": "curious"
+          }
+        ]
+      },
+      "captured": {
+        "all_groups_better": false,
+        "delta_mean": -0.004629629629629629,
+        "groups": [
+          {
+            "delta_mean": 0.020833333333333332,
+            "heldout": 0,
+            "n": 48,
+            "opponent": "capture"
+          },
+          {
+            "delta_mean": 0.0,
+            "heldout": 0,
+            "n": 48,
+            "opponent": "risk"
+          },
+          {
+            "delta_mean": 0.020833333333333332,
+            "heldout": 0,
+            "n": 48,
+            "opponent": "curious"
+          },
+          {
+            "delta_mean": 0.0,
+            "heldout": 1,
+            "n": 48,
+            "opponent": "capture"
+          },
+          {
+            "delta_mean": 0.0,
+            "heldout": 1,
+            "n": 48,
+            "opponent": "risk"
+          },
+          {
+            "delta_mean": -0.020833333333333332,
+            "heldout": 1,
+            "n": 48,
+            "opponent": "curious"
+          },
+          {
+            "delta_mean": -0.020833333333333332,
+            "heldout": 2,
+            "n": 48,
+            "opponent": "capture"
+          },
+          {
+            "delta_mean": 0.0,
+            "heldout": 2,
+            "n": 48,
+            "opponent": "risk"
+          },
+          {
+            "delta_mean": -0.041666666666666664,
+            "heldout": 2,
+            "n": 48,
+            "opponent": "curious"
+          }
+        ]
+      },
+      "pred_lava_steps": {
+        "all_groups_better": false,
+        "delta_mean": 0.2939814814814815,
+        "groups": [
+          {
+            "delta_mean": -1.1458333333333333,
+            "heldout": 0,
+            "n": 48,
+            "opponent": "capture"
+          },
+          {
+            "delta_mean": 0.0,
+            "heldout": 0,
+            "n": 48,
+            "opponent": "risk"
+          },
+          {
+            "delta_mean": -0.5625,
+            "heldout": 0,
+            "n": 48,
+            "opponent": "curious"
+          },
+          {
+            "delta_mean": 0.5,
+            "heldout": 1,
+            "n": 48,
+            "opponent": "capture"
+          },
+          {
+            "delta_mean": 0.0,
+            "heldout": 1,
+            "n": 48,
+            "opponent": "risk"
+          },
+          {
+            "delta_mean": 0.4375,
+            "heldout": 1,
+            "n": 48,
+            "opponent": "curious"
+          },
+          {
+            "delta_mean": 2.3958333333333335,
+            "heldout": 2,
+            "n": 48,
+            "opponent": "capture"
+          },
+          {
+            "delta_mean": 0.0,
+            "heldout": 2,
+            "n": 48,
+            "opponent": "risk"
+          },
+          {
+            "delta_mean": 1.0208333333333333,
+            "heldout": 2,
+            "n": 48,
+            "opponent": "curious"
+          }
+        ]
+      },
+      "prey_lava_steps": {
+        "all_groups_better": false,
+        "delta_mean": -0.08564814814814817,
+        "groups": [
+          {
+            "delta_mean": -0.5208333333333334,
+            "heldout": 0,
+            "n": 48,
+            "opponent": "capture"
+          },
+          {
+            "delta_mean": 0.14583333333333334,
+            "heldout": 0,
+            "n": 48,
+            "opponent": "risk"
+          },
+          {
+            "delta_mean": -1.5,
+            "heldout": 0,
+            "n": 48,
+            "opponent": "curious"
+          },
+          {
+            "delta_mean": 0.875,
+            "heldout": 1,
+            "n": 48,
+            "opponent": "capture"
+          },
+          {
+            "delta_mean": -0.3333333333333333,
+            "heldout": 1,
+            "n": 48,
+            "opponent": "risk"
+          },
+          {
+            "delta_mean": 0.625,
+            "heldout": 1,
+            "n": 48,
+            "opponent": "curious"
+          },
+          {
+            "delta_mean": 2.0833333333333335,
+            "heldout": 2,
+            "n": 48,
+            "opponent": "capture"
+          },
+          {
+            "delta_mean": 0.4166666666666667,
+            "heldout": 2,
+            "n": 48,
+            "opponent": "risk"
+          },
+          {
+            "delta_mean": -2.5625,
+            "heldout": 2,
+            "n": 48,
+            "opponent": "curious"
+          }
+        ]
+      },
+      "resources_collected": {
+        "all_groups_better": false,
+        "delta_mean": -0.013888888888888888,
+        "groups": [
+          {
+            "delta_mean": -0.375,
+            "heldout": 0,
+            "n": 48,
+            "opponent": "capture"
+          },
+          {
+            "delta_mean": 0.0,
+            "heldout": 0,
+            "n": 48,
+            "opponent": "risk"
+          },
+          {
+            "delta_mean": -0.08333333333333333,
+            "heldout": 0,
+            "n": 48,
+            "opponent": "curious"
+          },
+          {
+            "delta_mean": 0.0625,
+            "heldout": 1,
+            "n": 48,
+            "opponent": "capture"
+          },
+          {
+            "delta_mean": 0.0,
+            "heldout": 1,
+            "n": 48,
+            "opponent": "risk"
+          },
+          {
+            "delta_mean": 0.3958333333333333,
+            "heldout": 1,
+            "n": 48,
+            "opponent": "curious"
+          },
+          {
+            "delta_mean": 0.0625,
+            "heldout": 2,
+            "n": 48,
+            "opponent": "capture"
+          },
+          {
+            "delta_mean": 0.0,
+            "heldout": 2,
+            "n": 48,
+            "opponent": "risk"
+          },
+          {
+            "delta_mean": -0.1875,
+            "heldout": 2,
+            "n": 48,
+            "opponent": "curious"
+          }
+        ]
+      },
+      "survival_time": {
+        "all_groups_better": false,
+        "delta_mean": 0.19212962962962965,
+        "groups": [
+          {
+            "delta_mean": 1.25,
+            "heldout": 0,
+            "n": 48,
+            "opponent": "capture"
+          },
+          {
+            "delta_mean": 0.0,
+            "heldout": 0,
+            "n": 48,
+            "opponent": "risk"
+          },
+          {
+            "delta_mean": -1.4583333333333333,
+            "heldout": 0,
+            "n": 48,
+            "opponent": "curious"
+          },
+          {
+            "delta_mean": 0.0625,
+            "heldout": 1,
+            "n": 48,
+            "opponent": "capture"
+          },
+          {
+            "delta_mean": 0.0,
+            "heldout": 1,
+            "n": 48,
+            "opponent": "risk"
+          },
+          {
+            "delta_mean": 1.125,
+            "heldout": 1,
+            "n": 48,
+            "opponent": "curious"
+          },
+          {
+            "delta_mean": -1.1666666666666667,
+            "heldout": 2,
+            "n": 48,
+            "opponent": "capture"
+          },
+          {
+            "delta_mean": 0.0,
+            "heldout": 2,
+            "n": 48,
+            "opponent": "risk"
+          },
+          {
+            "delta_mean": 1.9166666666666667,
+            "heldout": 2,
+            "n": 48,
+            "opponent": "curious"
+          }
+        ]
+      }
+    },
+    "planner_bc_real_online_vs_shuffled": {
+      "blue_return": {
+        "all_groups_better": false,
+        "delta_mean": -0.27165308594703674,
+        "groups": [
+          {
+            "delta_mean": -0.03843464454015096,
+            "heldout": 0,
+            "n": 48,
+            "opponent": "capture"
+          },
+          {
+            "delta_mean": 0.20833333333333334,
+            "heldout": 0,
+            "n": 48,
+            "opponent": "risk"
+          },
+          {
+            "delta_mean": 0.20193948348363241,
+            "heldout": 0,
+            "n": 48,
+            "opponent": "curious"
+          },
+          {
+            "delta_mean": -1.592594176530838,
+            "heldout": 1,
+            "n": 48,
+            "opponent": "capture"
+          },
+          {
+            "delta_mean": 0.5153307120005289,
+            "heldout": 1,
+            "n": 48,
+            "opponent": "risk"
+          },
+          {
+            "delta_mean": 0.9440293709437052,
+            "heldout": 1,
+            "n": 48,
+            "opponent": "curious"
+          },
+          {
+            "delta_mean": -0.8291717569033304,
+            "heldout": 2,
+            "n": 48,
+            "opponent": "capture"
+          },
+          {
+            "delta_mean": 0.0,
+            "heldout": 2,
+            "n": 48,
+            "opponent": "risk"
+          },
+          {
+            "delta_mean": -1.8543100953102112,
+            "heldout": 2,
+            "n": 48,
+            "opponent": "curious"
+          }
+        ]
+      },
+      "captured": {
+        "all_groups_better": false,
+        "delta_mean": -0.0023148148148148156,
+        "groups": [
+          {
+            "delta_mean": -0.041666666666666664,
+            "heldout": 0,
+            "n": 48,
+            "opponent": "capture"
+          },
+          {
+            "delta_mean": 0.0,
+            "heldout": 0,
+            "n": 48,
+            "opponent": "risk"
+          },
+          {
+            "delta_mean": -0.041666666666666664,
+            "heldout": 0,
+            "n": 48,
+            "opponent": "curious"
+          },
+          {
+            "delta_mean": 0.020833333333333332,
+            "heldout": 1,
+            "n": 48,
+            "opponent": "capture"
+          },
+          {
+            "delta_mean": 0.0,
+            "heldout": 1,
+            "n": 48,
+            "opponent": "risk"
+          },
+          {
+            "delta_mean": 0.020833333333333332,
+            "heldout": 1,
+            "n": 48,
+            "opponent": "curious"
+          },
+          {
+            "delta_mean": 0.0,
+            "heldout": 2,
+            "n": 48,
+            "opponent": "capture"
+          },
+          {
+            "delta_mean": 0.0,
+            "heldout": 2,
+            "n": 48,
+            "opponent": "risk"
+          },
+          {
+            "delta_mean": 0.020833333333333332,
+            "heldout": 2,
+            "n": 48,
+            "opponent": "curious"
+          }
+        ]
+      },
+      "pred_lava_steps": {
+        "all_groups_better": false,
+        "delta_mean": -0.22685185185185183,
+        "groups": [
+          {
+            "delta_mean": -1.6458333333333333,
+            "heldout": 0,
+            "n": 48,
+            "opponent": "capture"
+          },
+          {
+            "delta_mean": 0.0,
+            "heldout": 0,
+            "n": 48,
+            "opponent": "risk"
+          },
+          {
+            "delta_mean": 0.4791666666666667,
+            "heldout": 0,
+            "n": 48,
+            "opponent": "curious"
+          },
+          {
+            "delta_mean": -0.5208333333333334,
+            "heldout": 1,
+            "n": 48,
+            "opponent": "capture"
+          },
+          {
+            "delta_mean": 0.0,
+            "heldout": 1,
+            "n": 48,
+            "opponent": "risk"
+          },
+          {
+            "delta_mean": -0.020833333333333332,
+            "heldout": 1,
+            "n": 48,
+            "opponent": "curious"
+          },
+          {
+            "delta_mean": -0.5416666666666666,
+            "heldout": 2,
+            "n": 48,
+            "opponent": "capture"
+          },
+          {
+            "delta_mean": 0.0,
+            "heldout": 2,
+            "n": 48,
+            "opponent": "risk"
+          },
+          {
+            "delta_mean": 0.20833333333333334,
+            "heldout": 2,
+            "n": 48,
+            "opponent": "curious"
+          }
+        ]
+      },
+      "prey_lava_steps": {
+        "all_groups_better": false,
+        "delta_mean": -0.27314814814814814,
+        "groups": [
+          {
+            "delta_mean": -1.0625,
+            "heldout": 0,
+            "n": 48,
+            "opponent": "capture"
+          },
+          {
+            "delta_mean": 0.5,
+            "heldout": 0,
+            "n": 48,
+            "opponent": "risk"
+          },
+          {
+            "delta_mean": 0.22916666666666666,
+            "heldout": 0,
+            "n": 48,
+            "opponent": "curious"
+          },
+          {
+            "delta_mean": 0.3958333333333333,
+            "heldout": 1,
+            "n": 48,
+            "opponent": "capture"
+          },
+          {
+            "delta_mean": -0.5416666666666666,
+            "heldout": 1,
+            "n": 48,
+            "opponent": "risk"
+          },
+          {
+            "delta_mean": 1.0,
+            "heldout": 1,
+            "n": 48,
+            "opponent": "curious"
+          },
+          {
+            "delta_mean": -0.4166666666666667,
+            "heldout": 2,
+            "n": 48,
+            "opponent": "capture"
+          },
+          {
+            "delta_mean": -0.22916666666666666,
+            "heldout": 2,
+            "n": 48,
+            "opponent": "risk"
+          },
+          {
+            "delta_mean": -2.3333333333333335,
+            "heldout": 2,
+            "n": 48,
+            "opponent": "curious"
+          }
+        ]
+      },
+      "resources_collected": {
+        "all_groups_better": false,
+        "delta_mean": -0.06018518518518518,
+        "groups": [
+          {
+            "delta_mean": -0.10416666666666667,
+            "heldout": 0,
+            "n": 48,
+            "opponent": "capture"
+          },
+          {
+            "delta_mean": 0.041666666666666664,
+            "heldout": 0,
+            "n": 48,
+            "opponent": "risk"
+          },
+          {
+            "delta_mean": -0.041666666666666664,
+            "heldout": 0,
+            "n": 48,
+            "opponent": "curious"
+          },
+          {
+            "delta_mean": -0.2708333333333333,
+            "heldout": 1,
+            "n": 48,
+            "opponent": "capture"
+          },
+          {
+            "delta_mean": 0.10416666666666667,
+            "heldout": 1,
+            "n": 48,
+            "opponent": "risk"
+          },
+          {
+            "delta_mean": 0.22916666666666666,
+            "heldout": 1,
+            "n": 48,
+            "opponent": "curious"
+          },
+          {
+            "delta_mean": -0.16666666666666666,
+            "heldout": 2,
+            "n": 48,
+            "opponent": "capture"
+          },
+          {
+            "delta_mean": 0.0,
+            "heldout": 2,
+            "n": 48,
+            "opponent": "risk"
+          },
+          {
+            "delta_mean": -0.3333333333333333,
+            "heldout": 2,
+            "n": 48,
+            "opponent": "curious"
+          }
+        ]
+      },
+      "survival_time": {
+        "all_groups_better": false,
+        "delta_mean": -0.6435185185185185,
+        "groups": [
+          {
+            "delta_mean": 1.375,
+            "heldout": 0,
+            "n": 48,
+            "opponent": "capture"
+          },
+          {
+            "delta_mean": 0.0,
+            "heldout": 0,
+            "n": 48,
+            "opponent": "risk"
+          },
+          {
+            "delta_mean": 1.4583333333333333,
+            "heldout": 0,
+            "n": 48,
+            "opponent": "curious"
+          },
+          {
+            "delta_mean": -1.4375,
+            "heldout": 1,
+            "n": 48,
+            "opponent": "capture"
+          },
+          {
+            "delta_mean": 0.0,
+            "heldout": 1,
+            "n": 48,
+            "opponent": "risk"
+          },
+          {
+            "delta_mean": -1.4583333333333333,
+            "heldout": 1,
+            "n": 48,
+            "opponent": "curious"
+          },
+          {
+            "delta_mean": -4.395833333333333,
+            "heldout": 2,
+            "n": 48,
+            "opponent": "capture"
+          },
+          {
+            "delta_mean": 0.0,
+            "heldout": 2,
+            "n": 48,
+            "opponent": "risk"
+          },
+          {
+            "delta_mean": -1.3333333333333333,
+            "heldout": 2,
+            "n": 48,
+            "opponent": "curious"
+          }
+        ]
+      }
+    },
+    "planner_bc_real_online_vs_true_red": {
+      "blue_return": {
+        "all_groups_better": false,
+        "delta_mean": -3.664150895895782,
+        "groups": [
+          {
+            "delta_mean": -9.659031768639883,
+            "heldout": 0,
+            "n": 48,
+            "opponent": "capture"
+          },
+          {
+            "delta_mean": 0.0,
+            "heldout": 0,
+            "n": 48,
+            "opponent": "risk"
+          },
+          {
+            "delta_mean": -0.7112067937850952,
+            "heldout": 0,
+            "n": 48,
+            "opponent": "curious"
+          },
+          {
+            "delta_mean": -8.111513117949167,
+            "heldout": 1,
+            "n": 48,
+            "opponent": "capture"
+          },
+          {
+            "delta_mean": 0.20283071200052896,
+            "heldout": 1,
+            "n": 48,
+            "opponent": "risk"
+          },
+          {
+            "delta_mean": -1.648853600025177,
+            "heldout": 1,
+            "n": 48,
+            "opponent": "curious"
+          },
+          {
+            "delta_mean": -9.972843984762827,
+            "heldout": 2,
+            "n": 48,
+            "opponent": "capture"
+          },
+          {
+            "delta_mean": 0.0,
+            "heldout": 2,
+            "n": 48,
+            "opponent": "risk"
+          },
+          {
+            "delta_mean": -3.076739509900411,
+            "heldout": 2,
+            "n": 48,
+            "opponent": "curious"
+          }
+        ]
+      },
+      "captured": {
+        "all_groups_better": false,
+        "delta_mean": 0.1712962962962963,
+        "groups": [
+          {
+            "delta_mean": 0.4375,
+            "heldout": 0,
+            "n": 48,
+            "opponent": "capture"
+          },
+          {
+            "delta_mean": 0.0,
+            "heldout": 0,
+            "n": 48,
+            "opponent": "risk"
+          },
+          {
+            "delta_mean": 0.041666666666666664,
+            "heldout": 0,
+            "n": 48,
+            "opponent": "curious"
+          },
+          {
+            "delta_mean": 0.4166666666666667,
+            "heldout": 1,
+            "n": 48,
+            "opponent": "capture"
+          },
+          {
+            "delta_mean": 0.0,
+            "heldout": 1,
+            "n": 48,
+            "opponent": "risk"
+          },
+          {
+            "delta_mean": 0.125,
+            "heldout": 1,
+            "n": 48,
+            "opponent": "curious"
+          },
+          {
+            "delta_mean": 0.4791666666666667,
+            "heldout": 2,
+            "n": 48,
+            "opponent": "capture"
+          },
+          {
+            "delta_mean": 0.0,
+            "heldout": 2,
+            "n": 48,
+            "opponent": "risk"
+          },
+          {
+            "delta_mean": 0.041666666666666664,
+            "heldout": 2,
+            "n": 48,
+            "opponent": "curious"
+          }
+        ]
+      },
+      "pred_lava_steps": {
+        "all_groups_better": false,
+        "delta_mean": -2.1990740740740744,
+        "groups": [
+          {
+            "delta_mean": -7.020833333333333,
+            "heldout": 0,
+            "n": 48,
+            "opponent": "capture"
+          },
+          {
+            "delta_mean": 0.0,
+            "heldout": 0,
+            "n": 48,
+            "opponent": "risk"
+          },
+          {
+            "delta_mean": -0.6041666666666666,
+            "heldout": 0,
+            "n": 48,
+            "opponent": "curious"
+          },
+          {
+            "delta_mean": -3.7291666666666665,
+            "heldout": 1,
+            "n": 48,
+            "opponent": "capture"
+          },
+          {
+            "delta_mean": 0.0,
+            "heldout": 1,
+            "n": 48,
+            "opponent": "risk"
+          },
+          {
+            "delta_mean": -1.1875,
+            "heldout": 1,
+            "n": 48,
+            "opponent": "curious"
+          },
+          {
+            "delta_mean": -7.354166666666667,
+            "heldout": 2,
+            "n": 48,
+            "opponent": "capture"
+          },
+          {
+            "delta_mean": 0.0,
+            "heldout": 2,
+            "n": 48,
+            "opponent": "risk"
+          },
+          {
+            "delta_mean": 0.10416666666666667,
+            "heldout": 2,
+            "n": 48,
+            "opponent": "curious"
+          }
+        ]
+      },
+      "prey_lava_steps": {
+        "all_groups_better": false,
+        "delta_mean": -1.4027777777777777,
+        "groups": [
+          {
+            "delta_mean": -3.5416666666666665,
+            "heldout": 0,
+            "n": 48,
+            "opponent": "capture"
+          },
+          {
+            "delta_mean": 0.125,
+            "heldout": 0,
+            "n": 48,
+            "opponent": "risk"
+          },
+          {
+            "delta_mean": 2.2291666666666665,
+            "heldout": 0,
+            "n": 48,
+            "opponent": "curious"
+          },
+          {
+            "delta_mean": -3.4166666666666665,
+            "heldout": 1,
+            "n": 48,
+            "opponent": "capture"
+          },
+          {
+            "delta_mean": 0.2708333333333333,
+            "heldout": 1,
+            "n": 48,
+            "opponent": "risk"
+          },
+          {
+            "delta_mean": -0.9791666666666666,
+            "heldout": 1,
+            "n": 48,
+            "opponent": "curious"
+          },
+          {
+            "delta_mean": -5.958333333333333,
+            "heldout": 2,
+            "n": 48,
+            "opponent": "capture"
+          },
+          {
+            "delta_mean": 0.4166666666666667,
+            "heldout": 2,
+            "n": 48,
+            "opponent": "risk"
+          },
+          {
+            "delta_mean": -1.7708333333333333,
+            "heldout": 2,
+            "n": 48,
+            "opponent": "curious"
+          }
+        ]
+      },
+      "resources_collected": {
+        "all_groups_better": false,
+        "delta_mean": -0.3935185185185185,
+        "groups": [
+          {
+            "delta_mean": -1.0625,
+            "heldout": 0,
+            "n": 48,
+            "opponent": "capture"
+          },
+          {
+            "delta_mean": 0.0,
+            "heldout": 0,
+            "n": 48,
+            "opponent": "risk"
+          },
+          {
+            "delta_mean": -0.0625,
+            "heldout": 0,
+            "n": 48,
+            "opponent": "curious"
+          },
+          {
+            "delta_mean": -0.7916666666666666,
+            "heldout": 1,
+            "n": 48,
+            "opponent": "capture"
+          },
+          {
+            "delta_mean": 0.041666666666666664,
+            "heldout": 1,
+            "n": 48,
+            "opponent": "risk"
+          },
+          {
+            "delta_mean": -0.08333333333333333,
+            "heldout": 1,
+            "n": 48,
+            "opponent": "curious"
+          },
+          {
+            "delta_mean": -1.0416666666666667,
+            "heldout": 2,
+            "n": 48,
+            "opponent": "capture"
+          },
+          {
+            "delta_mean": 0.0,
+            "heldout": 2,
+            "n": 48,
+            "opponent": "risk"
+          },
+          {
+            "delta_mean": -0.5416666666666666,
+            "heldout": 2,
+            "n": 48,
+            "opponent": "curious"
+          }
+        ]
+      },
+      "survival_time": {
+        "all_groups_better": false,
+        "delta_mean": -9.819444444444445,
+        "groups": [
+          {
+            "delta_mean": -20.458333333333332,
+            "heldout": 0,
+            "n": 48,
+            "opponent": "capture"
+          },
+          {
+            "delta_mean": 0.0,
+            "heldout": 0,
+            "n": 48,
+            "opponent": "risk"
+          },
+          {
+            "delta_mean": -3.0,
+            "heldout": 0,
+            "n": 48,
+            "opponent": "curious"
+          },
+          {
+            "delta_mean": -24.25,
+            "heldout": 1,
+            "n": 48,
+            "opponent": "capture"
+          },
+          {
+            "delta_mean": 0.0,
+            "heldout": 1,
+            "n": 48,
+            "opponent": "risk"
+          },
+          {
+            "delta_mean": -8.145833333333334,
+            "heldout": 1,
+            "n": 48,
+            "opponent": "curious"
+          },
+          {
+            "delta_mean": -29.604166666666668,
+            "heldout": 2,
+            "n": 48,
+            "opponent": "capture"
+          },
+          {
+            "delta_mean": 0.0,
+            "heldout": 2,
+            "n": 48,
+            "opponent": "risk"
+          },
+          {
+            "delta_mean": -2.9166666666666665,
+            "heldout": 2,
+            "n": 48,
+            "opponent": "curious"
+          }
+        ]
+      }
+    },
+    "planner_bc_real_online_vs_zero": {
+      "blue_return": {
+        "all_groups_better": false,
+        "delta_mean": -0.8099433603110138,
+        "groups": [
+          {
+            "delta_mean": -3.714205741882324,
+            "heldout": 0,
+            "n": 48,
+            "opponent": "capture"
+          },
+          {
+            "delta_mean": 0.5208333333333334,
+            "heldout": 0,
+            "n": 48,
+            "opponent": "risk"
+          },
+          {
+            "delta_mean": 0.7213963667551676,
+            "heldout": 0,
+            "n": 48,
+            "opponent": "curious"
+          },
+          {
+            "delta_mean": 2.336509793996811,
+            "heldout": 1,
+            "n": 48,
+            "opponent": "capture"
+          },
+          {
+            "delta_mean": 0.4173537890116374,
+            "heldout": 1,
+            "n": 48,
+            "opponent": "risk"
+          },
+          {
+            "delta_mean": -2.70005468527476,
+            "heldout": 1,
+            "n": 48,
+            "opponent": "curious"
+          },
+          {
+            "delta_mean": -1.8893350064754486,
+            "heldout": 2,
+            "n": 48,
+            "opponent": "capture"
+          },
+          {
+            "delta_mean": -0.20833333333333334,
+            "heldout": 2,
+            "n": 48,
+            "opponent": "risk"
+          },
+          {
+            "delta_mean": -2.7736547589302063,
+            "heldout": 2,
+            "n": 48,
+            "opponent": "curious"
+          }
+        ]
+      },
+      "captured": {
+        "all_groups_better": false,
+        "delta_mean": -0.009259259259259259,
+        "groups": [
+          {
+            "delta_mean": 0.041666666666666664,
+            "heldout": 0,
+            "n": 48,
+            "opponent": "capture"
+          },
+          {
+            "delta_mean": -0.020833333333333332,
+            "heldout": 0,
+            "n": 48,
+            "opponent": "risk"
+          },
+          {
+            "delta_mean": -0.0625,
+            "heldout": 0,
+            "n": 48,
+            "opponent": "curious"
+          },
+          {
+            "delta_mean": -0.14583333333333334,
+            "heldout": 1,
+            "n": 48,
+            "opponent": "capture"
+          },
+          {
+            "delta_mean": 0.0,
+            "heldout": 1,
+            "n": 48,
+            "opponent": "risk"
+          },
+          {
+            "delta_mean": 0.08333333333333333,
+            "heldout": 1,
+            "n": 48,
+            "opponent": "curious"
+          },
+          {
+            "delta_mean": 0.0625,
+            "heldout": 2,
+            "n": 48,
+            "opponent": "capture"
+          },
+          {
+            "delta_mean": -0.020833333333333332,
+            "heldout": 2,
+            "n": 48,
+            "opponent": "risk"
+          },
+          {
+            "delta_mean": -0.020833333333333332,
+            "heldout": 2,
+            "n": 48,
+            "opponent": "curious"
+          }
+        ]
+      },
+      "pred_lava_steps": {
+        "all_groups_better": false,
+        "delta_mean": -0.35879629629629634,
+        "groups": [
+          {
+            "delta_mean": -4.666666666666667,
+            "heldout": 0,
+            "n": 48,
+            "opponent": "capture"
+          },
+          {
+            "delta_mean": 0.0,
+            "heldout": 0,
+            "n": 48,
+            "opponent": "risk"
+          },
+          {
+            "delta_mean": 0.14583333333333334,
+            "heldout": 0,
+            "n": 48,
+            "opponent": "curious"
+          },
+          {
+            "delta_mean": 1.0833333333333333,
+            "heldout": 1,
+            "n": 48,
+            "opponent": "capture"
+          },
+          {
+            "delta_mean": 0.0,
+            "heldout": 1,
+            "n": 48,
+            "opponent": "risk"
+          },
+          {
+            "delta_mean": -0.7083333333333334,
+            "heldout": 1,
+            "n": 48,
+            "opponent": "curious"
+          },
+          {
+            "delta_mean": -0.5,
+            "heldout": 2,
+            "n": 48,
+            "opponent": "capture"
+          },
+          {
+            "delta_mean": 0.0,
+            "heldout": 2,
+            "n": 48,
+            "opponent": "risk"
+          },
+          {
+            "delta_mean": 1.4166666666666667,
+            "heldout": 2,
+            "n": 48,
+            "opponent": "curious"
+          }
+        ]
+      },
+      "prey_lava_steps": {
+        "all_groups_better": false,
+        "delta_mean": -0.5254629629629629,
+        "groups": [
+          {
+            "delta_mean": -2.7291666666666665,
+            "heldout": 0,
+            "n": 48,
+            "opponent": "capture"
+          },
+          {
+            "delta_mean": 0.6458333333333334,
+            "heldout": 0,
+            "n": 48,
+            "opponent": "risk"
+          },
+          {
+            "delta_mean": 0.22916666666666666,
+            "heldout": 0,
+            "n": 48,
+            "opponent": "curious"
+          },
+          {
+            "delta_mean": 0.7083333333333334,
+            "heldout": 1,
+            "n": 48,
+            "opponent": "capture"
+          },
+          {
+            "delta_mean": -0.020833333333333332,
+            "heldout": 1,
+            "n": 48,
+            "opponent": "risk"
+          },
+          {
+            "delta_mean": -0.4166666666666667,
+            "heldout": 1,
+            "n": 48,
+            "opponent": "curious"
+          },
+          {
+            "delta_mean": 0.6458333333333334,
+            "heldout": 2,
+            "n": 48,
+            "opponent": "capture"
+          },
+          {
+            "delta_mean": 0.22916666666666666,
+            "heldout": 2,
+            "n": 48,
+            "opponent": "risk"
+          },
+          {
+            "delta_mean": -4.020833333333333,
+            "heldout": 2,
+            "n": 48,
+            "opponent": "curious"
+          }
+        ]
+      },
+      "resources_collected": {
+        "all_groups_better": false,
+        "delta_mean": -0.18287037037037035,
+        "groups": [
+          {
+            "delta_mean": -0.6875,
+            "heldout": 0,
+            "n": 48,
+            "opponent": "capture"
+          },
+          {
+            "delta_mean": 0.0625,
+            "heldout": 0,
+            "n": 48,
+            "opponent": "risk"
+          },
+          {
+            "delta_mean": 0.020833333333333332,
+            "heldout": 0,
+            "n": 48,
+            "opponent": "curious"
+          },
+          {
+            "delta_mean": 0.1875,
+            "heldout": 1,
+            "n": 48,
+            "opponent": "capture"
+          },
+          {
+            "delta_mean": 0.08333333333333333,
+            "heldout": 1,
+            "n": 48,
+            "opponent": "risk"
+          },
+          {
+            "delta_mean": -0.375,
+            "heldout": 1,
+            "n": 48,
+            "opponent": "curious"
+          },
+          {
+            "delta_mean": -0.25,
+            "heldout": 2,
+            "n": 48,
+            "opponent": "capture"
+          },
+          {
+            "delta_mean": -0.08333333333333333,
+            "heldout": 2,
+            "n": 48,
+            "opponent": "risk"
+          },
+          {
+            "delta_mean": -0.6041666666666666,
+            "heldout": 2,
+            "n": 48,
+            "opponent": "curious"
+          }
+        ]
+      },
+      "survival_time": {
+        "all_groups_better": false,
+        "delta_mean": -0.023148148148148154,
+        "groups": [
+          {
+            "delta_mean": -2.3958333333333335,
+            "heldout": 0,
+            "n": 48,
+            "opponent": "capture"
+          },
+          {
+            "delta_mean": 0.3541666666666667,
+            "heldout": 0,
+            "n": 48,
+            "opponent": "risk"
+          },
+          {
+            "delta_mean": 0.8541666666666666,
+            "heldout": 0,
+            "n": 48,
+            "opponent": "curious"
+          },
+          {
+            "delta_mean": 9.395833333333334,
+            "heldout": 1,
+            "n": 48,
+            "opponent": "capture"
+          },
+          {
+            "delta_mean": 0.0,
+            "heldout": 1,
+            "n": 48,
+            "opponent": "risk"
+          },
+          {
+            "delta_mean": -5.145833333333333,
+            "heldout": 1,
+            "n": 48,
+            "opponent": "curious"
+          },
+          {
+            "delta_mean": -5.625,
+            "heldout": 2,
+            "n": 48,
+            "opponent": "capture"
+          },
+          {
+            "delta_mean": 1.625,
+            "heldout": 2,
+            "n": 48,
+            "opponent": "risk"
+          },
+          {
+            "delta_mean": 0.7291666666666666,
+            "heldout": 2,
+            "n": 48,
+            "opponent": "curious"
+          }
+        ]
+      }
+    },
+    "planner_true_red_vs_mappo_prey": {
+      "blue_return": {
+        "all_groups_better": true,
+        "delta_mean": 12.69593205799659,
+        "groups": [
+          {
+            "delta_mean": 21.89820782840252,
+            "heldout": 0,
+            "n": 48,
+            "opponent": "capture"
+          },
+          {
+            "delta_mean": 0.8945563038190206,
+            "heldout": 0,
+            "n": 48,
+            "opponent": "risk"
+          },
+          {
+            "delta_mean": 9.01145851612091,
+            "heldout": 0,
+            "n": 48,
+            "opponent": "curious"
+          },
+          {
+            "delta_mean": 24.611667921145756,
+            "heldout": 1,
+            "n": 48,
+            "opponent": "capture"
+          },
+          {
+            "delta_mean": 7.362550934155782,
+            "heldout": 1,
+            "n": 48,
+            "opponent": "risk"
+          },
+          {
+            "delta_mean": 7.549521637459596,
+            "heldout": 1,
+            "n": 48,
+            "opponent": "curious"
+          },
+          {
+            "delta_mean": 26.176081098616123,
+            "heldout": 2,
+            "n": 48,
+            "opponent": "capture"
+          },
+          {
+            "delta_mean": 7.277546517550945,
+            "heldout": 2,
+            "n": 48,
+            "opponent": "risk"
+          },
+          {
+            "delta_mean": 9.481797764698664,
+            "heldout": 2,
+            "n": 48,
+            "opponent": "curious"
+          }
+        ]
+      },
+      "captured": {
+        "all_groups_better": true,
+        "delta_mean": -0.3912037037037037,
+        "groups": [
+          {
+            "delta_mean": -1.0,
+            "heldout": 0,
+            "n": 48,
+            "opponent": "capture"
+          },
+          {
+            "delta_mean": -0.020833333333333332,
+            "heldout": 0,
+            "n": 48,
+            "opponent": "risk"
+          },
+          {
+            "delta_mean": -0.1875,
+            "heldout": 0,
+            "n": 48,
+            "opponent": "curious"
+          },
+          {
+            "delta_mean": -1.0,
+            "heldout": 1,
+            "n": 48,
+            "opponent": "capture"
+          },
+          {
+            "delta_mean": -0.041666666666666664,
+            "heldout": 1,
+            "n": 48,
+            "opponent": "risk"
+          },
+          {
+            "delta_mean": -0.08333333333333333,
+            "heldout": 1,
+            "n": 48,
+            "opponent": "curious"
+          },
+          {
+            "delta_mean": -1.0,
+            "heldout": 2,
+            "n": 48,
+            "opponent": "capture"
+          },
+          {
+            "delta_mean": -0.041666666666666664,
+            "heldout": 2,
+            "n": 48,
+            "opponent": "risk"
+          },
+          {
+            "delta_mean": -0.14583333333333334,
+            "heldout": 2,
+            "n": 48,
+            "opponent": "curious"
+          }
+        ]
+      },
+      "pred_lava_steps": {
+        "all_groups_better": false,
+        "delta_mean": 4.439814814814814,
+        "groups": [
+          {
+            "delta_mean": 12.75,
+            "heldout": 0,
+            "n": 48,
+            "opponent": "capture"
+          },
+          {
+            "delta_mean": 0.0,
+            "heldout": 0,
+            "n": 48,
+            "opponent": "risk"
+          },
+          {
+            "delta_mean": 2.3333333333333335,
+            "heldout": 0,
+            "n": 48,
+            "opponent": "curious"
+          },
+          {
+            "delta_mean": 7.770833333333333,
+            "heldout": 1,
+            "n": 48,
+            "opponent": "capture"
+          },
+          {
+            "delta_mean": -0.020833333333333332,
+            "heldout": 1,
+            "n": 48,
+            "opponent": "risk"
+          },
+          {
+            "delta_mean": 1.0208333333333333,
+            "heldout": 1,
+            "n": 48,
+            "opponent": "curious"
+          },
+          {
+            "delta_mean": 13.8125,
+            "heldout": 2,
+            "n": 48,
+            "opponent": "capture"
+          },
+          {
+            "delta_mean": 0.0,
+            "heldout": 2,
+            "n": 48,
+            "opponent": "risk"
+          },
+          {
+            "delta_mean": 2.2916666666666665,
+            "heldout": 2,
+            "n": 48,
+            "opponent": "curious"
+          }
+        ]
+      },
+      "prey_lava_steps": {
+        "all_groups_better": false,
+        "delta_mean": -7.349537037037036,
+        "groups": [
+          {
+            "delta_mean": 5.979166666666667,
+            "heldout": 0,
+            "n": 48,
+            "opponent": "capture"
+          },
+          {
+            "delta_mean": -15.125,
+            "heldout": 0,
+            "n": 48,
+            "opponent": "risk"
+          },
+          {
+            "delta_mean": -11.979166666666666,
+            "heldout": 0,
+            "n": 48,
+            "opponent": "curious"
+          },
+          {
+            "delta_mean": 6.229166666666667,
+            "heldout": 1,
+            "n": 48,
+            "opponent": "capture"
+          },
+          {
+            "delta_mean": -15.833333333333334,
+            "heldout": 1,
+            "n": 48,
+            "opponent": "risk"
+          },
+          {
+            "delta_mean": -13.75,
+            "heldout": 1,
+            "n": 48,
+            "opponent": "curious"
+          },
+          {
+            "delta_mean": 9.416666666666666,
+            "heldout": 2,
+            "n": 48,
+            "opponent": "capture"
+          },
+          {
+            "delta_mean": -19.0,
+            "heldout": 2,
+            "n": 48,
+            "opponent": "risk"
+          },
+          {
+            "delta_mean": -12.083333333333334,
+            "heldout": 2,
+            "n": 48,
+            "opponent": "curious"
+          }
+        ]
+      },
+      "resources_collected": {
+        "all_groups_better": false,
+        "delta_mean": 1.3495370370370372,
+        "groups": [
+          {
+            "delta_mean": 2.1666666666666665,
+            "heldout": 0,
+            "n": 48,
+            "opponent": "capture"
+          },
+          {
+            "delta_mean": -0.5625,
+            "heldout": 0,
+            "n": 48,
+            "opponent": "risk"
+          },
+          {
+            "delta_mean": 0.9791666666666666,
+            "heldout": 0,
+            "n": 48,
+            "opponent": "curious"
+          },
+          {
+            "delta_mean": 2.75,
+            "heldout": 1,
+            "n": 48,
+            "opponent": "capture"
+          },
+          {
+            "delta_mean": 0.6666666666666666,
+            "heldout": 1,
+            "n": 48,
+            "opponent": "risk"
+          },
+          {
+            "delta_mean": 0.7083333333333334,
+            "heldout": 1,
+            "n": 48,
+            "opponent": "curious"
+          },
+          {
+            "delta_mean": 3.1875,
+            "heldout": 2,
+            "n": 48,
+            "opponent": "capture"
+          },
+          {
+            "delta_mean": 0.7708333333333334,
+            "heldout": 2,
+            "n": 48,
+            "opponent": "risk"
+          },
+          {
+            "delta_mean": 1.4791666666666667,
+            "heldout": 2,
+            "n": 48,
+            "opponent": "curious"
+          }
+        ]
+      },
+      "survival_time": {
+        "all_groups_better": true,
+        "delta_mean": 27.319444444444443,
+        "groups": [
+          {
+            "delta_mean": 73.0625,
+            "heldout": 0,
+            "n": 48,
+            "opponent": "capture"
+          },
+          {
+            "delta_mean": 1.5,
+            "heldout": 0,
+            "n": 48,
+            "opponent": "risk"
+          },
+          {
+            "delta_mean": 10.875,
+            "heldout": 0,
+            "n": 48,
+            "opponent": "curious"
+          },
+          {
+            "delta_mean": 71.6875,
+            "heldout": 1,
+            "n": 48,
+            "opponent": "capture"
+          },
+          {
+            "delta_mean": 1.4583333333333333,
+            "heldout": 1,
+            "n": 48,
+            "opponent": "risk"
+          },
+          {
+            "delta_mean": 3.5625,
+            "heldout": 1,
+            "n": 48,
+            "opponent": "curious"
+          },
+          {
+            "delta_mean": 73.58333333333333,
+            "heldout": 2,
+            "n": 48,
+            "opponent": "capture"
+          },
+          {
+            "delta_mean": 2.125,
+            "heldout": 2,
+            "n": 48,
+            "opponent": "risk"
+          },
+          {
+            "delta_mean": 8.020833333333334,
+            "heldout": 2,
+            "n": 48,
+            "opponent": "curious"
+          }
+        ]
+      }
+    },
+    "planner_true_red_vs_random": {
+      "blue_return": {
+        "all_groups_better": true,
+        "delta_mean": 47.4044707160857,
+        "groups": [
+          {
+            "delta_mean": 44.83903214832147,
+            "heldout": 0,
+            "n": 48,
+            "opponent": "capture"
+          },
+          {
+            "delta_mean": 45.29254473249117,
+            "heldout": 0,
+            "n": 48,
+            "opponent": "risk"
+          },
+          {
+            "delta_mean": 55.066992700099945,
+            "heldout": 0,
+            "n": 48,
+            "opponent": "curious"
+          },
+          {
+            "delta_mean": 51.63136290510496,
+            "heldout": 1,
+            "n": 48,
+            "opponent": "capture"
+          },
+          {
+            "delta_mean": 50.7097643216451,
+            "heldout": 1,
+            "n": 48,
+            "opponent": "risk"
+          },
+          {
+            "delta_mean": 46.2150097489357,
+            "heldout": 1,
+            "n": 48,
+            "opponent": "curious"
+          },
+          {
+            "delta_mean": 37.84951695551475,
+            "heldout": 2,
+            "n": 48,
+            "opponent": "capture"
+          },
+          {
+            "delta_mean": 45.43577515333891,
+            "heldout": 2,
+            "n": 48,
+            "opponent": "risk"
+          },
+          {
+            "delta_mean": 49.600237779319286,
+            "heldout": 2,
+            "n": 48,
+            "opponent": "curious"
+          }
+        ]
+      },
+      "captured": {
+        "all_groups_better": false,
+        "delta_mean": -0.27314814814814814,
+        "groups": [
+          {
+            "delta_mean": -0.6458333333333334,
+            "heldout": 0,
+            "n": 48,
+            "opponent": "capture"
+          },
+          {
+            "delta_mean": 0.0,
+            "heldout": 0,
+            "n": 48,
+            "opponent": "risk"
+          },
+          {
+            "delta_mean": -0.4166666666666667,
+            "heldout": 0,
+            "n": 48,
+            "opponent": "curious"
+          },
+          {
+            "delta_mean": -0.4791666666666667,
+            "heldout": 1,
+            "n": 48,
+            "opponent": "capture"
+          },
+          {
+            "delta_mean": -0.041666666666666664,
+            "heldout": 1,
+            "n": 48,
+            "opponent": "risk"
+          },
+          {
+            "delta_mean": -0.2916666666666667,
+            "heldout": 1,
+            "n": 48,
+            "opponent": "curious"
+          },
+          {
+            "delta_mean": -0.5,
+            "heldout": 2,
+            "n": 48,
+            "opponent": "capture"
+          },
+          {
+            "delta_mean": -0.020833333333333332,
+            "heldout": 2,
+            "n": 48,
+            "opponent": "risk"
+          },
+          {
+            "delta_mean": -0.0625,
+            "heldout": 2,
+            "n": 48,
+            "opponent": "curious"
+          }
+        ]
+      },
+      "pred_lava_steps": {
+        "all_groups_better": false,
+        "delta_mean": 5.43287037037037,
+        "groups": [
+          {
+            "delta_mean": 16.208333333333332,
+            "heldout": 0,
+            "n": 48,
+            "opponent": "capture"
+          },
+          {
+            "delta_mean": -0.08333333333333333,
+            "heldout": 0,
+            "n": 48,
+            "opponent": "risk"
+          },
+          {
+            "delta_mean": 3.0625,
+            "heldout": 0,
+            "n": 48,
+            "opponent": "curious"
+          },
+          {
+            "delta_mean": 10.6875,
+            "heldout": 1,
+            "n": 48,
+            "opponent": "capture"
+          },
+          {
+            "delta_mean": -0.20833333333333334,
+            "heldout": 1,
+            "n": 48,
+            "opponent": "risk"
+          },
+          {
+            "delta_mean": 2.5416666666666665,
+            "heldout": 1,
+            "n": 48,
+            "opponent": "curious"
+          },
+          {
+            "delta_mean": 17.270833333333332,
+            "heldout": 2,
+            "n": 48,
+            "opponent": "capture"
+          },
+          {
+            "delta_mean": 0.0,
+            "heldout": 2,
+            "n": 48,
+            "opponent": "risk"
+          },
+          {
+            "delta_mean": -0.5833333333333334,
+            "heldout": 2,
+            "n": 48,
+            "opponent": "curious"
+          }
+        ]
+      },
+      "prey_lava_steps": {
+        "all_groups_better": false,
+        "delta_mean": 15.215277777777779,
+        "groups": [
+          {
+            "delta_mean": 14.8125,
+            "heldout": 0,
+            "n": 48,
+            "opponent": "capture"
+          },
+          {
+            "delta_mean": 15.458333333333334,
+            "heldout": 0,
+            "n": 48,
+            "opponent": "risk"
+          },
+          {
+            "delta_mean": 19.583333333333332,
+            "heldout": 0,
+            "n": 48,
+            "opponent": "curious"
+          },
+          {
+            "delta_mean": 13.770833333333334,
+            "heldout": 1,
+            "n": 48,
+            "opponent": "capture"
+          },
+          {
+            "delta_mean": 11.979166666666666,
+            "heldout": 1,
+            "n": 48,
+            "opponent": "risk"
+          },
+          {
+            "delta_mean": 15.5,
+            "heldout": 1,
+            "n": 48,
+            "opponent": "curious"
+          },
+          {
+            "delta_mean": 17.75,
+            "heldout": 2,
+            "n": 48,
+            "opponent": "capture"
+          },
+          {
+            "delta_mean": 9.291666666666666,
+            "heldout": 2,
+            "n": 48,
+            "opponent": "risk"
+          },
+          {
+            "delta_mean": 18.791666666666668,
+            "heldout": 2,
+            "n": 48,
+            "opponent": "curious"
+          }
+        ]
+      },
+      "resources_collected": {
+        "all_groups_better": true,
+        "delta_mean": 5.8055555555555545,
+        "groups": [
+          {
+            "delta_mean": 4.208333333333333,
+            "heldout": 0,
+            "n": 48,
+            "opponent": "capture"
+          },
+          {
+            "delta_mean": 5.75,
+            "heldout": 0,
+            "n": 48,
+            "opponent": "risk"
+          },
+          {
+            "delta_mean": 6.833333333333333,
+            "heldout": 0,
+            "n": 48,
+            "opponent": "curious"
+          },
+          {
+            "delta_mean": 4.729166666666667,
+            "heldout": 1,
+            "n": 48,
+            "opponent": "capture"
+          },
+          {
+            "delta_mean": 6.3125,
+            "heldout": 1,
+            "n": 48,
+            "opponent": "risk"
+          },
+          {
+            "delta_mean": 6.729166666666667,
+            "heldout": 1,
+            "n": 48,
+            "opponent": "curious"
+          },
+          {
+            "delta_mean": 5.020833333333333,
+            "heldout": 2,
+            "n": 48,
+            "opponent": "capture"
+          },
+          {
+            "delta_mean": 5.625,
+            "heldout": 2,
+            "n": 48,
+            "opponent": "risk"
+          },
+          {
+            "delta_mean": 7.041666666666667,
+            "heldout": 2,
+            "n": 48,
+            "opponent": "curious"
+          }
+        ]
+      },
+      "survival_time": {
+        "all_groups_better": false,
+        "delta_mean": 15.835648148148149,
+        "groups": [
+          {
+            "delta_mean": 37.354166666666664,
+            "heldout": 0,
+            "n": 48,
+            "opponent": "capture"
+          },
+          {
+            "delta_mean": 0.0,
+            "heldout": 0,
+            "n": 48,
+            "opponent": "risk"
+          },
+          {
+            "delta_mean": 24.354166666666668,
+            "heldout": 0,
+            "n": 48,
+            "opponent": "curious"
+          },
+          {
+            "delta_mean": 29.770833333333332,
+            "heldout": 1,
+            "n": 48,
+            "opponent": "capture"
+          },
+          {
+            "delta_mean": 2.0416666666666665,
+            "heldout": 1,
+            "n": 48,
+            "opponent": "risk"
+          },
+          {
+            "delta_mean": 14.833333333333334,
+            "heldout": 1,
+            "n": 48,
+            "opponent": "curious"
+          },
+          {
+            "delta_mean": 30.666666666666668,
+            "heldout": 2,
+            "n": 48,
+            "opponent": "capture"
+          },
+          {
+            "delta_mean": 1.1666666666666667,
+            "heldout": 2,
+            "n": 48,
+            "opponent": "risk"
+          },
+          {
+            "delta_mean": 2.3333333333333335,
+            "heldout": 2,
+            "n": 48,
+            "opponent": "curious"
+          }
+        ]
+      }
+    }
+  },
+  "config": {
+    "bc_seed": 0,
+    "context_inside_horizon": "held_fixed",
+    "controllers": [
+      "mappo_prey",
+      "random",
+      "planner_true_red",
+      "planner_bc_oracle_correct",
+      "planner_bc_oracle_zero",
+      "planner_bc_oracle_wrong",
+      "planner_bc_real_online",
+      "planner_bc_real_zero",
+      "planner_bc_real_shuffled",
+      "planner_bc_no_c"
+    ],
+    "heldout_checkpoints": [
+      0,
+      1,
+      2
+    ],
+    "imagined_dynamics": "exact_simulator",
+    "n_eps_per_type": 48,
+    "terminal_value": "zero"
+  },
+  "dataset_sha256": "928181027a9e5e86b106190b1487cda90c09e2cc5df08b569f7b93ba8350b5f5",
+  "dependencies": {
+    "distrax": "0.1.5",
+    "flax": "0.10.4",
+    "jax": "0.4.38",
+    "jaxlib": "0.4.38",
+    "jaxmarl": "0.1.0",
+    "numpy": "1.26.4",
+    "opponent-modeling": "0.2.0",
+    "optax": "0.2.5",
+    "scikit-learn": "1.9.0"
+  },
+  "git_dirty": false,
+  "git_sha": "e66d2e2c43cf6b373e162aa97c2fea6782d2b619",
+  "planner": {
+    "discount": 0.99,
+    "horizon": 10,
+    "max_plan_std": 1.0,
+    "min_plan_std": 0.05,
+    "mppi_iterations": 3,
+    "num_elites": 16,
+    "population_size": 128,
+    "temperature": 1.0
+  },
+  "runs": [
+    {
+      "blue_action_abs_max": 1.0,
+      "blue_return": {
+        "mean": 0.6966235637664795,
+        "std": 7.7767462730407715
+      },
+      "captured": {
+        "mean": 1.0,
+        "std": 0.0
+      },
+      "context_mode": "zero",
+      "controller": "mappo_prey",
+      "heldout_checkpoint": 0,
+      "n_episodes": 48,
+      "opponent": "capture",
+      "pred_lava_steps": {
+        "mean": 6.541666507720947,
+        "std": 5.708029270172119
+      },
+      "prey_lava_steps": {
+        "mean": 10.125,
+        "std": 7.471124649047852
+      },
+      "resources_collected": {
+        "mean": 2.375,
+        "std": 1.5761899948120117
+      },
+      "seconds": 1.453833818435669,
+      "survival_time": {
+        "mean": 26.9375,
+        "std": 13.337613105773926
+      }
+    },
+    {
+      "blue_action_abs_max": 0.999983549118042,
+      "blue_return": {
+        "mean": -22.24420166015625,
+        "std": 39.76578903198242
+      },
+      "captured": {
+        "mean": 0.6458333134651184,
+        "std": 0.47826001048088074
+      },
+      "context_mode": "zero",
+      "controller": "random",
+      "heldout_checkpoint": 0,
+      "n_episodes": 48,
+      "opponent": "capture",
+      "pred_lava_steps": {
+        "mean": 3.0833332538604736,
+        "std": 6.613853931427002
+      },
+      "prey_lava_steps": {
+        "mean": 1.2916666269302368,
+        "std": 4.305801868438721
+      },
+      "resources_collected": {
+        "mean": 0.3333333432674408,
+        "std": 0.5527707934379578
+      },
+      "seconds": 0.40962696075439453,
+      "survival_time": {
+        "mean": 62.64583206176758,
+        "std": 31.767704010009766
+      }
+    },
+    {
+      "blue_action_abs_max": 1.0,
+      "blue_return": {
+        "mean": 22.594833374023438,
+        "std": 16.428489685058594
+      },
+      "captured": {
+        "mean": 0.0,
+        "std": 0.0
+      },
+      "context_mode": "zero",
+      "controller": "planner_true_red",
+      "heldout_checkpoint": 0,
+      "n_episodes": 48,
+      "opponent": "capture",
+      "pred_lava_steps": {
+        "mean": 19.29166603088379,
+        "std": 24.123777389526367
+      },
+      "prey_lava_steps": {
+        "mean": 16.10416603088379,
+        "std": 24.479787826538086
+      },
+      "resources_collected": {
+        "mean": 4.541666507720947,
+        "std": 3.2911391258239746
+      },
+      "seconds": 9.81380820274353,
+      "survival_time": {
+        "mean": 100.0,
+        "std": 0.0
+      }
+    },
+    {
+      "blue_action_abs_max": 1.0,
+      "blue_return": {
+        "mean": 18.1962890625,
+        "std": 14.00158977508545
+      },
+      "captured": {
+        "mean": 0.25,
+        "std": 0.4330126941204071
+      },
+      "context_mode": "oracle",
+      "controller": "planner_bc_oracle_correct",
+      "heldout_checkpoint": 0,
+      "n_episodes": 48,
+      "opponent": "capture",
+      "pred_lava_steps": {
+        "mean": 16.35416603088379,
+        "std": 22.72066879272461
+      },
+      "prey_lava_steps": {
+        "mean": 15.75,
+        "std": 24.696069717407227
+      },
+      "resources_collected": {
+        "mean": 4.166666507720947,
+        "std": 2.9035420417785645
+      },
+      "seconds": 8.98855996131897,
+      "survival_time": {
+        "mean": 88.0,
+        "std": 23.512407302856445
+      }
+    },
+    {
+      "blue_action_abs_max": 1.0,
+      "blue_return": {
+        "mean": 14.79563045501709,
+        "std": 11.731367111206055
+      },
+      "captured": {
+        "mean": 0.3958333432674408,
+        "std": 0.4890289306640625
+      },
+      "context_mode": "zero",
+      "controller": "planner_bc_oracle_zero",
+      "heldout_checkpoint": 0,
+      "n_episodes": 48,
+      "opponent": "capture",
+      "pred_lava_steps": {
+        "mean": 15.375,
+        "std": 19.268524169921875
+      },
+      "prey_lava_steps": {
+        "mean": 14.125,
+        "std": 22.602197647094727
+      },
+      "resources_collected": {
+        "mean": 3.7708332538604736,
+        "std": 2.373811960220337
+      },
+      "seconds": 8.925652980804443,
+      "survival_time": {
+        "mean": 78.64583587646484,
+        "std": 29.527875900268555
+      }
+    },
+    {
+      "blue_action_abs_max": 1.0,
+      "blue_return": {
+        "mean": 15.3178129196167,
+        "std": 13.700946807861328
+      },
+      "captured": {
+        "mean": 0.3958333432674408,
+        "std": 0.4890289306640625
+      },
+      "context_mode": "wrong_oracle",
+      "controller": "planner_bc_oracle_wrong",
+      "heldout_checkpoint": 0,
+      "n_episodes": 48,
+      "opponent": "capture",
+      "pred_lava_steps": {
+        "mean": 13.75,
+        "std": 20.808151245117188
+      },
+      "prey_lava_steps": {
+        "mean": 13.270833015441895,
+        "std": 23.537858963012695
+      },
+      "resources_collected": {
+        "mean": 3.875,
+        "std": 2.7660515308380127
+      },
+      "seconds": 8.937297105789185,
+      "survival_time": {
+        "mean": 78.33333587646484,
+        "std": 30.56368637084961
+      }
+    },
+    {
+      "blue_action_abs_max": 1.0,
+      "blue_return": {
+        "mean": 12.935798645019531,
+        "std": 12.53916072845459
+      },
+      "captured": {
+        "mean": 0.4375,
+        "std": 0.49607837200164795
+      },
+      "context_mode": "online",
+      "controller": "planner_bc_real_online",
+      "heldout_checkpoint": 0,
+      "n_episodes": 48,
+      "opponent": "capture",
+      "pred_lava_steps": {
+        "mean": 12.270833015441895,
+        "std": 18.695743560791016
+      },
+      "prey_lava_steps": {
+        "mean": 12.5625,
+        "std": 22.245698928833008
+      },
+      "resources_collected": {
+        "mean": 3.4791667461395264,
+        "std": 2.4064979553222656
+      },
+      "seconds": 13.75680422782898,
+      "survival_time": {
+        "mean": 79.54166412353516,
+        "std": 27.29236602783203
+      }
+    },
+    {
+      "blue_action_abs_max": 1.0,
+      "blue_return": {
+        "mean": 16.650005340576172,
+        "std": 13.110939025878906
+      },
+      "captured": {
+        "mean": 0.3958333432674408,
+        "std": 0.4890289306640625
+      },
+      "context_mode": "zero",
+      "controller": "planner_bc_real_zero",
+      "heldout_checkpoint": 0,
+      "n_episodes": 48,
+      "opponent": "capture",
+      "pred_lava_steps": {
+        "mean": 16.9375,
+        "std": 21.652950286865234
+      },
+      "prey_lava_steps": {
+        "mean": 15.291666984558105,
+        "std": 22.406248092651367
+      },
+      "resources_collected": {
+        "mean": 4.166666507720947,
+        "std": 2.8087167739868164
+      },
+      "seconds": 9.114461898803711,
+      "survival_time": {
+        "mean": 81.9375,
+        "std": 27.50182342529297
+      }
+    },
+    {
+      "blue_action_abs_max": 1.0,
+      "blue_return": {
+        "mean": 12.974234580993652,
+        "std": 12.495716094970703
+      },
+      "captured": {
+        "mean": 0.4791666567325592,
+        "std": 0.49956580996513367
+      },
+      "context_mode": "shuffled",
+      "controller": "planner_bc_real_shuffled",
+      "heldout_checkpoint": 0,
+      "n_episodes": 48,
+      "opponent": "capture",
+      "pred_lava_steps": {
+        "mean": 13.916666984558105,
+        "std": 20.353986740112305
+      },
+      "prey_lava_steps": {
+        "mean": 13.625,
+        "std": 22.601276397705078
+      },
+      "resources_collected": {
+        "mean": 3.5833332538604736,
+        "std": 2.4902589321136475
+      },
+      "seconds": 13.151732921600342,
+      "survival_time": {
+        "mean": 78.16666412353516,
+        "std": 27.544912338256836
+      }
+    },
+    {
+      "blue_action_abs_max": 1.0,
+      "blue_return": {
+        "mean": 15.034951210021973,
+        "std": 14.464518547058105
+      },
+      "captured": {
+        "mean": 0.4166666567325592,
+        "std": 0.4930066764354706
+      },
+      "context_mode": "zero",
+      "controller": "planner_bc_no_c",
+      "heldout_checkpoint": 0,
+      "n_episodes": 48,
+      "opponent": "capture",
+      "pred_lava_steps": {
+        "mean": 13.416666984558105,
+        "std": 17.29141616821289
+      },
+      "prey_lava_steps": {
+        "mean": 13.083333015441895,
+        "std": 19.992534637451172
+      },
+      "resources_collected": {
+        "mean": 3.8541667461395264,
+        "std": 2.8722057342529297
+      },
+      "seconds": 9.279439926147461,
+      "survival_time": {
+        "mean": 78.29166412353516,
+        "std": 29.968008041381836
+      }
+    },
+    {
+      "blue_action_abs_max": 1.0,
+      "blue_return": {
+        "mean": 31.44280433654785,
+        "std": 12.819353103637695
+      },
+      "captured": {
+        "mean": 0.02083333395421505,
+        "std": 0.1428261399269104
+      },
+      "context_mode": "zero",
+      "controller": "mappo_prey",
+      "heldout_checkpoint": 0,
+      "n_episodes": 48,
+      "opponent": "risk",
+      "pred_lava_steps": {
+        "mean": 0.0,
+        "std": 0.0
+      },
+      "prey_lava_steps": {
+        "mean": 37.625,
+        "std": 16.670364379882812
+      },
+      "resources_collected": {
+        "mean": 7.041666507720947,
+        "std": 2.226341724395752
+      },
+      "seconds": 0.4055650234222412,
+      "survival_time": {
+        "mean": 98.5,
+        "std": 10.28348159790039
+      }
+    },
+    {
+      "blue_action_abs_max": 0.9998373985290527,
+      "blue_return": {
+        "mean": -12.955184936523438,
+        "std": 28.31267738342285
+      },
+      "captured": {
+        "mean": 0.0,
+        "std": 0.0
+      },
+      "context_mode": "zero",
+      "controller": "random",
+      "heldout_checkpoint": 0,
+      "n_episodes": 48,
+      "opponent": "risk",
+      "pred_lava_steps": {
+        "mean": 0.0833333358168602,
+        "std": 0.5713045597076416
+      },
+      "prey_lava_steps": {
+        "mean": 7.041666507720947,
+        "std": 13.814180374145508
+      },
+      "resources_collected": {
+        "mean": 0.7291666865348816,
+        "std": 1.1679680347442627
+      },
+      "seconds": 0.37139201164245605,
+      "survival_time": {
+        "mean": 100.0,
+        "std": 0.0
+      }
+    },
+    {
+      "blue_action_abs_max": 1.0,
+      "blue_return": {
+        "mean": 32.33736038208008,
+        "std": 18.077129364013672
+      },
+      "captured": {
+        "mean": 0.0,
+        "std": 0.0
+      },
+      "context_mode": "zero",
+      "controller": "planner_true_red",
+      "heldout_checkpoint": 0,
+      "n_episodes": 48,
+      "opponent": "risk",
+      "pred_lava_steps": {
+        "mean": 0.0,
+        "std": 0.0
+      },
+      "prey_lava_steps": {
+        "mean": 22.5,
+        "std": 21.837467193603516
+      },
+      "resources_collected": {
+        "mean": 6.479166507720947,
+        "std": 3.6170289516448975
+      },
+      "seconds": 9.17908525466919,
+      "survival_time": {
+        "mean": 100.0,
+        "std": 0.0
+      }
+    },
+    {
+      "blue_action_abs_max": 1.0,
+      "blue_return": {
+        "mean": 32.33736038208008,
+        "std": 18.077129364013672
+      },
+      "captured": {
+        "mean": 0.0,
+        "std": 0.0
+      },
+      "context_mode": "oracle",
+      "controller": "planner_bc_oracle_correct",
+      "heldout_checkpoint": 0,
+      "n_episodes": 48,
+      "opponent": "risk",
+      "pred_lava_steps": {
+        "mean": 0.0,
+        "std": 0.0
+      },
+      "prey_lava_steps": {
+        "mean": 22.60416603088379,
+        "std": 21.927663803100586
+      },
+      "resources_collected": {
+        "mean": 6.479166507720947,
+        "std": 3.6170289516448975
+      },
+      "seconds": 8.97985315322876,
+      "survival_time": {
+        "mean": 100.0,
+        "std": 0.0
+      }
+    },
+    {
+      "blue_action_abs_max": 1.0,
+      "blue_return": {
+        "mean": 31.39986228942871,
+        "std": 17.54680633544922
+      },
+      "captured": {
+        "mean": 0.02083333395421505,
+        "std": 0.1428261399269104
+      },
+      "context_mode": "zero",
+      "controller": "planner_bc_oracle_zero",
+      "heldout_checkpoint": 0,
+      "n_episodes": 48,
+      "opponent": "risk",
+      "pred_lava_steps": {
+        "mean": 0.0,
+        "std": 0.0
+      },
+      "prey_lava_steps": {
+        "mean": 21.85416603088379,
+        "std": 21.64773941040039
+      },
+      "resources_collected": {
+        "mean": 6.333333492279053,
+        "std": 3.484090805053711
+      },
+      "seconds": 9.037003993988037,
+      "survival_time": {
+        "mean": 99.64583587646484,
+        "std": 2.428044319152832
+      }
+    },
+    {
+      "blue_action_abs_max": 1.0,
+      "blue_return": {
+        "mean": 32.12413787841797,
+        "std": 17.756237030029297
+      },
+      "captured": {
+        "mean": 0.0,
+        "std": 0.0
+      },
+      "context_mode": "wrong_oracle",
+      "controller": "planner_bc_oracle_wrong",
+      "heldout_checkpoint": 0,
+      "n_episodes": 48,
+      "opponent": "risk",
+      "pred_lava_steps": {
+        "mean": 0.0,
+        "std": 0.0
+      },
+      "prey_lava_steps": {
+        "mean": 21.22916603088379,
+        "std": 21.397274017333984
+      },
+      "resources_collected": {
+        "mean": 6.4375,
+        "std": 3.5526177883148193
+      },
+      "seconds": 9.043691873550415,
+      "survival_time": {
+        "mean": 100.0,
+        "std": 0.0
+      }
+    },
+    {
+      "blue_action_abs_max": 1.0,
+      "blue_return": {
+        "mean": 32.33736038208008,
+        "std": 18.077129364013672
+      },
+      "captured": {
+        "mean": 0.0,
+        "std": 0.0
+      },
+      "context_mode": "online",
+      "controller": "planner_bc_real_online",
+      "heldout_checkpoint": 0,
+      "n_episodes": 48,
+      "opponent": "risk",
+      "pred_lava_steps": {
+        "mean": 0.0,
+        "std": 0.0
+      },
+      "prey_lava_steps": {
+        "mean": 22.625,
+        "std": 21.948448181152344
+      },
+      "resources_collected": {
+        "mean": 6.479166507720947,
+        "std": 3.6170289516448975
+      },
+      "seconds": 13.98819088935852,
+      "survival_time": {
+        "mean": 100.0,
+        "std": 0.0
+      }
+    },
+    {
+      "blue_action_abs_max": 1.0,
+      "blue_return": {
+        "mean": 31.8165283203125,
+        "std": 17.86197853088379
+      },
+      "captured": {
+        "mean": 0.02083333395421505,
+        "std": 0.1428261399269104
+      },
+      "context_mode": "zero",
+      "controller": "planner_bc_real_zero",
+      "heldout_checkpoint": 0,
+      "n_episodes": 48,
+      "opponent": "risk",
+      "pred_lava_steps": {
+        "mean": 0.0,
+        "std": 0.0
+      },
+      "prey_lava_steps": {
+        "mean": 21.97916603088379,
+        "std": 21.730825424194336
+      },
+      "resources_collected": {
+        "mean": 6.416666507720947,
+        "std": 3.546320676803589
+      },
+      "seconds": 9.12039303779602,
+      "survival_time": {
+        "mean": 99.64583587646484,
+        "std": 2.428044319152832
+      }
+    },
+    {
+      "blue_action_abs_max": 1.0,
+      "blue_return": {
+        "mean": 32.1290283203125,
+        "std": 17.812816619873047
+      },
+      "captured": {
+        "mean": 0.0,
+        "std": 0.0
+      },
+      "context_mode": "shuffled",
+      "controller": "planner_bc_real_shuffled",
+      "heldout_checkpoint": 0,
+      "n_episodes": 48,
+      "opponent": "risk",
+      "pred_lava_steps": {
+        "mean": 0.0,
+        "std": 0.0
+      },
+      "prey_lava_steps": {
+        "mean": 22.125,
+        "std": 21.705053329467773
+      },
+      "resources_collected": {
+        "mean": 6.4375,
+        "std": 3.5643270015716553
+      },
+      "seconds": 13.189903020858765,
+      "survival_time": {
+        "mean": 100.0,
+        "std": 0.0
+      }
+    },
+    {
+      "blue_action_abs_max": 1.0,
+      "blue_return": {
+        "mean": 32.3345947265625,
+        "std": 18.078262329101562
+      },
+      "captured": {
+        "mean": 0.0,
+        "std": 0.0
+      },
+      "context_mode": "zero",
+      "controller": "planner_bc_no_c",
+      "heldout_checkpoint": 0,
+      "n_episodes": 48,
+      "opponent": "risk",
+      "pred_lava_steps": {
+        "mean": 0.0,
+        "std": 0.0
+      },
+      "prey_lava_steps": {
+        "mean": 22.47916603088379,
+        "std": 21.822189331054688
+      },
+      "resources_collected": {
+        "mean": 6.479166507720947,
+        "std": 3.6170289516448975
+      },
+      "seconds": 9.404688119888306,
+      "survival_time": {
+        "mean": 100.0,
+        "std": 0.0
+      }
+    },
+    {
+      "blue_action_abs_max": 1.0,
+      "blue_return": {
+        "mean": 26.97782325744629,
+        "std": 16.241466522216797
+      },
+      "captured": {
+        "mean": 0.1875,
+        "std": 0.3903123736381531
+      },
+      "context_mode": "zero",
+      "controller": "mappo_prey",
+      "heldout_checkpoint": 0,
+      "n_episodes": 48,
+      "opponent": "curious",
+      "pred_lava_steps": {
+        "mean": 11.3125,
+        "std": 7.351746559143066
+      },
+      "prey_lava_steps": {
+        "mean": 34.375,
+        "std": 16.50710105895996
+      },
+      "resources_collected": {
+        "mean": 6.25,
+        "std": 2.4958298206329346
+      },
+      "seconds": 0.41906094551086426,
+      "survival_time": {
+        "mean": 89.125,
+        "std": 24.758522033691406
+      }
+    },
+    {
+      "blue_action_abs_max": 0.9997155666351318,
+      "blue_return": {
+        "mean": -19.07771110534668,
+        "std": 33.653743743896484
+      },
+      "captured": {
+        "mean": 0.4166666567325592,
+        "std": 0.4930066764354706
+      },
+      "context_mode": "zero",
+      "controller": "random",
+      "heldout_checkpoint": 0,
+      "n_episodes": 48,
+      "opponent": "curious",
+      "pred_lava_steps": {
+        "mean": 10.583333015441895,
+        "std": 8.323744773864746
+      },
+      "prey_lava_steps": {
+        "mean": 2.8125,
+        "std": 8.280640602111816
+      },
+      "resources_collected": {
+        "mean": 0.3958333432674408,
+        "std": 0.6689414381980896
+      },
+      "seconds": 0.38070201873779297,
+      "survival_time": {
+        "mean": 75.64583587646484,
+        "std": 32.14971160888672
+      }
+    },
+    {
+      "blue_action_abs_max": 1.0,
+      "blue_return": {
+        "mean": 35.98928451538086,
+        "std": 19.710283279418945
+      },
+      "captured": {
+        "mean": 0.0,
+        "std": 0.0
+      },
+      "context_mode": "zero",
+      "controller": "planner_true_red",
+      "heldout_checkpoint": 0,
+      "n_episodes": 48,
+      "opponent": "curious",
+      "pred_lava_steps": {
+        "mean": 13.645833015441895,
+        "std": 8.882308006286621
+      },
+      "prey_lava_steps": {
+        "mean": 22.39583396911621,
+        "std": 18.022830963134766
+      },
+      "resources_collected": {
+        "mean": 7.229166507720947,
+        "std": 3.9435579776763916
+      },
+      "seconds": 9.920084953308105,
+      "survival_time": {
+        "mean": 100.0,
+        "std": 0.0
+      }
+    },
+    {
+      "blue_action_abs_max": 1.0,
+      "blue_return": {
+        "mean": 35.06232833862305,
+        "std": 21.371931076049805
+      },
+      "captured": {
+        "mean": 0.0833333358168602,
+        "std": 0.2763853967189789
+      },
+      "context_mode": "oracle",
+      "controller": "planner_bc_oracle_correct",
+      "heldout_checkpoint": 0,
+      "n_episodes": 48,
+      "opponent": "curious",
+      "pred_lava_steps": {
+        "mean": 12.291666984558105,
+        "std": 8.599802017211914
+      },
+      "prey_lava_steps": {
+        "mean": 22.70833396911621,
+        "std": 19.600126266479492
+      },
+      "resources_collected": {
+        "mean": 7.208333492279053,
+        "std": 4.132988929748535
+      },
+      "seconds": 10.604557037353516,
+      "survival_time": {
+        "mean": 95.16666412353516,
+        "std": 16.573490142822266
+      }
+    },
+    {
+      "blue_action_abs_max": 1.0,
+      "blue_return": {
+        "mean": 32.76247787475586,
+        "std": 22.62540626525879
+      },
+      "captured": {
+        "mean": 0.1458333283662796,
+        "std": 0.35293906927108765
+      },
+      "context_mode": "zero",
+      "controller": "planner_bc_oracle_zero",
+      "heldout_checkpoint": 0,
+      "n_episodes": 48,
+      "opponent": "curious",
+      "pred_lava_steps": {
+        "mean": 12.1875,
+        "std": 9.003832817077637
+      },
+      "prey_lava_steps": {
+        "mean": 22.75,
+        "std": 21.830310821533203
+      },
+      "resources_collected": {
+        "mean": 6.875,
+        "std": 4.235883712768555
+      },
+      "seconds": 10.049741983413696,
+      "survival_time": {
+        "mean": 92.625,
+        "std": 20.805273056030273
+      }
+    },
+    {
+      "blue_action_abs_max": 1.0,
+      "blue_return": {
+        "mean": 29.6602783203125,
+        "std": 23.41107749938965
+      },
+      "captured": {
+        "mean": 0.25,
+        "std": 0.4330126941204071
+      },
+      "context_mode": "wrong_oracle",
+      "controller": "planner_bc_oracle_wrong",
+      "heldout_checkpoint": 0,
+      "n_episodes": 48,
+      "opponent": "curious",
+      "pred_lava_steps": {
+        "mean": 11.625,
+        "std": 9.184736251831055
+      },
+      "prey_lava_steps": {
+        "mean": 18.20833396911621,
+        "std": 18.89550018310547
+      },
+      "resources_collected": {
+        "mean": 6.458333492279053,
+        "std": 4.247344017028809
+      },
+      "seconds": 10.038800239562988,
+      "survival_time": {
+        "mean": 85.41666412353516,
+        "std": 26.88852882385254
+      }
+    },
+    {
+      "blue_action_abs_max": 1.0,
+      "blue_return": {
+        "mean": 35.278076171875,
+        "std": 20.614566802978516
+      },
+      "captured": {
+        "mean": 0.0416666679084301,
+        "std": 0.19982630014419556
+      },
+      "context_mode": "online",
+      "controller": "planner_bc_real_online",
+      "heldout_checkpoint": 0,
+      "n_episodes": 48,
+      "opponent": "curious",
+      "pred_lava_steps": {
+        "mean": 13.041666984558105,
+        "std": 9.124048233032227
+      },
+      "prey_lava_steps": {
+        "mean": 24.625,
+        "std": 20.58278465270996
+      },
+      "resources_collected": {
+        "mean": 7.166666507720947,
+        "std": 3.9965262413024902
+      },
+      "seconds": 14.329535961151123,
+      "survival_time": {
+        "mean": 97.0,
+        "std": 14.393285751342773
+      }
+    },
+    {
+      "blue_action_abs_max": 1.0,
+      "blue_return": {
+        "mean": 34.556678771972656,
+        "std": 21.71135902404785
+      },
+      "captured": {
+        "mean": 0.1041666641831398,
+        "std": 0.3054766356945038
+      },
+      "context_mode": "zero",
+      "controller": "planner_bc_real_zero",
+      "heldout_checkpoint": 0,
+      "n_episodes": 48,
+      "opponent": "curious",
+      "pred_lava_steps": {
+        "mean": 12.895833015441895,
+        "std": 9.35022258758545
+      },
+      "prey_lava_steps": {
+        "mean": 24.39583396911621,
+        "std": 19.99660301208496
+      },
+      "resources_collected": {
+        "mean": 7.145833492279053,
+        "std": 4.123053073883057
+      },
+      "seconds": 10.159986972808838,
+      "survival_time": {
+        "mean": 96.14583587646484,
+        "std": 15.76254653930664
+      }
+    },
+    {
+      "blue_action_abs_max": 1.0,
+      "blue_return": {
+        "mean": 35.07613754272461,
+        "std": 19.79656410217285
+      },
+      "captured": {
+        "mean": 0.0833333358168602,
+        "std": 0.2763853967189789
+      },
+      "context_mode": "shuffled",
+      "controller": "planner_bc_real_shuffled",
+      "heldout_checkpoint": 0,
+      "n_episodes": 48,
+      "opponent": "curious",
+      "pred_lava_steps": {
+        "mean": 12.5625,
+        "std": 8.643172264099121
+      },
+      "prey_lava_steps": {
+        "mean": 24.39583396911621,
+        "std": 20.13986587524414
+      },
+      "resources_collected": {
+        "mean": 7.208333492279053,
+        "std": 3.8781349658966064
+      },
+      "seconds": 14.607343196868896,
+      "survival_time": {
+        "mean": 95.54166412353516,
+        "std": 16.429088592529297
+      }
+    },
+    {
+      "blue_action_abs_max": 1.0,
+      "blue_return": {
+        "mean": 35.89549255371094,
+        "std": 20.128530502319336
+      },
+      "captured": {
+        "mean": 0.02083333395421505,
+        "std": 0.1428261399269104
+      },
+      "context_mode": "zero",
+      "controller": "planner_bc_no_c",
+      "heldout_checkpoint": 0,
+      "n_episodes": 48,
+      "opponent": "curious",
+      "pred_lava_steps": {
+        "mean": 13.604166984558105,
+        "std": 8.992448806762695
+      },
+      "prey_lava_steps": {
+        "mean": 26.125,
+        "std": 21.894277572631836
+      },
+      "resources_collected": {
+        "mean": 7.25,
+        "std": 3.934357166290283
+      },
+      "seconds": 10.629137992858887,
+      "survival_time": {
+        "mean": 98.45833587646484,
+        "std": 10.569134712219238
+      }
+    },
+    {
+      "blue_action_abs_max": 1.0,
+      "blue_return": {
+        "mean": 0.581045389175415,
+        "std": 10.88405704498291
+      },
+      "captured": {
+        "mean": 1.0,
+        "std": 0.0
+      },
+      "context_mode": "zero",
+      "controller": "mappo_prey",
+      "heldout_checkpoint": 1,
+      "n_episodes": 48,
+      "opponent": "capture",
+      "pred_lava_steps": {
+        "mean": 6.708333492279053,
+        "std": 7.294284820556641
+      },
+      "prey_lava_steps": {
+        "mean": 8.8125,
+        "std": 9.448668479919434
+      },
+      "resources_collected": {
+        "mean": 2.3125,
+        "std": 2.209414005279541
+      },
+      "seconds": 0.4606630802154541,
+      "survival_time": {
+        "mean": 28.3125,
+        "std": 14.72265338897705
+      }
+    },
+    {
+      "blue_action_abs_max": 0.9997420310974121,
+      "blue_return": {
+        "mean": -26.438650131225586,
+        "std": 38.89082336425781
+      },
+      "captured": {
+        "mean": 0.4791666567325592,
+        "std": 0.49956580996513367
+      },
+      "context_mode": "zero",
+      "controller": "random",
+      "heldout_checkpoint": 1,
+      "n_episodes": 48,
+      "opponent": "capture",
+      "pred_lava_steps": {
+        "mean": 3.7916667461395264,
+        "std": 8.298992156982422
+      },
+      "prey_lava_steps": {
+        "mean": 1.2708333730697632,
+        "std": 5.457180023193359
+      },
+      "resources_collected": {
+        "mean": 0.3333333432674408,
+        "std": 0.6236096024513245
+      },
+      "seconds": 0.42061400413513184,
+      "survival_time": {
+        "mean": 70.22916412353516,
+        "std": 33.678157806396484
+      }
+    },
+    {
+      "blue_action_abs_max": 1.0,
+      "blue_return": {
+        "mean": 25.192712783813477,
+        "std": 15.685844421386719
+      },
+      "captured": {
+        "mean": 0.0,
+        "std": 0.0
+      },
+      "context_mode": "zero",
+      "controller": "planner_true_red",
+      "heldout_checkpoint": 1,
+      "n_episodes": 48,
+      "opponent": "capture",
+      "pred_lava_steps": {
+        "mean": 14.479166984558105,
+        "std": 19.771602630615234
+      },
+      "prey_lava_steps": {
+        "mean": 15.041666984558105,
+        "std": 23.540708541870117
+      },
+      "resources_collected": {
+        "mean": 5.0625,
+        "std": 3.1517603397369385
+      },
+      "seconds": 10.727320194244385,
+      "survival_time": {
+        "mean": 100.0,
+        "std": 0.0
+      }
+    },
+    {
+      "blue_action_abs_max": 1.0,
+      "blue_return": {
+        "mean": 18.940277099609375,
+        "std": 13.663692474365234
+      },
+      "captured": {
+        "mean": 0.3333333432674408,
+        "std": 0.471404492855072
+      },
+      "context_mode": "oracle",
+      "controller": "planner_bc_oracle_correct",
+      "heldout_checkpoint": 1,
+      "n_episodes": 48,
+      "opponent": "capture",
+      "pred_lava_steps": {
+        "mean": 12.5625,
+        "std": 18.707069396972656
+      },
+      "prey_lava_steps": {
+        "mean": 11.020833015441895,
+        "std": 15.631818771362305
+      },
+      "resources_collected": {
+        "mean": 4.479166507720947,
+        "std": 2.5575833320617676
+      },
+      "seconds": 10.564323902130127,
+      "survival_time": {
+        "mean": 83.79166412353516,
+        "std": 25.237998962402344
+      }
+    },
+    {
+      "blue_action_abs_max": 1.0,
+      "blue_return": {
+        "mean": 17.42119026184082,
+        "std": 13.2450590133667
+      },
+      "captured": {
+        "mean": 0.5,
+        "std": 0.5
+      },
+      "context_mode": "zero",
+      "controller": "planner_bc_oracle_zero",
+      "heldout_checkpoint": 1,
+      "n_episodes": 48,
+      "opponent": "capture",
+      "pred_lava_steps": {
+        "mean": 10.708333015441895,
+        "std": 13.65796184539795
+      },
+      "prey_lava_steps": {
+        "mean": 10.770833015441895,
+        "std": 12.710296630859375
+      },
+      "resources_collected": {
+        "mean": 4.520833492279053,
+        "std": 2.5738232135772705
+      },
+      "seconds": 10.814524173736572,
+      "survival_time": {
+        "mean": 72.77083587646484,
+        "std": 31.78982925415039
+      }
+    },
+    {
+      "blue_action_abs_max": 1.0,
+      "blue_return": {
+        "mean": 15.052599906921387,
+        "std": 11.93912124633789
+      },
+      "captured": {
+        "mean": 0.4791666567325592,
+        "std": 0.49956580996513367
+      },
+      "context_mode": "wrong_oracle",
+      "controller": "planner_bc_oracle_wrong",
+      "heldout_checkpoint": 1,
+      "n_episodes": 48,
+      "opponent": "capture",
+      "pred_lava_steps": {
+        "mean": 7.333333492279053,
+        "std": 8.697062492370605
+      },
+      "prey_lava_steps": {
+        "mean": 8.770833015441895,
+        "std": 12.148798942565918
+      },
+      "resources_collected": {
+        "mean": 3.9791667461395264,
+        "std": 2.367220401763916
+      },
+      "seconds": 10.722685098648071,
+      "survival_time": {
+        "mean": 68.9375,
+        "std": 34.29917907714844
+      }
+    },
+    {
+      "blue_action_abs_max": 1.0,
+      "blue_return": {
+        "mean": 17.081199645996094,
+        "std": 12.367192268371582
+      },
+      "captured": {
+        "mean": 0.4166666567325592,
+        "std": 0.4930066764354706
+      },
+      "context_mode": "online",
+      "controller": "planner_bc_real_online",
+      "heldout_checkpoint": 1,
+      "n_episodes": 48,
+      "opponent": "capture",
+      "pred_lava_steps": {
+        "mean": 10.75,
+        "std": 15.710267066955566
+      },
+      "prey_lava_steps": {
+        "mean": 11.625,
+        "std": 17.593351364135742
+      },
+      "resources_collected": {
+        "mean": 4.270833492279053,
+        "std": 2.6750357151031494
+      },
+      "seconds": 15.4632887840271,
+      "survival_time": {
+        "mean": 75.75,
+        "std": 30.685569763183594
+      }
+    },
+    {
+      "blue_action_abs_max": 1.0,
+      "blue_return": {
+        "mean": 14.74468994140625,
+        "std": 12.58565616607666
+      },
+      "captured": {
+        "mean": 0.5625,
+        "std": 0.49607837200164795
+      },
+      "context_mode": "zero",
+      "controller": "planner_bc_real_zero",
+      "heldout_checkpoint": 1,
+      "n_episodes": 48,
+      "opponent": "capture",
+      "pred_lava_steps": {
+        "mean": 9.666666984558105,
+        "std": 14.074702262878418
+      },
+      "prey_lava_steps": {
+        "mean": 10.916666984558105,
+        "std": 16.910097122192383
+      },
+      "resources_collected": {
+        "mean": 4.083333492279053,
+        "std": 2.4565670490264893
+      },
+      "seconds": 10.895108222961426,
+      "survival_time": {
+        "mean": 66.35416412353516,
+        "std": 33.74752426147461
+      }
+    },
+    {
+      "blue_action_abs_max": 1.0,
+      "blue_return": {
+        "mean": 18.673795700073242,
+        "std": 14.666983604431152
+      },
+      "captured": {
+        "mean": 0.3958333432674408,
+        "std": 0.4890289306640625
+      },
+      "context_mode": "shuffled",
+      "controller": "planner_bc_real_shuffled",
+      "heldout_checkpoint": 1,
+      "n_episodes": 48,
+      "opponent": "capture",
+      "pred_lava_steps": {
+        "mean": 11.270833015441895,
+        "std": 16.9898738861084
+      },
+      "prey_lava_steps": {
+        "mean": 11.229166984558105,
+        "std": 17.21220588684082
+      },
+      "resources_collected": {
+        "mean": 4.541666507720947,
+        "std": 2.6611270904541016
+      },
+      "seconds": 15.6995530128479,
+      "survival_time": {
+        "mean": 77.1875,
+        "std": 31.754039764404297
+      }
+    },
+    {
+      "blue_action_abs_max": 1.0,
+      "blue_return": {
+        "mean": 16.810367584228516,
+        "std": 11.912659645080566
+      },
+      "captured": {
+        "mean": 0.4166666567325592,
+        "std": 0.4930066466331482
+      },
+      "context_mode": "zero",
+      "controller": "planner_bc_no_c",
+      "heldout_checkpoint": 1,
+      "n_episodes": 48,
+      "opponent": "capture",
+      "pred_lava_steps": {
+        "mean": 10.25,
+        "std": 15.365681648254395
+      },
+      "prey_lava_steps": {
+        "mean": 10.75,
+        "std": 14.134031295776367
+      },
+      "resources_collected": {
+        "mean": 4.208333492279053,
+        "std": 2.263462781906128
+      },
+      "seconds": 11.265555143356323,
+      "survival_time": {
+        "mean": 75.6875,
+        "std": 31.0189151763916
+      }
+    },
+    {
+      "blue_action_abs_max": 1.0,
+      "blue_return": {
+        "mean": 27.858427047729492,
+        "std": 15.326728820800781
+      },
+      "captured": {
+        "mean": 0.0416666679084301,
+        "std": 0.19982630014419556
+      },
+      "context_mode": "zero",
+      "controller": "mappo_prey",
+      "heldout_checkpoint": 1,
+      "n_episodes": 48,
+      "opponent": "risk",
+      "pred_lava_steps": {
+        "mean": 0.4166666567325592,
+        "std": 2.71441650390625
+      },
+      "prey_lava_steps": {
+        "mean": 33.72916793823242,
+        "std": 14.427606582641602
+      },
+      "resources_collected": {
+        "mean": 6.395833492279053,
+        "std": 2.342893362045288
+      },
+      "seconds": 0.46991395950317383,
+      "survival_time": {
+        "mean": 98.54166412353516,
+        "std": 7.0414204597473145
+      }
+    },
+    {
+      "blue_action_abs_max": 0.9999918937683105,
+      "blue_return": {
+        "mean": -15.488787651062012,
+        "std": 36.013954162597656
+      },
+      "captured": {
+        "mean": 0.0416666679084301,
+        "std": 0.19982631504535675
+      },
+      "context_mode": "zero",
+      "controller": "random",
+      "heldout_checkpoint": 1,
+      "n_episodes": 48,
+      "opponent": "risk",
+      "pred_lava_steps": {
+        "mean": 0.6041666865348816,
+        "std": 3.277064323425293
+      },
+      "prey_lava_steps": {
+        "mean": 5.916666507720947,
+        "std": 14.361164093017578
+      },
+      "resources_collected": {
+        "mean": 0.75,
+        "std": 0.9682458639144897
+      },
+      "seconds": 0.43247485160827637,
+      "survival_time": {
+        "mean": 97.95833587646484,
+        "std": 9.791489601135254
+      }
+    },
+    {
+      "blue_action_abs_max": 1.0,
+      "blue_return": {
+        "mean": 35.220977783203125,
+        "std": 17.999820709228516
+      },
+      "captured": {
+        "mean": 0.0,
+        "std": 0.0
+      },
+      "context_mode": "zero",
+      "controller": "planner_true_red",
+      "heldout_checkpoint": 1,
+      "n_episodes": 48,
+      "opponent": "risk",
+      "pred_lava_steps": {
+        "mean": 0.3958333432674408,
+        "std": 2.316063165664673
+      },
+      "prey_lava_steps": {
+        "mean": 17.89583396911621,
+        "std": 18.781906127929688
+      },
+      "resources_collected": {
+        "mean": 7.0625,
+        "std": 3.6136677265167236
+      },
+      "seconds": 11.119115114212036,
+      "survival_time": {
+        "mean": 100.0,
+        "std": 0.0
+      }
+    },
+    {
+      "blue_action_abs_max": 1.0,
+      "blue_return": {
+        "mean": 35.32191848754883,
+        "std": 17.600568771362305
+      },
+      "captured": {
+        "mean": 0.0,
+        "std": 0.0
+      },
+      "context_mode": "oracle",
+      "controller": "planner_bc_oracle_correct",
+      "heldout_checkpoint": 1,
+      "n_episodes": 48,
+      "opponent": "risk",
+      "pred_lava_steps": {
+        "mean": 0.3958333432674408,
+        "std": 2.316063165664673
+      },
+      "prey_lava_steps": {
+        "mean": 17.85416603088379,
+        "std": 19.0394229888916
+      },
+      "resources_collected": {
+        "mean": 7.083333492279053,
+        "std": 3.5345516204833984
+      },
+      "seconds": 12.363702058792114,
+      "survival_time": {
+        "mean": 100.0,
+        "std": 0.0
+      }
+    },
+    {
+      "blue_action_abs_max": 1.0,
+      "blue_return": {
+        "mean": 34.1684684753418,
+        "std": 18.117645263671875
+      },
+      "captured": {
+        "mean": 0.0,
+        "std": 0.0
+      },
+      "context_mode": "zero",
+      "controller": "planner_bc_oracle_zero",
+      "heldout_checkpoint": 1,
+      "n_episodes": 48,
+      "opponent": "risk",
+      "pred_lava_steps": {
+        "mean": 0.3958333432674408,
+        "std": 2.316063165664673
+      },
+      "prey_lava_steps": {
+        "mean": 18.02083396911621,
+        "std": 19.947315216064453
+      },
+      "resources_collected": {
+        "mean": 6.854166507720947,
+        "std": 3.6399953365325928
+      },
+      "seconds": 9.149706840515137,
+      "survival_time": {
+        "mean": 100.0,
+        "std": 0.0
+      }
+    },
+    {
+      "blue_action_abs_max": 1.0,
+      "blue_return": {
+        "mean": 34.89768600463867,
+        "std": 17.11418914794922
+      },
+      "captured": {
+        "mean": 0.0,
+        "std": 0.0
+      },
+      "context_mode": "wrong_oracle",
+      "controller": "planner_bc_oracle_wrong",
+      "heldout_checkpoint": 1,
+      "n_episodes": 48,
+      "opponent": "risk",
+      "pred_lava_steps": {
+        "mean": 0.3958333432674408,
+        "std": 2.316063165664673
+      },
+      "prey_lava_steps": {
+        "mean": 19.45833396911621,
+        "std": 19.811569213867188
+      },
+      "resources_collected": {
+        "mean": 7.0,
+        "std": 3.4399611949920654
+      },
+      "seconds": 9.023760318756104,
+      "survival_time": {
+        "mean": 100.0,
+        "std": 0.0
+      }
+    },
+    {
+      "blue_action_abs_max": 1.0,
+      "blue_return": {
+        "mean": 35.42380905151367,
+        "std": 17.698232650756836
+      },
+      "captured": {
+        "mean": 0.0,
+        "std": 0.0
+      },
+      "context_mode": "online",
+      "controller": "planner_bc_real_online",
+      "heldout_checkpoint": 1,
+      "n_episodes": 48,
+      "opponent": "risk",
+      "pred_lava_steps": {
+        "mean": 0.3958333432674408,
+        "std": 2.316063165664673
+      },
+      "prey_lava_steps": {
+        "mean": 18.16666603088379,
+        "std": 19.626018524169922
+      },
+      "resources_collected": {
+        "mean": 7.104166507720947,
+        "std": 3.554572105407715
+      },
+      "seconds": 13.494252920150757,
+      "survival_time": {
+        "mean": 100.0,
+        "std": 0.0
+      }
+    },
+    {
+      "blue_action_abs_max": 1.0,
+      "blue_return": {
+        "mean": 35.00645446777344,
+        "std": 17.37630844116211
+      },
+      "captured": {
+        "mean": 0.0,
+        "std": 0.0
+      },
+      "context_mode": "zero",
+      "controller": "planner_bc_real_zero",
+      "heldout_checkpoint": 1,
+      "n_episodes": 48,
+      "opponent": "risk",
+      "pred_lava_steps": {
+        "mean": 0.3958333432674408,
+        "std": 2.316063165664673
+      },
+      "prey_lava_steps": {
+        "mean": 18.1875,
+        "std": 20.093175888061523
+      },
+      "resources_collected": {
+        "mean": 7.020833492279053,
+        "std": 3.490997791290283
+      },
+      "seconds": 9.054385900497437,
+      "survival_time": {
+        "mean": 100.0,
+        "std": 0.0
+      }
+    },
+    {
+      "blue_action_abs_max": 1.0,
+      "blue_return": {
+        "mean": 34.908477783203125,
+        "std": 17.487276077270508
+      },
+      "captured": {
+        "mean": 0.0,
+        "std": 0.0
+      },
+      "context_mode": "shuffled",
+      "controller": "planner_bc_real_shuffled",
+      "heldout_checkpoint": 1,
+      "n_episodes": 48,
+      "opponent": "risk",
+      "pred_lava_steps": {
+        "mean": 0.3958333432674408,
+        "std": 2.316063165664673
+      },
+      "prey_lava_steps": {
+        "mean": 18.70833396911621,
+        "std": 19.50102424621582
+      },
+      "resources_collected": {
+        "mean": 7.0,
+        "std": 3.5118844509124756
+      },
+      "seconds": 13.312644004821777,
+      "survival_time": {
+        "mean": 100.0,
+        "std": 0.0
+      }
+    },
+    {
+      "blue_action_abs_max": 1.0,
+      "blue_return": {
+        "mean": 35.42606735229492,
+        "std": 18.280609130859375
+      },
+      "captured": {
+        "mean": 0.0,
+        "std": 0.0
+      },
+      "context_mode": "zero",
+      "controller": "planner_bc_no_c",
+      "heldout_checkpoint": 1,
+      "n_episodes": 48,
+      "opponent": "risk",
+      "pred_lava_steps": {
+        "mean": 0.3958333432674408,
+        "std": 2.316063165664673
+      },
+      "prey_lava_steps": {
+        "mean": 18.5,
+        "std": 19.48076057434082
+      },
+      "resources_collected": {
+        "mean": 7.104166507720947,
+        "std": 3.6699204444885254
+      },
+      "seconds": 9.088993072509766,
+      "survival_time": {
+        "mean": 100.0,
+        "std": 0.0
+      }
+    },
+    {
+      "blue_action_abs_max": 1.0,
+      "blue_return": {
+        "mean": 28.686294555664062,
+        "std": 14.972884178161621
+      },
+      "captured": {
+        "mean": 0.0833333358168602,
+        "std": 0.2763853967189789
+      },
+      "context_mode": "zero",
+      "controller": "mappo_prey",
+      "heldout_checkpoint": 1,
+      "n_episodes": 48,
+      "opponent": "curious",
+      "pred_lava_steps": {
+        "mean": 11.958333015441895,
+        "std": 8.21573257446289
+      },
+      "prey_lava_steps": {
+        "mean": 34.02083206176758,
+        "std": 13.825533866882324
+      },
+      "resources_collected": {
+        "mean": 6.5625,
+        "std": 2.5892908573150635
+      },
+      "seconds": 0.41306495666503906,
+      "survival_time": {
+        "mean": 96.4375,
+        "std": 14.240357398986816
+      }
+    },
+    {
+      "blue_action_abs_max": 0.9998540878295898,
+      "blue_return": {
+        "mean": -9.9791898727417,
+        "std": 29.721609115600586
+      },
+      "captured": {
+        "mean": 0.2916666567325592,
+        "std": 0.45452964305877686
+      },
+      "context_mode": "zero",
+      "controller": "random",
+      "heldout_checkpoint": 1,
+      "n_episodes": 48,
+      "opponent": "curious",
+      "pred_lava_steps": {
+        "mean": 10.4375,
+        "std": 7.981505393981934
+      },
+      "prey_lava_steps": {
+        "mean": 4.770833492279053,
+        "std": 11.62654972076416
+      },
+      "resources_collected": {
+        "mean": 0.5416666865348816,
+        "std": 0.7058780789375305
+      },
+      "seconds": 0.3847041130065918,
+      "survival_time": {
+        "mean": 85.16666412353516,
+        "std": 26.614791870117188
+      }
+    },
+    {
+      "blue_action_abs_max": 1.0,
+      "blue_return": {
+        "mean": 36.23582077026367,
+        "std": 18.9698429107666
+      },
+      "captured": {
+        "mean": 0.0,
+        "std": 0.0
+      },
+      "context_mode": "zero",
+      "controller": "planner_true_red",
+      "heldout_checkpoint": 1,
+      "n_episodes": 48,
+      "opponent": "curious",
+      "pred_lava_steps": {
+        "mean": 12.979166984558105,
+        "std": 7.636233329772949
+      },
+      "prey_lava_steps": {
+        "mean": 20.27083396911621,
+        "std": 20.310853958129883
+      },
+      "resources_collected": {
+        "mean": 7.270833492279053,
+        "std": 3.8009843826293945
+      },
+      "seconds": 9.285023927688599,
+      "survival_time": {
+        "mean": 100.0,
+        "std": 0.0
+      }
+    },
+    {
+      "blue_action_abs_max": 1.0,
+      "blue_return": {
+        "mean": 34.11954879760742,
+        "std": 19.792648315429688
+      },
+      "captured": {
+        "mean": 0.0833333358168602,
+        "std": 0.2763853967189789
+      },
+      "context_mode": "oracle",
+      "controller": "planner_bc_oracle_correct",
+      "heldout_checkpoint": 1,
+      "n_episodes": 48,
+      "opponent": "curious",
+      "pred_lava_steps": {
+        "mean": 12.6875,
+        "std": 8.05749225616455
+      },
+      "prey_lava_steps": {
+        "mean": 18.52083396911621,
+        "std": 19.701934814453125
+      },
+      "resources_collected": {
+        "mean": 7.020833492279053,
+        "std": 3.6313998699188232
+      },
+      "seconds": 9.162658214569092,
+      "survival_time": {
+        "mean": 94.10416412353516,
+        "std": 19.683156967163086
+      }
+    },
+    {
+      "blue_action_abs_max": 1.0,
+      "blue_return": {
+        "mean": 36.330204010009766,
+        "std": 20.234806060791016
+      },
+      "captured": {
+        "mean": 0.1041666641831398,
+        "std": 0.3054766356945038
+      },
+      "context_mode": "zero",
+      "controller": "planner_bc_oracle_zero",
+      "heldout_checkpoint": 1,
+      "n_episodes": 48,
+      "opponent": "curious",
+      "pred_lava_steps": {
+        "mean": 12.083333015441895,
+        "std": 8.048895835876465
+      },
+      "prey_lava_steps": {
+        "mean": 21.47916603088379,
+        "std": 19.328292846679688
+      },
+      "resources_collected": {
+        "mean": 7.5,
+        "std": 3.7416574954986572
+      },
+      "seconds": 9.311842918395996,
+      "survival_time": {
+        "mean": 93.77083587646484,
+        "std": 18.391843795776367
+      }
+    },
+    {
+      "blue_action_abs_max": 1.0,
+      "blue_return": {
+        "mean": 31.786420822143555,
+        "std": 20.844697952270508
+      },
+      "captured": {
+        "mean": 0.1875,
+        "std": 0.3903123736381531
+      },
+      "context_mode": "wrong_oracle",
+      "controller": "planner_bc_oracle_wrong",
+      "heldout_checkpoint": 1,
+      "n_episodes": 48,
+      "opponent": "curious",
+      "pred_lava_steps": {
+        "mean": 10.854166984558105,
+        "std": 8.460667610168457
+      },
+      "prey_lava_steps": {
+        "mean": 17.8125,
+        "std": 18.63873291015625
+      },
+      "resources_collected": {
+        "mean": 6.75,
+        "std": 3.8432841300964355
+      },
+      "seconds": 9.004129886627197,
+      "survival_time": {
+        "mean": 88.58333587646484,
+        "std": 24.905515670776367
+      }
+    },
+    {
+      "blue_action_abs_max": 1.0,
+      "blue_return": {
+        "mean": 34.58696365356445,
+        "std": 19.684757232666016
+      },
+      "captured": {
+        "mean": 0.125,
+        "std": 0.33071890473365784
+      },
+      "context_mode": "online",
+      "controller": "planner_bc_real_online",
+      "heldout_checkpoint": 1,
+      "n_episodes": 48,
+      "opponent": "curious",
+      "pred_lava_steps": {
+        "mean": 11.791666984558105,
+        "std": 7.629324436187744
+      },
+      "prey_lava_steps": {
+        "mean": 19.29166603088379,
+        "std": 18.03348731994629
+      },
+      "resources_collected": {
+        "mean": 7.1875,
+        "std": 3.6836137771606445
+      },
+      "seconds": 13.32591199874878,
+      "survival_time": {
+        "mean": 91.85416412353516,
+        "std": 22.023651123046875
+      }
+    },
+    {
+      "blue_action_abs_max": 1.0,
+      "blue_return": {
+        "mean": 37.28702163696289,
+        "std": 17.78350830078125
+      },
+      "captured": {
+        "mean": 0.0416666679084301,
+        "std": 0.19982630014419556
+      },
+      "context_mode": "zero",
+      "controller": "planner_bc_real_zero",
+      "heldout_checkpoint": 1,
+      "n_episodes": 48,
+      "opponent": "curious",
+      "pred_lava_steps": {
+        "mean": 12.5,
+        "std": 6.770031929016113
+      },
+      "prey_lava_steps": {
+        "mean": 19.70833396911621,
+        "std": 18.364320755004883
+      },
+      "resources_collected": {
+        "mean": 7.5625,
+        "std": 3.4393932819366455
+      },
+      "seconds": 9.298740863800049,
+      "survival_time": {
+        "mean": 97.0,
+        "std": 14.393285751342773
+      }
+    },
+    {
+      "blue_action_abs_max": 1.0,
+      "blue_return": {
+        "mean": 33.64293670654297,
+        "std": 18.736114501953125
+      },
+      "captured": {
+        "mean": 0.1041666641831398,
+        "std": 0.3054766058921814
+      },
+      "context_mode": "shuffled",
+      "controller": "planner_bc_real_shuffled",
+      "heldout_checkpoint": 1,
+      "n_episodes": 48,
+      "opponent": "curious",
+      "pred_lava_steps": {
+        "mean": 11.8125,
+        "std": 7.446073532104492
+      },
+      "prey_lava_steps": {
+        "mean": 18.29166603088379,
+        "std": 16.586841583251953
+      },
+      "resources_collected": {
+        "mean": 6.958333492279053,
+        "std": 3.576301097869873
+      },
+      "seconds": 13.25621509552002,
+      "survival_time": {
+        "mean": 93.3125,
+        "std": 20.106130599975586
+      }
+    },
+    {
+      "blue_action_abs_max": 1.0,
+      "blue_return": {
+        "mean": 32.405059814453125,
+        "std": 19.331764221191406
+      },
+      "captured": {
+        "mean": 0.1458333283662796,
+        "std": 0.35293906927108765
+      },
+      "context_mode": "zero",
+      "controller": "planner_bc_no_c",
+      "heldout_checkpoint": 1,
+      "n_episodes": 48,
+      "opponent": "curious",
+      "pred_lava_steps": {
+        "mean": 11.354166984558105,
+        "std": 8.181507110595703
+      },
+      "prey_lava_steps": {
+        "mean": 18.66666603088379,
+        "std": 19.262802124023438
+      },
+      "resources_collected": {
+        "mean": 6.791666507720947,
+        "std": 3.5821218490600586
+      },
+      "seconds": 9.069000959396362,
+      "survival_time": {
+        "mean": 90.72916412353516,
+        "std": 22.957151412963867
+      }
+    },
+    {
+      "blue_action_abs_max": 1.0,
+      "blue_return": {
+        "mean": 0.20623715221881866,
+        "std": 8.416587829589844
+      },
+      "captured": {
+        "mean": 1.0,
+        "std": 0.0
+      },
+      "context_mode": "zero",
+      "controller": "mappo_prey",
+      "heldout_checkpoint": 2,
+      "n_episodes": 48,
+      "opponent": "capture",
+      "pred_lava_steps": {
+        "mean": 7.5,
+        "std": 7.179252624511719
+      },
+      "prey_lava_steps": {
+        "mean": 9.020833015441895,
+        "std": 8.77375316619873
+      },
+      "resources_collected": {
+        "mean": 2.1041667461395264,
+        "std": 1.7587825059890747
+      },
+      "seconds": 0.42050981521606445,
+      "survival_time": {
+        "mean": 26.41666603088379,
+        "std": 13.445621490478516
+      }
+    },
+    {
+      "blue_action_abs_max": 0.9999222755432129,
+      "blue_return": {
+        "mean": -11.467198371887207,
+        "std": 23.95587158203125
+      },
+      "captured": {
+        "mean": 0.5,
+        "std": 0.5
+      },
+      "context_mode": "zero",
+      "controller": "random",
+      "heldout_checkpoint": 2,
+      "n_episodes": 48,
+      "opponent": "capture",
+      "pred_lava_steps": {
+        "mean": 4.041666507720947,
+        "std": 5.458015441894531
+      },
+      "prey_lava_steps": {
+        "mean": 0.6875,
+        "std": 2.58324933052063
+      },
+      "resources_collected": {
+        "mean": 0.2708333432674408,
+        "std": 0.5299206972122192
+      },
+      "seconds": 0.391355037689209,
+      "survival_time": {
+        "mean": 69.33333587646484,
+        "std": 33.735694885253906
+      }
+    },
+    {
+      "blue_action_abs_max": 1.0,
+      "blue_return": {
+        "mean": 26.3823184967041,
+        "std": 16.25370216369629
+      },
+      "captured": {
+        "mean": 0.0,
+        "std": 0.0
+      },
+      "context_mode": "zero",
+      "controller": "planner_true_red",
+      "heldout_checkpoint": 2,
+      "n_episodes": 48,
+      "opponent": "capture",
+      "pred_lava_steps": {
+        "mean": 21.3125,
+        "std": 25.555622100830078
+      },
+      "prey_lava_steps": {
+        "mean": 18.4375,
+        "std": 24.934837341308594
+      },
+      "resources_collected": {
+        "mean": 5.291666507720947,
+        "std": 3.246526002883911
+      },
+      "seconds": 9.189494848251343,
+      "survival_time": {
+        "mean": 100.0,
+        "std": 0.0
+      }
+    },
+    {
+      "blue_action_abs_max": 1.0,
+      "blue_return": {
+        "mean": 20.354122161865234,
+        "std": 15.692110061645508
+      },
+      "captured": {
+        "mean": 0.1875,
+        "std": 0.3903123736381531
+      },
+      "context_mode": "oracle",
+      "controller": "planner_bc_oracle_correct",
+      "heldout_checkpoint": 2,
+      "n_episodes": 48,
+      "opponent": "capture",
+      "pred_lava_steps": {
+        "mean": 15.354166984558105,
+        "std": 21.087604522705078
+      },
+      "prey_lava_steps": {
+        "mean": 14.0625,
+        "std": 21.532346725463867
+      },
+      "resources_collected": {
+        "mean": 4.458333492279053,
+        "std": 2.9577465057373047
+      },
+      "seconds": 9.362994909286499,
+      "survival_time": {
+        "mean": 87.1875,
+        "std": 27.7606258392334
+      }
+    },
+    {
+      "blue_action_abs_max": 1.0,
+      "blue_return": {
+        "mean": 13.27933406829834,
+        "std": 12.432574272155762
+      },
+      "captured": {
+        "mean": 0.5,
+        "std": 0.5
+      },
+      "context_mode": "zero",
+      "controller": "planner_bc_oracle_zero",
+      "heldout_checkpoint": 2,
+      "n_episodes": 48,
+      "opponent": "capture",
+      "pred_lava_steps": {
+        "mean": 9.229166984558105,
+        "std": 14.649003982543945
+      },
+      "prey_lava_steps": {
+        "mean": 8.583333015441895,
+        "std": 13.319524765014648
+      },
+      "resources_collected": {
+        "mean": 3.6666667461395264,
+        "std": 2.312406301498413
+      },
+      "seconds": 9.0398690700531,
+      "survival_time": {
+        "mean": 70.45833587646484,
+        "std": 32.78589630126953
+      }
+    },
+    {
+      "blue_action_abs_max": 1.0,
+      "blue_return": {
+        "mean": 15.352367401123047,
+        "std": 14.256197929382324
+      },
+      "captured": {
+        "mean": 0.4791666567325592,
+        "std": 0.49956580996513367
+      },
+      "context_mode": "wrong_oracle",
+      "controller": "planner_bc_oracle_wrong",
+      "heldout_checkpoint": 2,
+      "n_episodes": 48,
+      "opponent": "capture",
+      "pred_lava_steps": {
+        "mean": 12.270833015441895,
+        "std": 17.800678253173828
+      },
+      "prey_lava_steps": {
+        "mean": 10.979166984558105,
+        "std": 16.322898864746094
+      },
+      "resources_collected": {
+        "mean": 4.041666507720947,
+        "std": 2.6532866954803467
+      },
+      "seconds": 9.11853575706482,
+      "survival_time": {
+        "mean": 70.375,
+        "std": 34.61311340332031
+      }
+    },
+    {
+      "blue_action_abs_max": 1.0,
+      "blue_return": {
+        "mean": 16.409475326538086,
+        "std": 15.081207275390625
+      },
+      "captured": {
+        "mean": 0.4791666567325592,
+        "std": 0.49956580996513367
+      },
+      "context_mode": "online",
+      "controller": "planner_bc_real_online",
+      "heldout_checkpoint": 2,
+      "n_episodes": 48,
+      "opponent": "capture",
+      "pred_lava_steps": {
+        "mean": 13.958333015441895,
+        "std": 19.560758590698242
+      },
+      "prey_lava_steps": {
+        "mean": 12.479166984558105,
+        "std": 18.51799774169922
+      },
+      "resources_collected": {
+        "mean": 4.25,
+        "std": 2.7195281982421875
+      },
+      "seconds": 13.343914031982422,
+      "survival_time": {
+        "mean": 70.39583587646484,
+        "std": 32.865726470947266
+      }
+    },
+    {
+      "blue_action_abs_max": 1.0,
+      "blue_return": {
+        "mean": 18.298809051513672,
+        "std": 16.1408748626709
+      },
+      "captured": {
+        "mean": 0.4166666567325592,
+        "std": 0.4930066764354706
+      },
+      "context_mode": "zero",
+      "controller": "planner_bc_real_zero",
+      "heldout_checkpoint": 2,
+      "n_episodes": 48,
+      "opponent": "capture",
+      "pred_lava_steps": {
+        "mean": 14.458333015441895,
+        "std": 19.290496826171875
+      },
+      "prey_lava_steps": {
+        "mean": 11.833333015441895,
+        "std": 15.294788360595703
+      },
+      "resources_collected": {
+        "mean": 4.5,
+        "std": 3.0482234954833984
+      },
+      "seconds": 9.11989688873291,
+      "survival_time": {
+        "mean": 76.02083587646484,
+        "std": 31.372421264648438
+      }
+    },
+    {
+      "blue_action_abs_max": 1.0,
+      "blue_return": {
+        "mean": 17.238645553588867,
+        "std": 16.072509765625
+      },
+      "captured": {
+        "mean": 0.4791666567325592,
+        "std": 0.4995657801628113
+      },
+      "context_mode": "shuffled",
+      "controller": "planner_bc_real_shuffled",
+      "heldout_checkpoint": 2,
+      "n_episodes": 48,
+      "opponent": "capture",
+      "pred_lava_steps": {
+        "mean": 14.5,
+        "std": 18.045082092285156
+      },
+      "prey_lava_steps": {
+        "mean": 12.895833015441895,
+        "std": 17.70856475830078
+      },
+      "resources_collected": {
+        "mean": 4.416666507720947,
+        "std": 2.9639031887054443
+      },
+      "seconds": 13.423819780349731,
+      "survival_time": {
+        "mean": 74.79166412353516,
+        "std": 31.166860580444336
+      }
+    },
+    {
+      "blue_action_abs_max": 1.0,
+      "blue_return": {
+        "mean": 15.867741584777832,
+        "std": 12.994405746459961
+      },
+      "captured": {
+        "mean": 0.5,
+        "std": 0.5
+      },
+      "context_mode": "zero",
+      "controller": "planner_bc_no_c",
+      "heldout_checkpoint": 2,
+      "n_episodes": 48,
+      "opponent": "capture",
+      "pred_lava_steps": {
+        "mean": 11.5625,
+        "std": 16.01419448852539
+      },
+      "prey_lava_steps": {
+        "mean": 10.395833015441895,
+        "std": 15.296704292297363
+      },
+      "resources_collected": {
+        "mean": 4.1875,
+        "std": 2.412262439727783
+      },
+      "seconds": 9.178704738616943,
+      "survival_time": {
+        "mean": 71.5625,
+        "std": 31.380664825439453
+      }
+    },
+    {
+      "blue_action_abs_max": 1.0,
+      "blue_return": {
+        "mean": 24.566543579101562,
+        "std": 13.979700088500977
+      },
+      "captured": {
+        "mean": 0.0416666679084301,
+        "std": 0.19982630014419556
+      },
+      "context_mode": "zero",
+      "controller": "mappo_prey",
+      "heldout_checkpoint": 2,
+      "n_episodes": 48,
+      "opponent": "risk",
+      "pred_lava_steps": {
+        "mean": 0.0,
+        "std": 0.0
+      },
+      "prey_lava_steps": {
+        "mean": 36.79166793823242,
+        "std": 17.721172332763672
+      },
+      "resources_collected": {
+        "mean": 5.604166507720947,
+        "std": 2.157733917236328
+      },
+      "seconds": 0.41741275787353516,
+      "survival_time": {
+        "mean": 97.875,
+        "std": 11.397414207458496
+      }
+    },
+    {
+      "blue_action_abs_max": 0.9999692440032959,
+      "blue_return": {
+        "mean": -13.59168529510498,
+        "std": 27.2357177734375
+      },
+      "captured": {
+        "mean": 0.02083333395421505,
+        "std": 0.1428261399269104
+      },
+      "context_mode": "zero",
+      "controller": "random",
+      "heldout_checkpoint": 2,
+      "n_episodes": 48,
+      "opponent": "risk",
+      "pred_lava_steps": {
+        "mean": 0.0,
+        "std": 0.0
+      },
+      "prey_lava_steps": {
+        "mean": 8.5,
+        "std": 18.595474243164062
+      },
+      "resources_collected": {
+        "mean": 0.75,
+        "std": 0.9242113828659058
+      },
+      "seconds": 0.3765730857849121,
+      "survival_time": {
+        "mean": 98.83333587646484,
+        "std": 7.998263835906982
+      }
+    },
+    {
+      "blue_action_abs_max": 1.0,
+      "blue_return": {
+        "mean": 31.844091415405273,
+        "std": 18.707996368408203
+      },
+      "captured": {
+        "mean": 0.0,
+        "std": 0.0
+      },
+      "context_mode": "zero",
+      "controller": "planner_true_red",
+      "heldout_checkpoint": 2,
+      "n_episodes": 48,
+      "opponent": "risk",
+      "pred_lava_steps": {
+        "mean": 0.0,
+        "std": 0.0
+      },
+      "prey_lava_steps": {
+        "mean": 17.79166603088379,
+        "std": 19.098384857177734
+      },
+      "resources_collected": {
+        "mean": 6.375,
+        "std": 3.74513578414917
+      },
+      "seconds": 9.48866605758667,
+      "survival_time": {
+        "mean": 100.0,
+        "std": 0.0
+      }
+    },
+    {
+      "blue_action_abs_max": 1.0,
+      "blue_return": {
+        "mean": 31.844091415405273,
+        "std": 18.707996368408203
+      },
+      "captured": {
+        "mean": 0.0,
+        "std": 0.0
+      },
+      "context_mode": "oracle",
+      "controller": "planner_bc_oracle_correct",
+      "heldout_checkpoint": 2,
+      "n_episodes": 48,
+      "opponent": "risk",
+      "pred_lava_steps": {
+        "mean": 0.0,
+        "std": 0.0
+      },
+      "prey_lava_steps": {
+        "mean": 18.4375,
+        "std": 19.246110916137695
+      },
+      "resources_collected": {
+        "mean": 6.375,
+        "std": 3.74513578414917
+      },
+      "seconds": 9.13054609298706,
+      "survival_time": {
+        "mean": 100.0,
+        "std": 0.0
+      }
+    },
+    {
+      "blue_action_abs_max": 1.0,
+      "blue_return": {
+        "mean": 32.78158950805664,
+        "std": 19.34679412841797
+      },
+      "captured": {
+        "mean": 0.0,
+        "std": 0.0
+      },
+      "context_mode": "zero",
+      "controller": "planner_bc_oracle_zero",
+      "heldout_checkpoint": 2,
+      "n_episodes": 48,
+      "opponent": "risk",
+      "pred_lava_steps": {
+        "mean": 0.0,
+        "std": 0.0
+      },
+      "prey_lava_steps": {
+        "mean": 17.625,
+        "std": 18.510835647583008
+      },
+      "resources_collected": {
+        "mean": 6.5625,
+        "std": 3.87247896194458
+      },
+      "seconds": 9.043447256088257,
+      "survival_time": {
+        "mean": 100.0,
+        "std": 0.0
+      }
+    },
+    {
+      "blue_action_abs_max": 1.0,
+      "blue_return": {
+        "mean": 32.052425384521484,
+        "std": 18.90795135498047
+      },
+      "captured": {
+        "mean": 0.02083333395421505,
+        "std": 0.1428261399269104
+      },
+      "context_mode": "wrong_oracle",
+      "controller": "planner_bc_oracle_wrong",
+      "heldout_checkpoint": 2,
+      "n_episodes": 48,
+      "opponent": "risk",
+      "pred_lava_steps": {
+        "mean": 0.0,
+        "std": 0.0
+      },
+      "prey_lava_steps": {
+        "mean": 17.875,
+        "std": 18.714550018310547
+      },
+      "resources_collected": {
+        "mean": 6.458333492279053,
+        "std": 3.7246830463409424
+      },
+      "seconds": 9.0277419090271,
+      "survival_time": {
+        "mean": 99.83333587646484,
+        "std": 1.1426091194152832
+      }
+    },
+    {
+      "blue_action_abs_max": 1.0,
+      "blue_return": {
+        "mean": 31.844091415405273,
+        "std": 18.707996368408203
+      },
+      "captured": {
+        "mean": 0.0,
+        "std": 0.0
+      },
+      "context_mode": "online",
+      "controller": "planner_bc_real_online",
+      "heldout_checkpoint": 2,
+      "n_episodes": 48,
+      "opponent": "risk",
+      "pred_lava_steps": {
+        "mean": 0.0,
+        "std": 0.0
+      },
+      "prey_lava_steps": {
+        "mean": 18.20833396911621,
+        "std": 18.931848526000977
+      },
+      "resources_collected": {
+        "mean": 6.375,
+        "std": 3.74513578414917
+      },
+      "seconds": 13.302670001983643,
+      "survival_time": {
+        "mean": 100.0,
+        "std": 0.0
+      }
+    },
+    {
+      "blue_action_abs_max": 1.0,
+      "blue_return": {
+        "mean": 32.052425384521484,
+        "std": 19.343664169311523
+      },
+      "captured": {
+        "mean": 0.02083333395421505,
+        "std": 0.1428261399269104
+      },
+      "context_mode": "zero",
+      "controller": "planner_bc_real_zero",
+      "heldout_checkpoint": 2,
+      "n_episodes": 48,
+      "opponent": "risk",
+      "pred_lava_steps": {
+        "mean": 0.0,
+        "std": 0.0
+      },
+      "prey_lava_steps": {
+        "mean": 17.97916603088379,
+        "std": 18.987375259399414
+      },
+      "resources_collected": {
+        "mean": 6.458333492279053,
+        "std": 3.8131260871887207
+      },
+      "seconds": 9.089931011199951,
+      "survival_time": {
+        "mean": 98.375,
+        "std": 11.1404390335083
+      }
+    },
+    {
+      "blue_action_abs_max": 1.0,
+      "blue_return": {
+        "mean": 31.844091415405273,
+        "std": 18.707996368408203
+      },
+      "captured": {
+        "mean": 0.0,
+        "std": 0.0
+      },
+      "context_mode": "shuffled",
+      "controller": "planner_bc_real_shuffled",
+      "heldout_checkpoint": 2,
+      "n_episodes": 48,
+      "opponent": "risk",
+      "pred_lava_steps": {
+        "mean": 0.0,
+        "std": 0.0
+      },
+      "prey_lava_steps": {
+        "mean": 18.4375,
+        "std": 19.246110916137695
+      },
+      "resources_collected": {
+        "mean": 6.375,
+        "std": 3.74513578414917
+      },
+      "seconds": 13.781576156616211,
+      "survival_time": {
+        "mean": 100.0,
+        "std": 0.0
+      }
+    },
+    {
+      "blue_action_abs_max": 1.0,
+      "blue_return": {
+        "mean": 31.844091415405273,
+        "std": 18.707996368408203
+      },
+      "captured": {
+        "mean": 0.0,
+        "std": 0.0
+      },
+      "context_mode": "zero",
+      "controller": "planner_bc_no_c",
+      "heldout_checkpoint": 2,
+      "n_episodes": 48,
+      "opponent": "risk",
+      "pred_lava_steps": {
+        "mean": 0.0,
+        "std": 0.0
+      },
+      "prey_lava_steps": {
+        "mean": 17.79166603088379,
+        "std": 19.098384857177734
+      },
+      "resources_collected": {
+        "mean": 6.375,
+        "std": 3.74513578414917
+      },
+      "seconds": 9.470502138137817,
+      "survival_time": {
+        "mean": 100.0,
+        "std": 0.0
+      }
+    },
+    {
+      "blue_action_abs_max": 1.0,
+      "blue_return": {
+        "mean": 27.71826171875,
+        "std": 13.162182807922363
+      },
+      "captured": {
+        "mean": 0.1458333283662796,
+        "std": 0.35293906927108765
+      },
+      "context_mode": "zero",
+      "controller": "mappo_prey",
+      "heldout_checkpoint": 2,
+      "n_episodes": 48,
+      "opponent": "curious",
+      "pred_lava_steps": {
+        "mean": 9.3125,
+        "std": 6.0832977294921875
+      },
+      "prey_lava_steps": {
+        "mean": 34.4375,
+        "std": 16.062255859375
+      },
+      "resources_collected": {
+        "mean": 5.979166507720947,
+        "std": 2.1456310749053955
+      },
+      "seconds": 0.41567516326904297,
+      "survival_time": {
+        "mean": 91.97916412353516,
+        "std": 20.687646865844727
+      }
+    },
+    {
+      "blue_action_abs_max": 0.9999527931213379,
+      "blue_return": {
+        "mean": -12.400179862976074,
+        "std": 24.805965423583984
+      },
+      "captured": {
+        "mean": 0.0625,
+        "std": 0.24206146597862244
+      },
+      "context_mode": "zero",
+      "controller": "random",
+      "heldout_checkpoint": 2,
+      "n_episodes": 48,
+      "opponent": "curious",
+      "pred_lava_steps": {
+        "mean": 12.1875,
+        "std": 7.064158916473389
+      },
+      "prey_lava_steps": {
+        "mean": 3.5625,
+        "std": 10.849166870117188
+      },
+      "resources_collected": {
+        "mean": 0.4166666567325592,
+        "std": 0.6066758632659912
+      },
+      "seconds": 0.3887012004852295,
+      "survival_time": {
+        "mean": 97.66666412353516,
+        "std": 11.843304634094238
+      }
+    },
+    {
+      "blue_action_abs_max": 1.0,
+      "blue_return": {
+        "mean": 37.20005798339844,
+        "std": 18.977188110351562
+      },
+      "captured": {
+        "mean": 0.0,
+        "std": 0.0
+      },
+      "context_mode": "zero",
+      "controller": "planner_true_red",
+      "heldout_checkpoint": 2,
+      "n_episodes": 48,
+      "opponent": "curious",
+      "pred_lava_steps": {
+        "mean": 11.604166984558105,
+        "std": 6.610406875610352
+      },
+      "prey_lava_steps": {
+        "mean": 22.35416603088379,
+        "std": 20.189199447631836
+      },
+      "resources_collected": {
+        "mean": 7.458333492279053,
+        "std": 3.8076584339141846
+      },
+      "seconds": 9.100876092910767,
+      "survival_time": {
+        "mean": 100.0,
+        "std": 0.0
+      }
+    },
+    {
+      "blue_action_abs_max": 1.0,
+      "blue_return": {
+        "mean": 37.622798919677734,
+        "std": 20.24620246887207
+      },
+      "captured": {
+        "mean": 0.0416666679084301,
+        "std": 0.19982630014419556
+      },
+      "context_mode": "oracle",
+      "controller": "planner_bc_oracle_correct",
+      "heldout_checkpoint": 2,
+      "n_episodes": 48,
+      "opponent": "curious",
+      "pred_lava_steps": {
+        "mean": 11.270833015441895,
+        "std": 6.604101181030273
+      },
+      "prey_lava_steps": {
+        "mean": 21.97916603088379,
+        "std": 18.88947105407715
+      },
+      "resources_collected": {
+        "mean": 7.625,
+        "std": 3.897782564163208
+      },
+      "seconds": 9.025704860687256,
+      "survival_time": {
+        "mean": 97.0,
+        "std": 14.393285751342773
+      }
+    },
+    {
+      "blue_action_abs_max": 1.0,
+      "blue_return": {
+        "mean": 36.39820861816406,
+        "std": 21.274486541748047
+      },
+      "captured": {
+        "mean": 0.0833333358168602,
+        "std": 0.2763853967189789
+      },
+      "context_mode": "zero",
+      "controller": "planner_bc_oracle_zero",
+      "heldout_checkpoint": 2,
+      "n_episodes": 48,
+      "opponent": "curious",
+      "pred_lava_steps": {
+        "mean": 10.875,
+        "std": 6.518003940582275
+      },
+      "prey_lava_steps": {
+        "mean": 21.29166603088379,
+        "std": 17.96751594543457
+      },
+      "resources_collected": {
+        "mean": 7.458333492279053,
+        "std": 4.036078453063965
+      },
+      "seconds": 9.044404983520508,
+      "survival_time": {
+        "mean": 96.14583587646484,
+        "std": 15.36905574798584
+      }
+    },
+    {
+      "blue_action_abs_max": 1.0,
+      "blue_return": {
+        "mean": 34.00593566894531,
+        "std": 21.768291473388672
+      },
+      "captured": {
+        "mean": 0.1458333283662796,
+        "std": 0.35293906927108765
+      },
+      "context_mode": "wrong_oracle",
+      "controller": "planner_bc_oracle_wrong",
+      "heldout_checkpoint": 2,
+      "n_episodes": 48,
+      "opponent": "curious",
+      "pred_lava_steps": {
+        "mean": 10.0,
+        "std": 6.7360968589782715
+      },
+      "prey_lava_steps": {
+        "mean": 20.16666603088379,
+        "std": 20.21894073486328
+      },
+      "resources_collected": {
+        "mean": 7.104166507720947,
+        "std": 4.047836780548096
+      },
+      "seconds": 9.052347183227539,
+      "survival_time": {
+        "mean": 91.41666412353516,
+        "std": 22.881792068481445
+      }
+    },
+    {
+      "blue_action_abs_max": 1.0,
+      "blue_return": {
+        "mean": 34.12331771850586,
+        "std": 19.27060890197754
+      },
+      "captured": {
+        "mean": 0.0416666679084301,
+        "std": 0.19982630014419556
+      },
+      "context_mode": "online",
+      "controller": "planner_bc_real_online",
+      "heldout_checkpoint": 2,
+      "n_episodes": 48,
+      "opponent": "curious",
+      "pred_lava_steps": {
+        "mean": 11.708333015441895,
+        "std": 7.094476222991943
+      },
+      "prey_lava_steps": {
+        "mean": 20.58333396911621,
+        "std": 19.522245407104492
+      },
+      "resources_collected": {
+        "mean": 6.916666507720947,
+        "std": 3.7351558208465576
+      },
+      "seconds": 13.321608066558838,
+      "survival_time": {
+        "mean": 97.08333587646484,
+        "std": 14.025026321411133
+      }
+    },
+    {
+      "blue_action_abs_max": 1.0,
+      "blue_return": {
+        "mean": 36.89697265625,
+        "std": 19.845861434936523
+      },
+      "captured": {
+        "mean": 0.0625,
+        "std": 0.24206146597862244
+      },
+      "context_mode": "zero",
+      "controller": "planner_bc_real_zero",
+      "heldout_checkpoint": 2,
+      "n_episodes": 48,
+      "opponent": "curious",
+      "pred_lava_steps": {
+        "mean": 10.291666984558105,
+        "std": 6.082619667053223
+      },
+      "prey_lava_steps": {
+        "mean": 24.60416603088379,
+        "std": 19.49972152709961
+      },
+      "resources_collected": {
+        "mean": 7.520833492279053,
+        "std": 3.8567559719085693
+      },
+      "seconds": 9.08407998085022,
+      "survival_time": {
+        "mean": 96.35416412353516,
+        "std": 15.718207359313965
+      }
+    },
+    {
+      "blue_action_abs_max": 1.0,
+      "blue_return": {
+        "mean": 35.977630615234375,
+        "std": 19.482999801635742
+      },
+      "captured": {
+        "mean": 0.02083333395421505,
+        "std": 0.1428261399269104
+      },
+      "context_mode": "shuffled",
+      "controller": "planner_bc_real_shuffled",
+      "heldout_checkpoint": 2,
+      "n_episodes": 48,
+      "opponent": "curious",
+      "pred_lava_steps": {
+        "mean": 11.5,
+        "std": 7.187952995300293
+      },
+      "prey_lava_steps": {
+        "mean": 22.91666603088379,
+        "std": 19.493410110473633
+      },
+      "resources_collected": {
+        "mean": 7.25,
+        "std": 3.8432841300964355
+      },
+      "seconds": 13.320232152938843,
+      "survival_time": {
+        "mean": 98.41666412353516,
+        "std": 10.854785919189453
+      }
+    },
+    {
+      "blue_action_abs_max": 1.0,
+      "blue_return": {
+        "mean": 34.617958068847656,
+        "std": 21.511795043945312
+      },
+      "captured": {
+        "mean": 0.0833333358168602,
+        "std": 0.2763853967189789
+      },
+      "context_mode": "zero",
+      "controller": "planner_bc_no_c",
+      "heldout_checkpoint": 2,
+      "n_episodes": 48,
+      "opponent": "curious",
+      "pred_lava_steps": {
+        "mean": 10.6875,
+        "std": 5.993594646453857
+      },
+      "prey_lava_steps": {
+        "mean": 23.14583396911621,
+        "std": 20.723365783691406
+      },
+      "resources_collected": {
+        "mean": 7.104166507720947,
+        "std": 4.068371772766113
+      },
+      "seconds": 9.095852851867676,
+      "survival_time": {
+        "mean": 95.16666412353516,
+        "std": 17.328125
+      }
+    }
+  ],
+  "schema_version": 1
+}
