@@ -164,15 +164,18 @@ def test_smoke_profile_only_overrides_named_keys(smoke_config):
         load_config(profile="does-not-exist")
 
 
-def test_gate0_rejects_opponent_aware_settings(smoke_config):
-    bad_mode = dict(smoke_config, opponent_mode="factored")
-    with pytest.raises(NotImplementedError, match="implicit"):
-        validate_gate0_config(bad_mode)
-    bad_ctx = dict(smoke_config, context_dim=8)
-    with pytest.raises(NotImplementedError, match="context_dim"):
-        validate_gate0_config(bad_ctx)
-    with pytest.raises(NotImplementedError):
-        create_agent(bad_ctx, OBS_DIM, key=jax.random.PRNGKey(0))
+def test_gate0_validator_pins_the_single_agent_baseline(smoke_config):
+    """The Gate 0 baseline is implicit mode with no context; other settings are
+    later-gate configurations and must not silently pass as the baseline."""
+    validate_gate0_config(smoke_config)
+    with pytest.raises(NotImplementedError, match="Gate 0"):
+        validate_gate0_config(dict(smoke_config, opponent_mode="conditioned", context_dim=3))
+    with pytest.raises(NotImplementedError, match="Gate 0"):
+        validate_gate0_config(dict(smoke_config, context_dim=8))
+    with pytest.raises(NotImplementedError, match="context_dim >= 1"):
+        create_agent(dict(smoke_config, opponent_mode="factored"), OBS_DIM, key=jax.random.PRNGKey(0))
+    with pytest.raises(NotImplementedError, match="opponent_mode"):
+        create_agent(dict(smoke_config, opponent_mode="bogus"), OBS_DIM, key=jax.random.PRNGKey(0))
 
 
 # --------------------------------------------------------------------------- #
@@ -366,7 +369,9 @@ def test_plan_shapes_bounds_and_repeatability(agent):
     action_again, _ = agent.plan(x, horizon=agent.horizon, key=key)
     np.testing.assert_array_equal(np.asarray(action), np.asarray(action_again))
     # Module function and method are the same computation.
-    action_fn, _ = mppi.plan(agent, x=x, horizon=agent.horizon, key=key)
+    action_fn, _ = mppi.plan(
+        agent, x=x, horizon=agent.horizon, context=jnp.zeros((0,)), key=key
+    )
     np.testing.assert_array_equal(np.asarray(action), np.asarray(action_fn))
 
     # Warm start, deterministic, and train-noise variants all stay bounded.
@@ -492,6 +497,37 @@ def test_checkpoint_roundtrip_reproduces_deterministic_actions(agent, smoke_conf
         a_tmp, _ = template.act(obs, mpc=mpc, deterministic=True, key=key)
         np.testing.assert_array_equal(np.asarray(a_ref), np.asarray(a_res))
         assert not np.allclose(np.asarray(a_ref), np.asarray(a_tmp))
+
+
+def test_golden_fixed_seed_values_from_verified_port(agent):
+    """Fixed-seed values recorded from the port that was compared bitwise against
+    upstream 5b05ff4 (see third_party/tdmpc2-jax/UPSTREAM.md). Any refactor of
+    the implicit single-agent path must reproduce them."""
+    batch = _synthetic_batch(agent, jax.random.PRNGKey(50))
+    new_agent, info = agent.update(**batch, key=jax.random.PRNGKey(51))
+    assert float(info["total_loss"]) == pytest.approx(1.4424139261245728, abs=2e-5)
+    assert float(info["consistency_loss"]) == pytest.approx(0.02596951089799404, abs=2e-6)
+    assert float(info["reward_loss"]) == pytest.approx(4.615118980407715, abs=2e-5)
+    assert float(info["value_loss"]) == pytest.approx(4.61511754989624, abs=2e-5)
+    assert float(info["policy_loss"]) == pytest.approx(0.00045023064012639225, abs=2e-6)
+    x = agent.model.encode(
+        jax.random.normal(jax.random.PRNGKey(20), (OBS_DIM,)),
+        agent.model.encoder.params,
+        jax.random.PRNGKey(0),
+    )
+    a, _ = agent.plan(x, horizon=3, key=jax.random.PRNGKey(21))
+    np.testing.assert_allclose(
+        np.asarray(a), [0.03614749386906624, -0.05706670507788658], atol=2e-5
+    )
+    a2, _ = new_agent.act(
+        jax.random.normal(jax.random.PRNGKey(62), (OBS_DIM,)),
+        mpc=True,
+        deterministic=True,
+        key=jax.random.PRNGKey(63),
+    )
+    np.testing.assert_allclose(
+        np.asarray(a2), [0.06102251634001732, -0.019713396206498146], atol=2e-5
+    )
 
 
 # --------------------------------------------------------------------------- #

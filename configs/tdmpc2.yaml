@@ -17,9 +17,18 @@ opponent_mode: implicit
 context_dim: 0
 
 encoder:
+  # "mlp" is the upstream learned SimNorm encoder; "identity" is the local
+  # normalized Markov-state baseline (TD-MPC-style state-space baseline).
+  type: mlp
   encoder_dim: 256
   num_encoder_layers: 2
   learning_rate: 1.0e-4
+
+# Local factored-mode red policy head red(x, c) -> v (unused in other modes).
+factored:
+  red_hidden_dim: 128
+  red_loss_scale: 1.0
+  red_detach_latent: true
 
 world_model:
   latent_dim: 512
@@ -58,6 +67,10 @@ tdmpc2:
 # Named override profiles. ``smoke`` shrinks widths and planner population for
 # compilation speed in tests only. It is not a replacement for the reference
 # configuration above and must never be used for reported results.
+# ``gate4`` is the declared local run configuration for the SimpleTag world
+# model (CPU budget): capture-aware continuation head, 3-D opponent context,
+# reduced widths; the planner defaults are unchanged. ``opponent_mode`` and
+# ``encoder.type`` are set per run by scripts/run_tdmpc.py.
 profiles:
   smoke:
     encoder:
@@ -70,3 +83,13 @@ profiles:
       policy_prior_samples: 8
       num_elites: 8
       batch_size: 8
+  gate4:
+    context_dim: 3
+    encoder:
+      encoder_dim: 128
+    world_model:
+      latent_dim: 128
+      predict_continues: true
+    tdmpc2:
+      batch_size: 128
+      continue_loss_scale: 1.0

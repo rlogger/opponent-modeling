@@ -67,6 +67,7 @@ __all__ = [
     "deterministic_specialist_action",
     "family_behavior_summary",
     "load_continuous_actor_params",
+    "load_continuous_dataset",
     "markov_state",
     "markov_state_dim",
     "pad_obs",
@@ -75,6 +76,13 @@ __all__ = [
     "state_action_coverage",
     "validate_continuous_dataset",
 ]
+
+
+def load_continuous_dataset(path: Path | str) -> ContinuousTrajectoryDataset:
+    """Load a dataset written by ``scripts/make_continuous_dataset.py``."""
+    with np.load(Path(path), allow_pickle=False) as raw:
+        data = {name: np.asarray(raw[name]) for name in raw.files}
+    return ContinuousTrajectoryDataset(**data)
 
 
 # --------------------------------------------------------------------------- #

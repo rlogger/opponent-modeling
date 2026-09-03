@@ -1,4 +1,4 @@
-"""Single-agent TD-MPC2 core (Gate 0 source port).
+"""TD-MPC2 core with opponent modes (Gate 0 source port + Gate 4 adaptation).
 
 Ported from ShaneFlandermeyer/tdmpc2-jax (MIT), pinned commit
 ``5b05ff452424896d709848e1f249bd67e269b8a1``:
@@ -15,8 +15,30 @@ Ported from ShaneFlandermeyer/tdmpc2-jax (MIT), pinned commit
 Compatibility substitutions (documented in ``third_party/tdmpc2-jax/UPSTREAM.md``):
 ``einops.rearrange`` -> ``jnp.reshape``; ``tfd.MultivariateNormalDiag`` ->
 ``distrax.MultivariateNormalDiag``; ``jaxtyping`` -> plain ``jax.Array``/``Any``.
-The world latent is named ``x`` (upstream ``z``) per the handoff notation. No
-algorithmic changes; the transition is Equation 1, ``x_next = d(x, u)``.
+The world latent is named ``x`` (upstream ``z``) per the handoff notation.
+
+Gate 4 local changes (``opponent_mode="implicit"`` with ``context_dim=0``,
+``encoder.type="mlp"`` and ``predict_continues=False`` remains the unchanged
+upstream computation, guarded by fixed-seed golden values in the tests):
+
+- batch size is derived from the sampled tensors;
+- the continuation head predicts ``continue(x, u[, c | v])`` for the same
+  transition, is trained on ``1 - terminated`` over valid steps, and is queried
+  at the same location during planning;
+- an identity/normalized Markov-state encoder (``encoder.type="identity"``)
+  gives the TD-MPC-style state-space baseline; ``"mlp"`` is the learned
+  SimNorm encoder;
+- one implementation of the three transition modes:
+
+  | mode          | dynamics / reward / continue | Q          | policy prior |
+  |---------------|------------------------------|------------|--------------|
+  | ``implicit``  | ``(x, u)``                   | ``(x, u)``    | ``pi(x)``    |
+  | ``conditioned``| ``(x, u, c)``               | ``(x, u, c)`` | ``pi(x, c)`` |
+  | ``factored``  | ``(x, u, v)``, ``v = red(x, c)``| ``(x, u, c)`` | ``pi(x, c)`` |
+
+  In ``factored`` mode the red policy head ``red(x, c) -> v`` is a separately
+  identified ``TrainState`` trained with MSE on recorded red actions; physics,
+  reward, and termination never receive ``c`` (controllability invariant).
 """
 from __future__ import annotations
 
@@ -43,10 +65,15 @@ Params = Any
 PyTree = Any
 
 DEFAULT_CONFIG_PATH = Path(__file__).resolve().parents[2] / "configs" / "tdmpc2.yaml"
+OPPONENT_MODES = ("implicit", "conditioned", "factored")
+ENCODER_TYPES = ("mlp", "identity")
 
 __all__ = [
     "DEFAULT_CONFIG_PATH",
+    "ENCODER_TYPES",
+    "OPPONENT_MODES",
     "Ensemble",
+    "IdentityEncoder",
     "NormedLinear",
     "TDMPC2",
     "WorldModel",
@@ -62,6 +89,7 @@ __all__ = [
     "symlog",
     "two_hot",
     "two_hot_inv",
+    "validate_config",
     "validate_gate0_config",
 ]
 
@@ -151,7 +179,7 @@ def percentile_normalization(
 
 
 # --------------------------------------------------------------------------- #
-# Networks: upstream tdmpc2_jax/networks/{mlp,ensemble}.py
+# Networks: upstream tdmpc2_jax/networks/{mlp,ensemble}.py (+ local encoder)
 # --------------------------------------------------------------------------- #
 class NormedLinear(nn.Module):
     features: int
@@ -199,9 +227,35 @@ class Ensemble(nn.Module):
         return ensemble()(*args, **kwargs)
 
 
+class IdentityEncoder(nn.Module):
+    """Local: ``x = (s - mean) / std``; no parameters, no SimNorm.
+
+    The TD-MPC-style state-space baseline of the handoff: the latent is the
+    normalized explicit Markov state so factorization and invariance tests
+    are directly interpretable in state units.
+    """
+
+    mean: tuple
+    std: tuple
+
+    @nn.compact
+    def __call__(self, obs: jax.Array) -> jax.Array:
+        mean = jnp.asarray(self.mean, jnp.float32)
+        std = jnp.asarray(self.std, jnp.float32)
+        return (obs - mean) / std
+
+
 # --------------------------------------------------------------------------- #
-# World model: upstream tdmpc2_jax/world_model.py
+# World model: upstream tdmpc2_jax/world_model.py + opponent modes
 # --------------------------------------------------------------------------- #
+def _adamw_chain(learning_rate: float, max_grad_norm: float):
+    return optax.chain(
+        optax.zero_nans(),
+        optax.clip_by_global_norm(max_grad_norm),
+        optax.adamw(learning_rate),
+    )
+
+
 class WorldModel(struct.PyTreeNode):
     # Models
     encoder: TrainState
@@ -211,8 +265,12 @@ class WorldModel(struct.PyTreeNode):
     value_model: TrainState
     target_value_model: TrainState
     continue_model: Optional[TrainState]
+    red_model: Optional[TrainState]
     # Spaces
     action_dim: int = struct.field(pytree_node=False)
+    context_dim: int = struct.field(pytree_node=False)
+    opponent_mode: str = struct.field(pytree_node=False)
+    encoder_type: str = struct.field(pytree_node=False)
     # Architecture
     latent_dim: int = struct.field(pytree_node=False)
     simnorm_dim: int = struct.field(pytree_node=False)
@@ -221,6 +279,45 @@ class WorldModel(struct.PyTreeNode):
     symlog_min: float
     symlog_max: float
     predict_continues: bool = struct.field(pytree_node=False)
+
+    # -- mode-specific input assembly -----------------------------------------
+    @property
+    def transition_extra_dim(self) -> int:
+        """Width appended to ``u`` for dynamics / reward / continue inputs."""
+        if self.opponent_mode == "conditioned":
+            return self.context_dim
+        if self.opponent_mode == "factored":
+            return self.action_dim  # red action v
+        return 0
+
+    @property
+    def value_extra_dim(self) -> int:
+        return 0 if self.opponent_mode == "implicit" else self.context_dim
+
+    def transition_inputs(
+        self, u: jax.Array, c: Optional[jax.Array] = None, v: Optional[jax.Array] = None
+    ) -> jax.Array:
+        """``u`` | ``[u, c]`` | ``[u, v]`` according to ``opponent_mode``."""
+        if self.opponent_mode == "conditioned":
+            return jnp.concatenate([u, c], axis=-1)
+        if self.opponent_mode == "factored":
+            return jnp.concatenate([u, v], axis=-1)
+        return u
+
+    def value_inputs(self, u: jax.Array, c: Optional[jax.Array] = None) -> jax.Array:
+        if self.opponent_mode == "implicit":
+            return u
+        return jnp.concatenate([u, c], axis=-1)
+
+    def policy_inputs(self, x: jax.Array, c: Optional[jax.Array] = None) -> jax.Array:
+        if self.opponent_mode == "implicit":
+            return x
+        return jnp.concatenate([x, c], axis=-1)
+
+    def latent_activation(self, x: jax.Array) -> jax.Array:
+        if self.encoder_type == "identity":
+            return x
+        return simnorm(x, simplex_dim=self.simnorm_dim)
 
     @classmethod
     def create(
@@ -243,12 +340,33 @@ class WorldModel(struct.PyTreeNode):
         max_grad_norm: float = 20,
         # Misc
         dtype: jnp.dtype = jnp.float32,
+        # Local: opponent modes
+        opponent_mode: str = "implicit",
+        context_dim: int = 0,
+        encoder_type: str = "mlp",
+        red_hidden_dim: int = 128,
         *,
         key: PRNGKey,
     ) -> "WorldModel":
+        if opponent_mode not in OPPONENT_MODES:
+            raise ValueError(f"opponent_mode must be one of {OPPONENT_MODES}")
+        if encoder_type not in ENCODER_TYPES:
+            raise ValueError(f"encoder_type must be one of {ENCODER_TYPES}")
+        if opponent_mode != "implicit" and context_dim < 1:
+            raise ValueError("conditioned/factored modes need context_dim >= 1")
         dynamics_key, reward_key, value_key, policy_key, continue_key = (
             jax.random.split(key, 5)
         )
+        red_key = jax.random.fold_in(key, 1)  # local head; does not disturb upstream splits
+        if opponent_mode == "conditioned":
+            transition_extra, value_extra = context_dim, context_dim
+        elif opponent_mode == "factored":
+            transition_extra, value_extra = action_dim, context_dim
+        else:
+            transition_extra, value_extra = 0, 0
+        transition_in = latent_dim + action_dim + transition_extra
+        value_in = latent_dim + action_dim + value_extra
+        policy_in = latent_dim + (0 if opponent_mode == "implicit" else context_dim)
 
         # Latent forward dynamics model
         dynamics_module = nn.Sequential(
@@ -260,14 +378,8 @@ class WorldModel(struct.PyTreeNode):
         )
         dynamics_model = TrainState.create(
             apply_fn=dynamics_module.apply,
-            params=dynamics_module.init(
-                dynamics_key, jnp.zeros(latent_dim + action_dim)
-            )["params"],
-            tx=optax.chain(
-                optax.zero_nans(),
-                optax.clip_by_global_norm(max_grad_norm),
-                optax.adamw(learning_rate),
-            ),
+            params=dynamics_module.init(dynamics_key, jnp.zeros(transition_in))["params"],
+            tx=_adamw_chain(learning_rate, max_grad_norm),
         )
 
         # Transition reward model
@@ -280,14 +392,8 @@ class WorldModel(struct.PyTreeNode):
         )
         reward_model = TrainState.create(
             apply_fn=reward_module.apply,
-            params=reward_module.init(
-                reward_key, jnp.zeros(latent_dim + action_dim)
-            )["params"],
-            tx=optax.chain(
-                optax.zero_nans(),
-                optax.clip_by_global_norm(max_grad_norm),
-                optax.adamw(learning_rate),
-            ),
+            params=reward_module.init(reward_key, jnp.zeros(transition_in))["params"],
+            tx=_adamw_chain(learning_rate, max_grad_norm),
         )
 
         # Policy model
@@ -303,12 +409,8 @@ class WorldModel(struct.PyTreeNode):
         )
         policy_model = TrainState.create(
             apply_fn=policy_module.apply,
-            params=policy_module.init(policy_key, jnp.zeros(latent_dim))["params"],
-            tx=optax.chain(
-                optax.zero_nans(),
-                optax.clip_by_global_norm(max_grad_norm),
-                optax.adamw(learning_rate),
-            ),
+            params=policy_module.init(policy_key, jnp.zeros(policy_in))["params"],
+            tx=_adamw_chain(learning_rate, max_grad_norm),
         )
 
         # Return/value model (ensemble)
@@ -331,13 +433,9 @@ class WorldModel(struct.PyTreeNode):
             apply_fn=value_ensemble.apply,
             params=value_ensemble.init(
                 {"params": value_param_key, "dropout": value_dropout_key},
-                jnp.zeros(latent_dim + action_dim),
+                jnp.zeros(value_in),
             )["params"],
-            tx=optax.chain(
-                optax.zero_nans(),
-                optax.clip_by_global_norm(max_grad_norm),
-                optax.adamw(learning_rate),
-            ),
+            tx=_adamw_chain(learning_rate, max_grad_norm),
         )
         target_value_model = TrainState.create(
             apply_fn=value_ensemble.apply,
@@ -346,6 +444,7 @@ class WorldModel(struct.PyTreeNode):
         )
 
         if predict_continues:
+            # Local: same transition inputs as dynamics, ``continue(x, u[, c | v])``.
             continue_module = nn.Sequential(
                 [
                     NormedLinear(latent_dim, activation=mish, dtype=dtype),
@@ -355,21 +454,36 @@ class WorldModel(struct.PyTreeNode):
             )
             continue_model = TrainState.create(
                 apply_fn=continue_module.apply,
-                params=continue_module.init(continue_key, jnp.zeros(latent_dim))[
-                    "params"
-                ],
-                tx=optax.chain(
-                    optax.zero_nans(),
-                    optax.clip_by_global_norm(max_grad_norm),
-                    optax.adamw(learning_rate),
-                ),
+                params=continue_module.init(continue_key, jnp.zeros(transition_in))["params"],
+                tx=_adamw_chain(learning_rate, max_grad_norm),
             )
         else:
             continue_model = None
 
+        if opponent_mode == "factored":
+            # Local: latent-input red policy head ``red(x, c) -> v in [-1, 1]``.
+            red_module = nn.Sequential(
+                [
+                    NormedLinear(red_hidden_dim, activation=mish, dtype=dtype),
+                    NormedLinear(red_hidden_dim, activation=mish, dtype=dtype),
+                    nn.Dense(action_dim, kernel_init=nn.initializers.truncated_normal(0.02)),
+                    jnp.tanh,
+                ]
+            )
+            red_model = TrainState.create(
+                apply_fn=red_module.apply,
+                params=red_module.init(red_key, jnp.zeros(latent_dim + context_dim))["params"],
+                tx=_adamw_chain(learning_rate, max_grad_norm),
+            )
+        else:
+            red_model = None
+
         return cls(
             # Spaces
             action_dim=action_dim,
+            context_dim=context_dim,
+            opponent_mode=opponent_mode,
+            encoder_type=encoder_type,
             # Models
             encoder=encoder,
             dynamics_model=dynamics_model,
@@ -378,6 +492,7 @@ class WorldModel(struct.PyTreeNode):
             value_model=value_model,
             target_value_model=target_value_model,
             continue_model=continue_model,
+            red_model=red_model,
             # Architecture
             latent_dim=latent_dim,
             simnorm_dim=simnorm_dim,
@@ -393,15 +508,15 @@ class WorldModel(struct.PyTreeNode):
         x = self.encoder.apply_fn(
             {"params": params}, obs, rngs={"dropout": key}
         ).astype(jnp.float32)
-        return simnorm(x, simplex_dim=self.simnorm_dim)
+        return self.latent_activation(x)
 
     @jax.jit
     def next(self, x: jax.Array, a: jax.Array, params: Params) -> jax.Array:
-        # Equation 1: x_next = d(x, u). The action is the agent's own action only.
+        """``x_next = d(x, a)`` where ``a = transition_inputs(u, c, v)``."""
         x = self.dynamics_model.apply_fn(
             {"params": params}, jnp.concatenate([x, a], axis=-1)
         ).astype(jnp.float32)
-        return simnorm(x, simplex_dim=self.simnorm_dim)
+        return self.latent_activation(x)
 
     @jax.jit
     def reward(
@@ -414,6 +529,20 @@ class WorldModel(struct.PyTreeNode):
         reward = two_hot_inv(logits, self.symlog_min, self.symlog_max, self.num_bins)
         return reward, logits
 
+    @jax.jit
+    def continue_logits(self, x: jax.Array, a: jax.Array, params: Params) -> jax.Array:
+        """Logit of ``P(episode continues after transition (x, a))``."""
+        return self.continue_model.apply_fn(
+            {"params": params}, jnp.concatenate([x, a], axis=-1)
+        ).squeeze(-1)
+
+    @jax.jit
+    def red_action(self, x: jax.Array, c: jax.Array, params: Params) -> jax.Array:
+        """Factored mode: deterministic red action ``v = red(x, c)`` in ``[-1, 1]``."""
+        return self.red_model.apply_fn(
+            {"params": params}, jnp.concatenate([x, c], axis=-1)
+        ).astype(jnp.float32)
+
     @partial(jax.jit, static_argnames=("deterministic",))
     def sample_actions(
         self,
@@ -425,6 +554,7 @@ class WorldModel(struct.PyTreeNode):
         *,
         key: PRNGKey,
     ) -> Tuple[jax.Array, ...]:
+        """Blue policy prior on ``x = policy_inputs(latent, c)``."""
         # Chunk the policy model output to get mean and logstd
         mean, log_std = jnp.split(
             self.policy_model.apply_fn({"params": params}, x).astype(jnp.float32),
@@ -459,6 +589,7 @@ class WorldModel(struct.PyTreeNode):
     def Q(
         self, x: jax.Array, a: jax.Array, params: Params, key: PRNGKey
     ) -> Tuple[jax.Array, jax.Array]:
+        """Blue Q on ``a = value_inputs(u, c)``."""
         x = jnp.concatenate([x, a], axis=-1)
         logits = self.value_model.apply_fn(
             {"params": params}, x, rngs={"dropout": key}
@@ -469,7 +600,7 @@ class WorldModel(struct.PyTreeNode):
 
 
 # --------------------------------------------------------------------------- #
-# Agent: upstream tdmpc2_jax/tdmpc2.py (create / act / update)
+# Agent: upstream tdmpc2_jax/tdmpc2.py (create / act / update) + local changes
 # --------------------------------------------------------------------------- #
 class TDMPC2(struct.PyTreeNode):
     model: WorldModel
@@ -494,6 +625,9 @@ class TDMPC2(struct.PyTreeNode):
     continue_loss_scale: float
     entropy_coef: float
     tau: float
+    # Local (factored mode)
+    red_loss_scale: float = 1.0
+    red_detach_latent: bool = struct.field(pytree_node=False, default=True)
 
     @classmethod
     def create(
@@ -518,6 +652,8 @@ class TDMPC2(struct.PyTreeNode):
         continue_loss_scale: float,
         entropy_coef: float,
         tau: float,
+        red_loss_scale: float = 1.0,
+        red_detach_latent: bool = True,
     ) -> "TDMPC2":
         return cls(
             model=world_model,
@@ -539,7 +675,14 @@ class TDMPC2(struct.PyTreeNode):
             entropy_coef=entropy_coef,
             tau=tau,
             value_scale=jnp.array([1.0]),
+            red_loss_scale=red_loss_scale,
+            red_detach_latent=red_detach_latent,
         )
+
+    def _context_or_zeros(self, x: jax.Array, context: Optional[jax.Array]) -> jax.Array:
+        if context is None:
+            return jnp.zeros(x.shape[:-1] + (self.model.context_dim,), jnp.float32)
+        return jnp.asarray(context, jnp.float32)
 
     @partial(jax.jit, static_argnames=("mpc", "deterministic", "train"))
     def act(
@@ -549,6 +692,7 @@ class TDMPC2(struct.PyTreeNode):
         mpc: bool = True,
         deterministic: bool = False,
         train: bool = False,
+        context: Optional[jax.Array] = None,
         *,
         key: PRNGKey,
     ) -> Tuple[jax.Array, Optional[Tuple[jax.Array, jax.Array]]]:
@@ -556,6 +700,7 @@ class TDMPC2(struct.PyTreeNode):
         x = self.model.encode(
             obs=obs, params=self.model.encoder.params, key=encoder_key
         )
+        c = self._context_or_zeros(x, context)
 
         if mpc:
             action, plan = self.plan(
@@ -564,11 +709,12 @@ class TDMPC2(struct.PyTreeNode):
                 prev_plan=prev_plan,
                 deterministic=deterministic,
                 train=train,
+                context=c,
                 key=action_key,
             )
         else:
             action, _, _, _ = self.model.sample_actions(
-                x=x,
+                x=self.model.policy_inputs(x, c),
                 deterministic=deterministic,
                 params=self.model.policy_model.params,
                 key=action_key,
@@ -584,14 +730,16 @@ class TDMPC2(struct.PyTreeNode):
         prev_plan: Optional[Tuple[jax.Array, jax.Array]] = None,
         deterministic: bool = False,
         train: bool = False,
+        context: Optional[jax.Array] = None,
         *,
         key: PRNGKey,
     ) -> Tuple[jax.Array, Tuple[jax.Array, jax.Array]]:
-        """MPPI planning; see :func:`mopa.mppi.plan`."""
+        """MPPI planning over blue actions; see :func:`mopa.mppi.plan`."""
         return mppi.plan(
             self,
             x=x,
             horizon=horizon,
+            context=self._context_or_zeros(x, context),
             prev_plan=prev_plan,
             deterministic=deterministic,
             train=train,
@@ -599,10 +747,22 @@ class TDMPC2(struct.PyTreeNode):
         )
 
     def estimate_value(
-        self, x: jax.Array, actions: jax.Array, horizon: int, key: PRNGKey
+        self,
+        x: jax.Array,
+        actions: jax.Array,
+        horizon: int,
+        key: PRNGKey,
+        context: Optional[jax.Array] = None,
     ) -> jax.Array:
-        """Imagined return of an action sequence; see :func:`mopa.mppi.estimate_value`."""
-        return mppi.estimate_value(self, x=x, actions=actions, horizon=horizon, key=key)
+        """Imagined return of a blue action sequence; see :func:`mopa.mppi.estimate_value`."""
+        return mppi.estimate_value(
+            self,
+            x=x,
+            actions=actions,
+            context=self._context_or_zeros(x, context),
+            horizon=horizon,
+            key=key,
+        )
 
     @jax.jit
     def update(
@@ -613,10 +773,28 @@ class TDMPC2(struct.PyTreeNode):
         next_observations: PyTree,
         terminated: jax.Array,
         truncated: jax.Array,
+        red_actions: Optional[jax.Array] = None,
+        context: Optional[jax.Array] = None,
+        next_context: Optional[jax.Array] = None,
         *,
         key: PRNGKey,
     ) -> Tuple["TDMPC2", Dict[str, Any]]:
+        """One gradient step on a ``(horizon, batch, ...)`` sequence batch.
+
+        ``red_actions`` (recorded joint actions) are required in ``factored``
+        mode; ``context`` / ``next_context`` ``(horizon, batch, context_dim)``
+        are required in ``conditioned`` and ``factored`` modes.
+        """
         world_model_key, policy_key = jax.random.split(key, 2)
+        model = self.model
+        horizon, batch_size = actions.shape[0], actions.shape[1]  # local: from tensors
+        zeros_c = jnp.zeros((horizon, batch_size, model.context_dim), jnp.float32)
+        context = zeros_c if context is None else jnp.asarray(context, jnp.float32)
+        next_context = zeros_c if next_context is None else jnp.asarray(next_context, jnp.float32)
+        if red_actions is None:
+            red_actions = jnp.zeros_like(actions)
+        context_seq = jnp.concatenate([context[:1], next_context], axis=0)  # (H+1, B, C)
+        transition_a = model.transition_inputs(actions, context, red_actions)
 
         def world_model_loss_fn(
             encoder_params: flax.core.FrozenDict,
@@ -624,9 +802,10 @@ class TDMPC2(struct.PyTreeNode):
             value_params: flax.core.FrozenDict,
             reward_params: flax.core.FrozenDict,
             continue_params: flax.core.FrozenDict,
+            red_params: flax.core.FrozenDict,
         ) -> Tuple[jax.Array, Dict[str, Any]]:
             encoder_key, value_key = jax.random.split(world_model_key, 2)
-            lam = self.rho ** jnp.arange(self.horizon)
+            lam = self.rho ** jnp.arange(horizon)
             lam /= jnp.sum(lam)
 
             ###########################################################
@@ -637,9 +816,7 @@ class TDMPC2(struct.PyTreeNode):
                 observations,
                 next_observations,
             )
-            all_xs = self.model.encode(
-                obs=all_obs, params=encoder_params, key=encoder_key
-            )
+            all_xs = model.encode(obs=all_obs, params=encoder_params, key=encoder_key)
             encoder_xs = jax.tree.map(lambda x: x[0], all_xs)
             next_xs = jax.tree.map(lambda x: x[1], all_xs)
 
@@ -647,16 +824,12 @@ class TDMPC2(struct.PyTreeNode):
             # Latent rollout (dynamics + consistency loss)
             ###########################################################
             done = jnp.logical_or(terminated, truncated)
-            finished = jnp.zeros((self.horizon + 1, self.batch_size), dtype=bool)
-            latent_xs = jnp.zeros(
-                (self.horizon + 1, self.batch_size, self.model.latent_dim)
-            )
+            finished = jnp.zeros((horizon + 1, batch_size), dtype=bool)
+            latent_xs = jnp.zeros((horizon + 1, batch_size, model.latent_dim))
             latent_xs = latent_xs.at[0].set(encoder_xs[0])
             consistency_loss = 0
-            for t in range(self.horizon):
-                x = self.model.next(
-                    x=latent_xs[t], a=actions[t], params=dynamics_params
-                )
+            for t in range(horizon):
+                x = model.next(x=latent_xs[t], a=transition_a[t], params=dynamics_params)
                 consistency_loss += lam[t] * jnp.mean(
                     (x - sg(next_xs[t])) ** 2, where=~finished[t][:, None]
                 )
@@ -668,17 +841,17 @@ class TDMPC2(struct.PyTreeNode):
             ###########################################################
             # Reward loss
             ###########################################################
-            _, reward_logits = self.model.reward(
-                x=latent_xs[:-1], a=actions, params=reward_params
+            _, reward_logits = model.reward(
+                x=latent_xs[:-1], a=transition_a, params=reward_params
             )
             reward_loss = jnp.sum(
                 lam[:, None]
                 * soft_crossentropy(
                     pred_logits=reward_logits,
                     target=rewards,
-                    low=self.model.symlog_min,
-                    high=self.model.symlog_max,
-                    num_bins=self.model.num_bins,
+                    low=model.symlog_min,
+                    high=model.symlog_max,
+                    num_bins=model.num_bins,
                 ),
                 axis=0,
                 where=~finished[:-1],
@@ -691,31 +864,34 @@ class TDMPC2(struct.PyTreeNode):
                 jax.random.split(value_key, 4)
             )
 
-            # TD targets
-            next_action = self.model.sample_actions(
-                x=next_xs,
+            # TD targets: capture-aware bootstrap through truncation.
+            next_action = model.sample_actions(
+                x=model.policy_inputs(next_xs, next_context),
                 deterministic=False,
-                params=self.model.policy_model.params,
+                params=model.policy_model.params,
                 key=next_action_key,
             )[0]
-            Qs, _ = self.model.Q(
+            Qs, _ = model.Q(
                 x=next_xs,
-                a=next_action,
-                params=self.model.target_value_model.params,
+                a=model.value_inputs(next_action, next_context),
+                params=model.target_value_model.params,
                 key=value_target_key,
             )
             # Subsample value networks
             inds = jax.random.choice(
                 ensemble_key,
-                jnp.arange(0, self.model.num_value_nets),
+                jnp.arange(0, model.num_value_nets),
                 shape=(2,),
                 replace=False,
             )
             Q = Qs[inds].min(axis=0)
             td_targets = rewards + (1 - terminated) * self.discount * Q
 
-            _, Q_logits = self.model.Q(
-                x=latent_xs[:-1], a=actions, params=value_params, key=value_key
+            _, Q_logits = model.Q(
+                x=latent_xs[:-1],
+                a=model.value_inputs(actions, context),
+                params=value_params,
+                key=value_key,
             )
             # Upstream sums this term over axis=1 (batch) rather than axis=0
             # (time) as in the reward loss. Preserved verbatim for parity.
@@ -724,32 +900,48 @@ class TDMPC2(struct.PyTreeNode):
                 * soft_crossentropy(
                     pred_logits=Q_logits,
                     target=sg(td_targets),
-                    low=self.model.symlog_min,
-                    high=self.model.symlog_max,
-                    num_bins=self.model.num_bins,
+                    low=model.symlog_min,
+                    high=model.symlog_max,
+                    num_bins=model.num_bins,
                 ),
                 axis=1,
                 where=~finished[:-1],
             ).mean()
 
             ###########################################################
-            # Continue loss
+            # Continue loss (local: same transition, valid steps only)
             ###########################################################
-            if self.model.predict_continues:
-                continue_logits = self.model.continue_model.apply_fn(
-                    {"params": continue_params}, latent_xs[:-1]
-                ).squeeze(-1)
-                continue_loss = optax.sigmoid_binary_cross_entropy(
-                    continue_logits, 1 - terminated
-                ).mean()
+            if model.predict_continues:
+                logits = model.continue_logits(latent_xs[:-1], transition_a, continue_params)
+                continue_loss = jnp.mean(
+                    optax.sigmoid_binary_cross_entropy(
+                        logits, (1 - terminated).astype(jnp.float32)
+                    ),
+                    where=~finished[:-1],
+                )
             else:
                 continue_loss = 0.0
+
+            ###########################################################
+            # Red policy head loss (local, factored mode only)
+            ###########################################################
+            if model.opponent_mode == "factored":
+                red_in = sg(latent_xs[:-1]) if self.red_detach_latent else latent_xs[:-1]
+                v_hat = model.red_action(red_in, context, red_params)
+                red_loss = jnp.sum(
+                    lam[:, None] * jnp.sum((v_hat - red_actions) ** 2, axis=-1),
+                    axis=0,
+                    where=~finished[:-1],
+                ).mean()
+            else:
+                red_loss = 0.0
 
             total_loss = (
                 self.consistency_loss_scale * consistency_loss
                 + self.reward_loss_scale * reward_loss
                 + self.value_loss_scale * value_loss
                 + self.continue_loss_scale * continue_loss
+                + self.red_loss_scale * red_loss
             )
 
             return total_loss, {
@@ -757,6 +949,7 @@ class TDMPC2(struct.PyTreeNode):
                 "reward_loss": reward_loss,
                 "value_loss": value_loss,
                 "continue_loss": continue_loss,
+                "red_loss": red_loss,
                 "total_loss": total_loss,
                 "latent_xs": latent_xs,
                 "finished": finished,
@@ -764,38 +957,35 @@ class TDMPC2(struct.PyTreeNode):
 
         # Update world model
         (
-            (encoder_grads, dynamics_grads, value_grads, reward_grads, continue_grads),
+            (encoder_grads, dynamics_grads, value_grads, reward_grads, continue_grads, red_grads),
             model_info,
-        ) = jax.grad(world_model_loss_fn, argnums=(0, 1, 2, 3, 4), has_aux=True)(
-            self.model.encoder.params,
-            self.model.dynamics_model.params,
-            self.model.value_model.params,
-            self.model.reward_model.params,
-            self.model.continue_model.params
-            if self.model.predict_continues
-            else None,
+        ) = jax.grad(world_model_loss_fn, argnums=(0, 1, 2, 3, 4, 5), has_aux=True)(
+            model.encoder.params,
+            model.dynamics_model.params,
+            model.value_model.params,
+            model.reward_model.params,
+            model.continue_model.params if model.predict_continues else None,
+            model.red_model.params if model.opponent_mode == "factored" else None,
         )
-        new_encoder = self.model.encoder.apply_gradients(grads=encoder_grads)
-        new_dynamics_model = self.model.dynamics_model.apply_gradients(
-            grads=dynamics_grads
-        )
-        new_reward_model = self.model.reward_model.apply_gradients(
-            grads=reward_grads
-        )
-        new_value_model = self.model.value_model.apply_gradients(grads=value_grads)
-        new_target_value_model = self.model.target_value_model.replace(
+        new_encoder = model.encoder.apply_gradients(grads=encoder_grads)
+        new_dynamics_model = model.dynamics_model.apply_gradients(grads=dynamics_grads)
+        new_reward_model = model.reward_model.apply_gradients(grads=reward_grads)
+        new_value_model = model.value_model.apply_gradients(grads=value_grads)
+        new_target_value_model = model.target_value_model.replace(
             params=optax.incremental_update(
                 new_value_model.params,
-                self.model.target_value_model.params,
+                model.target_value_model.params,
                 self.tau,
             )
         )
-        if self.model.predict_continues:
-            new_continue_model = self.model.continue_model.apply_gradients(
-                grads=continue_grads
-            )
+        if model.predict_continues:
+            new_continue_model = model.continue_model.apply_gradients(grads=continue_grads)
         else:
-            new_continue_model = self.model.continue_model
+            new_continue_model = model.continue_model
+        if model.opponent_mode == "factored":
+            new_red_model = model.red_model.apply_gradients(grads=red_grads)
+        else:
+            new_red_model = model.red_model
 
         # Update policy
         latent_xs = model_info.pop("latent_xs")
@@ -803,18 +993,21 @@ class TDMPC2(struct.PyTreeNode):
 
         def policy_loss_fn(actor_params: flax.core.FrozenDict):
             action_key, Q_key = jax.random.split(policy_key, 2)
-            actions, _, log_std, log_probs = self.model.sample_actions(
-                x=latent_xs,
+            actions_pi, _, log_std, log_probs = model.sample_actions(
+                x=model.policy_inputs(latent_xs, context_seq),
                 deterministic=False,
                 params=actor_params,
                 key=action_key,
             )
 
             # Compute policy objective (equation 4)
-            lam = self.rho ** jnp.arange(self.horizon + 1)
+            lam = self.rho ** jnp.arange(horizon + 1)
             lam /= jnp.sum(lam)
-            Qs, _ = self.model.Q(
-                x=latent_xs, a=actions, params=new_value_model.params, key=Q_key
+            Qs, _ = model.Q(
+                x=latent_xs,
+                a=model.value_inputs(actions_pi, context_seq),
+                params=new_value_model.params,
+                key=Q_key,
             )
             Q = Qs.mean(axis=0)
             Q_scale = percentile_normalization(Q[0], self.value_scale).clip(1, None)
@@ -830,13 +1023,13 @@ class TDMPC2(struct.PyTreeNode):
             }
 
         policy_grads, policy_info = jax.grad(policy_loss_fn, has_aux=True)(
-            self.model.policy_model.params
+            model.policy_model.params
         )
-        new_policy = self.model.policy_model.apply_gradients(grads=policy_grads)
+        new_policy = model.policy_model.apply_gradients(grads=policy_grads)
 
         # Update model
         new_agent = self.replace(
-            model=self.model.replace(
+            model=model.replace(
                 encoder=new_encoder,
                 dynamics_model=new_dynamics_model,
                 reward_model=new_reward_model,
@@ -844,6 +1037,7 @@ class TDMPC2(struct.PyTreeNode):
                 policy_model=new_policy,
                 target_value_model=new_target_value_model,
                 continue_model=new_continue_model,
+                red_model=new_red_model,
             ),
             value_scale=policy_info["value_scale"],
         )
@@ -885,6 +1079,22 @@ def build_encoder(
     )
 
 
+def build_identity_encoder(
+    obs_mean: np.ndarray, obs_std: np.ndarray, *, key: PRNGKey
+) -> TrainState:
+    """Local: parameter-free normalized Markov-state encoder."""
+    mean = np.asarray(obs_mean, np.float32)
+    std = np.asarray(obs_std, np.float32)
+    if mean.shape != std.shape or mean.ndim != 1 or np.any(std <= 0):
+        raise ValueError("identity encoder needs positive 1-D normalization vectors")
+    module = IdentityEncoder(mean=tuple(mean.tolist()), std=tuple(std.tolist()))
+    return TrainState.create(
+        apply_fn=module.apply,
+        params=module.init(key, jnp.zeros(mean.shape[0])).get("params", {}),
+        tx=optax.identity(),
+    )
+
+
 def _deep_update(base: Dict[str, Any], overrides: Dict[str, Any]) -> Dict[str, Any]:
     merged = dict(base)
     for k, v in overrides.items():
@@ -901,8 +1111,8 @@ def load_config(
     """Load ``configs/tdmpc2.yaml``.
 
     ``profile=None`` returns the reference (upstream-default) configuration.
-    ``profile="smoke"`` applies the explicitly named reduced-size overrides used
-    for compilation-speed tests; it never replaces the reference values on disk.
+    Named profiles (``smoke``, ``gate4``) apply explicit overrides; they never
+    replace the reference values on disk.
     """
     with open(path) as f:
         cfg = yaml.safe_load(f)
@@ -914,45 +1124,80 @@ def load_config(
     return cfg
 
 
-def validate_gate0_config(config: Dict[str, Any]) -> None:
-    """Gate 0 accepts only the unchanged upstream single-agent computation."""
-    if config.get("opponent_mode") != "implicit":
-        raise NotImplementedError(
-            "Gate 0 supports opponent_mode='implicit' only; got "
-            f"{config.get('opponent_mode')!r}"
-        )
-    if int(config.get("context_dim", 0)) != 0:
-        raise NotImplementedError(
-            f"Gate 0 supports context_dim=0 only; got {config.get('context_dim')!r}"
-        )
-    if config["world_model"]["latent_dim"] % config["world_model"]["simnorm_dim"]:
+def validate_config(config: Dict[str, Any]) -> None:
+    """Reject inconsistent opponent-mode / encoder settings at construction."""
+    mode = config.get("opponent_mode", "implicit")
+    if mode not in OPPONENT_MODES:
+        raise NotImplementedError(f"opponent_mode must be one of {OPPONENT_MODES}; got {mode!r}")
+    context_dim = int(config.get("context_dim", 0))
+    if context_dim < 0:
+        raise ValueError("context_dim cannot be negative")
+    if mode != "implicit" and context_dim < 1:
+        raise NotImplementedError(f"opponent_mode={mode!r} requires context_dim >= 1")
+    enc_type = config.get("encoder", {}).get("type", "mlp")
+    if enc_type not in ENCODER_TYPES:
+        raise ValueError(f"encoder.type must be one of {ENCODER_TYPES}")
+    if enc_type == "mlp" and (
+        config["world_model"]["latent_dim"] % config["world_model"]["simnorm_dim"]
+    ):
         raise ValueError("latent_dim must be a multiple of simnorm_dim")
 
 
-def create_agent(config: Dict[str, Any], obs_dim: int, *, key: PRNGKey) -> TDMPC2:
-    """Build encoder, world model, and agent as upstream ``train.py`` does."""
-    validate_gate0_config(config)
+def validate_gate0_config(config: Dict[str, Any]) -> None:
+    """Gate 0 baseline: the unchanged upstream single-agent computation only."""
+    validate_config(config)
+    if config.get("opponent_mode") != "implicit" or int(config.get("context_dim", 0)) != 0:
+        raise NotImplementedError(
+            "the Gate 0 baseline requires opponent_mode='implicit' and context_dim=0"
+        )
+
+
+def create_agent(
+    config: Dict[str, Any],
+    obs_dim: int,
+    *,
+    key: PRNGKey,
+    obs_mean: Optional[np.ndarray] = None,
+    obs_std: Optional[np.ndarray] = None,
+) -> TDMPC2:
+    """Build encoder, world model, and agent as upstream ``train.py`` does.
+
+    ``encoder.type="identity"`` requires ``obs_mean`` / ``obs_std`` (training-set
+    statistics of the Markov state) and forces ``latent_dim = obs_dim``.
+    """
+    validate_config(config)
     encoder_cfg = config["encoder"]
     model_cfg = dict(config["world_model"])
     tdmpc_cfg = dict(config["tdmpc2"])
+    factored_cfg = dict(config.get("factored", {}) or {})
+    mode = config.get("opponent_mode", "implicit")
+    context_dim = int(config.get("context_dim", 0))
+    encoder_type = encoder_cfg.get("type", "mlp")
 
     dtype = jnp.dtype(model_cfg.pop("dtype", "float32"))
     _, model_key, encoder_key = jax.random.split(key, 3)
 
-    encoder = build_encoder(
-        obs_dim=obs_dim,
-        encoder_dim=int(encoder_cfg["encoder_dim"]),
-        num_encoder_layers=int(encoder_cfg["num_encoder_layers"]),
-        latent_dim=int(model_cfg["latent_dim"]),
-        learning_rate=float(encoder_cfg["learning_rate"]),
-        max_grad_norm=float(model_cfg["max_grad_norm"]),
-        dtype=dtype,
-        key=encoder_key,
-    )
+    if encoder_type == "identity":
+        if obs_mean is None or obs_std is None:
+            raise ValueError("identity encoder requires obs_mean and obs_std")
+        encoder = build_identity_encoder(obs_mean, obs_std, key=encoder_key)
+        latent_dim = int(obs_dim)
+    else:
+        latent_dim = int(model_cfg["latent_dim"])
+        encoder = build_encoder(
+            obs_dim=obs_dim,
+            encoder_dim=int(encoder_cfg["encoder_dim"]),
+            num_encoder_layers=int(encoder_cfg["num_encoder_layers"]),
+            latent_dim=latent_dim,
+            learning_rate=float(encoder_cfg["learning_rate"]),
+            max_grad_norm=float(model_cfg["max_grad_norm"]),
+            dtype=dtype,
+            key=encoder_key,
+        )
     model = WorldModel.create(
         action_dim=int(np.prod(config["action_dim"])),
         encoder=encoder,
-        latent_dim=int(model_cfg["latent_dim"]),
+        latent_dim=latent_dim,
         value_dropout=float(model_cfg["value_dropout"]),
         num_value_nets=int(model_cfg["num_value_nets"]),
         num_bins=int(model_cfg["num_bins"]),
@@ -963,6 +1208,10 @@ def create_agent(config: Dict[str, Any], obs_dim: int, *, key: PRNGKey) -> TDMPC
         learning_rate=float(model_cfg["learning_rate"]),
         max_grad_norm=float(model_cfg["max_grad_norm"]),
         dtype=dtype,
+        opponent_mode=mode,
+        context_dim=context_dim,
+        encoder_type=encoder_type,
+        red_hidden_dim=int(factored_cfg.get("red_hidden_dim", 128)),
         key=model_key,
     )
     if model.action_dim >= 20:
@@ -987,4 +1236,6 @@ def create_agent(config: Dict[str, Any], obs_dim: int, *, key: PRNGKey) -> TDMPC
         continue_loss_scale=float(tdmpc_cfg["continue_loss_scale"]),
         entropy_coef=float(tdmpc_cfg["entropy_coef"]),
         tau=float(tdmpc_cfg["tau"]),
+        red_loss_scale=float(factored_cfg.get("red_loss_scale", 1.0)),
+        red_detach_latent=bool(factored_cfg.get("red_detach_latent", True)),
     )
