@@ -27,6 +27,7 @@ from mopa.tdmpc_data import (  # noqa: E402
     reward_calibration,
     state_statistics,
     termination_calibration,
+    world_model_observation,
 )
 
 OBS_DIM = 6
@@ -310,6 +311,37 @@ def test_sequence_replay_never_crosses_episodes_and_flags_padding():
         attach_context(data, None, source="causal")
     zero = attach_context(data, None, source="zero")
     assert zero.shape == (6, 13, 3) and not zero.any()
+
+
+def test_relative_feature_map_is_a_deterministic_markov_equivalent_extension():
+    rng = np.random.default_rng(0)
+    n_agents, n_res, n_lava = 2, 16, 3
+    pos = rng.uniform(-2, 2, size=(5, 2 * n_agents)).astype(np.float32)
+    vel = rng.normal(size=(5, 2 * n_agents)).astype(np.float32)
+    res = rng.uniform(-2, 2, size=(5, 2 * n_res)).astype(np.float32)
+    collected = (rng.random((5, n_res)) < 0.3).astype(np.float32)
+    lava = rng.uniform(-2, 2, size=(5, 2 * n_lava)).astype(np.float32)
+    rad = rng.uniform(0.3, 0.6, size=(5, n_lava)).astype(np.float32)
+    time = rng.random((5, 1)).astype(np.float32)
+    s = np.concatenate([pos, vel, res, collected, lava, rad, time], axis=-1)
+    assert s.shape == (5, 66)
+    np.testing.assert_array_equal(world_model_observation(s, feature_map="markov"), s)
+    f = world_model_observation(s, feature_map="relative")
+    assert f.shape == (5, 111)
+    np.testing.assert_array_equal(f[:, :66], s)  # prefix is the state itself
+    prey = pos[:, 2:4]
+    rel = res.reshape(5, n_res, 2) - prey[:, None, :]
+    np.testing.assert_allclose(f[:, 66:98], rel.reshape(5, -1), atol=1e-6)
+    np.testing.assert_allclose(f[:, 98:100], pos[:, 0:2] - prey, atol=1e-6)
+    dist = np.linalg.norm(rel, axis=-1)
+    dist[collected > 0.5] = np.inf
+    np.testing.assert_allclose(f[:, 108], dist.min(-1), atol=1e-5)
+    np.testing.assert_allclose(f[:, 109], np.linalg.norm(pos[:, 0:2] - prey, axis=-1), atol=1e-5)
+    np.testing.assert_allclose(f[:, 110], np.abs(prey).max(-1), atol=1e-6)
+    fj = world_model_observation(jnp.asarray(s), feature_map="relative")
+    np.testing.assert_allclose(np.asarray(fj), f, atol=1e-5)
+    with pytest.raises(ValueError):
+        world_model_observation(s, feature_map="bogus")
 
 
 def test_model_error_and_calibration_utilities_run():

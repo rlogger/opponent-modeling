@@ -18,13 +18,66 @@ import numpy as np
 from mopa.context import CONTEXT_DIM
 
 __all__ = [
+    "FEATURE_MAPS",
     "SequenceReplay",
     "attach_context",
     "multistep_model_error",
     "reward_calibration",
     "state_statistics",
     "termination_calibration",
+    "world_model_observation",
 ]
+
+FEATURE_MAPS = ("markov", "relative")
+
+
+def world_model_observation(
+    state: Any,
+    *,
+    feature_map: str = "relative",
+    num_agents: int = 2,
+    num_resources: int = 16,
+    num_lava: int = 3,
+) -> Any:
+    """World-model observation from the 66-D Markov state (``mopa.continuous_data``).
+
+    ``"markov"`` returns the state unchanged. ``"relative"`` appends
+    prey-relative resource, predator, and lava positions plus a few scalar
+    geometry features (nearest uncollected resource offset and distance,
+    predator distance, arena-boundary proximity). All are deterministic
+    functions of the state, so the vector stays Markov-equivalent while the
+    reward-relevant geometry becomes directly available. Works on NumPy or JAX
+    arrays with leading batch dimensions.
+    """
+    if feature_map not in FEATURE_MAPS:
+        raise ValueError(f"feature_map must be one of {FEATURE_MAPS}")
+    xp = jnp if isinstance(state, jax.Array) else np
+    s = state
+    if feature_map == "markov":
+        return s
+    pos = s[..., : 2 * num_agents]
+    prey = pos[..., 2 * (num_agents - 1) : 2 * num_agents]  # prey is the last agent
+    pred = pos[..., : 2 * (num_agents - 1)]
+    o = 4 * num_agents
+    res = s[..., o : o + 2 * num_resources].reshape(*s.shape[:-1], num_resources, 2)
+    collected = s[..., o + 2 * num_resources : o + 3 * num_resources]
+    o += 3 * num_resources
+    lava = s[..., o : o + 2 * num_lava]
+    lead = s.shape[:-1]
+    rel_res_2d = res - prey[..., None, :]
+    rel_res = rel_res_2d.reshape(*lead, 2 * num_resources)
+    rel_pred = (pred.reshape(*lead, num_agents - 1, 2) - prey[..., None, :]).reshape(*lead, 2 * (num_agents - 1))
+    rel_lava = (lava.reshape(*lead, num_lava, 2) - prey[..., None, :]).reshape(*lead, 2 * num_lava)
+    # Nearest *uncollected* resource (collected ones pushed far away).
+    dist = xp.sqrt(xp.sum(rel_res_2d**2, axis=-1) + 1e-12) + 1e3 * collected
+    nearest = xp.argmin(dist, axis=-1)
+    nearest_rel = xp.take_along_axis(rel_res_2d, nearest[..., None, None], axis=-2)[..., 0, :]
+    nearest_dist = xp.min(dist, axis=-1)[..., None]
+    pred_dist = xp.sqrt(xp.sum(rel_pred.reshape(*lead, num_agents - 1, 2) ** 2, axis=-1) + 1e-12)
+    bound = xp.max(xp.abs(prey), axis=-1)[..., None]
+    return xp.concatenate(
+        [s, rel_res, rel_pred, rel_lava, nearest_rel, nearest_dist, pred_dist, bound], axis=-1
+    )
 
 
 def attach_context(
@@ -75,10 +128,14 @@ class SequenceReplay:
         episodes: np.ndarray,
         horizon: int,
         context: np.ndarray,
+        feature_map: str = "markov",
     ) -> "SequenceReplay":
         idx = np.asarray(episodes)
         return cls(
-            state=np.asarray(data["state"])[idx],
+            state=np.asarray(
+                world_model_observation(np.asarray(data["state"])[idx], feature_map=feature_map),
+                dtype=np.float32,
+            ),
             blue_action=np.asarray(data["blue_action"])[idx],
             red_action=np.asarray(data["red_action"])[idx],
             reward=np.asarray(data["blue_reward"])[idx],
@@ -92,6 +149,29 @@ class SequenceReplay:
     @property
     def n_transitions(self) -> int:
         return int(self.valid_length.sum())
+
+    @property
+    def n_episodes(self) -> int:
+        return int(len(self.valid_length))
+
+    def append(
+        self, transitions: dict[str, np.ndarray], context: np.ndarray, feature_map: str = "markov"
+    ) -> None:
+        """Append collected episodes (data-contract arrays) to the replay."""
+        state = np.asarray(
+            world_model_observation(np.asarray(transitions["state"]), feature_map=feature_map),
+            dtype=np.float32,
+        )
+        if state.shape[1:] != self.state.shape[1:]:
+            raise ValueError("collected episodes must match the replay horizon and features")
+        self.state = np.concatenate([self.state, state])
+        self.blue_action = np.concatenate([self.blue_action, np.asarray(transitions["blue_action"], np.float32)])
+        self.red_action = np.concatenate([self.red_action, np.asarray(transitions["red_action"], np.float32)])
+        self.reward = np.concatenate([self.reward, np.asarray(transitions["blue_reward"], np.float32)])
+        self.terminated = np.concatenate([self.terminated, np.asarray(transitions["terminated_capture"], bool)])
+        self.truncated = np.concatenate([self.truncated, np.asarray(transitions["truncated_timeout"], bool)])
+        self.valid_length = np.concatenate([self.valid_length, np.asarray(transitions["valid_length"], np.int32)])
+        self.context = np.concatenate([self.context, np.asarray(context, np.float32)])
 
     def sample(self, rng: np.random.Generator, batch_size: int) -> dict[str, jax.Array]:
         """Return ``(horizon, batch, ...)`` arrays; windows never cross episodes."""
@@ -118,9 +198,12 @@ class SequenceReplay:
         return {k: jnp.asarray(np.swapaxes(v, 0, 1)) for k, v in batch.items()}
 
 
-def state_statistics(states: np.ndarray, valid_mask: np.ndarray) -> tuple[np.ndarray, np.ndarray]:
-    """Mean / std of the Markov state over valid transitions' start states."""
-    s = np.asarray(states)[:, :-1][np.asarray(valid_mask, bool)]
+def state_statistics(
+    states: np.ndarray, valid_mask: np.ndarray, feature_map: str = "markov"
+) -> tuple[np.ndarray, np.ndarray]:
+    """Mean / std of the world-model observation over valid transitions' start states."""
+    s = np.asarray(world_model_observation(np.asarray(states), feature_map=feature_map))
+    s = s[:, :-1][np.asarray(valid_mask, bool)]
     mean = s.mean(axis=0).astype(np.float32)
     std = (s.std(axis=0) + 1e-3).astype(np.float32)
     return mean, std

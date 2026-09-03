@@ -57,12 +57,14 @@ from mopa.manifest import (  # noqa: E402
 )
 from mopa.tdmpc import create_agent, load_config  # noqa: E402
 from mopa.tdmpc_data import (  # noqa: E402
+    FEATURE_MAPS,
     SequenceReplay,
     attach_context,
     multistep_model_error,
     reward_calibration,
     state_statistics,
     termination_calibration,
+    world_model_observation,
 )
 from tag_objectives import make_env  # noqa: E402
 
@@ -98,8 +100,9 @@ def load_context(ds, bc_artifacts: Path, heldout: int, bc_seed: int, source: str
     return encoder, enc_path, attach_context(data, causal, source=source)
 
 
-def run_dir(root: Path, mode: str, encoder: str, heldout: int, seed: int, context_source: str) -> Path:
-    return root / f"{mode}__{encoder}__ctx-{context_source}__h{heldout}__s{seed}"
+def run_dir(root: Path, mode: str, encoder: str, heldout: int, seed: int, context_source: str, features: str) -> Path:
+    suffix = "" if features == "markov" else f"__{features}"
+    return root / f"{mode}__{encoder}__ctx-{context_source}__h{heldout}__s{seed}{suffix}"
 
 
 def save_agent(agent, path: Path) -> None:  # noqa: ANN001
@@ -141,41 +144,70 @@ def cmd_train(args: argparse.Namespace) -> int:
         context = np.zeros_like(context)[..., : cfg["context_dim"]]
     train_eps = np.flatnonzero(ds.checkpoint_seed != args.heldout)
     eval_eps = np.flatnonzero(ds.checkpoint_seed == args.heldout)
-    mean, std = state_statistics(ds.state[train_eps], ds.valid_mask[train_eps])
-    state_dim = int(ds.state.shape[-1])
+    mean, std = state_statistics(ds.state[train_eps], ds.valid_mask[train_eps], feature_map=args.features)
+    state_dim = int(mean.shape[0])
     agent = create_agent(cfg, state_dim, key=jax.random.PRNGKey(args.seed), obs_mean=mean, obs_std=std)
     horizon = agent.horizon
-    replay = SequenceReplay.from_dataset(data, train_eps, horizon, context)
-    eval_replay = SequenceReplay.from_dataset(data, eval_eps, horizon, context)
+    replay = SequenceReplay.from_dataset(data, train_eps, horizon, context, feature_map=args.features)
+    eval_replay = SequenceReplay.from_dataset(data, eval_eps, horizon, context, feature_map=args.features)
     rng = np.random.default_rng(args.seed)
     key = jax.random.PRNGKey(10_000 + args.seed)
 
-    out = run_dir(args.out, args.mode, args.encoder, args.heldout, args.seed, args.context_source)
+    out = run_dir(args.out, args.mode, args.encoder, args.heldout, args.seed, args.context_source, args.features)
     out.mkdir(parents=True, exist_ok=True)
     log: list[dict[str, float]] = []
     t0 = time.time()
-    for step in range(1, args.updates + 1):
-        batch = replay.sample(rng, agent.batch_size)
-        key, k = jax.random.split(key)
-        agent, info = agent.update(**batch, key=k)
-        if step % args.log_every == 0 or step == args.updates:
-            row = {
-                "step": step,
-                "seconds": time.time() - t0,
-                **{
-                    k_: float(np.asarray(info[k_]))
-                    for k_ in ("total_loss", "consistency_loss", "reward_loss", "value_loss", "continue_loss", "red_loss", "policy_loss")
-                },
-            }
-            log.append(row)
-            print(
-                f"[{args.mode}/{args.encoder} h{args.heldout} s{args.seed}] step {step:6d} "
-                f"total {row['total_loss']:.4f} cons {row['consistency_loss']:.4f} rew {row['reward_loss']:.4f} "
-                f"val {row['value_loss']:.4f} cont {row['continue_loss']:.4f} red {row['red_loss']:.4f} "
-                f"pi {row['policy_loss']:.4f} ({row['seconds']:.0f}s)",
-                flush=True,
-            )
-    if not all(np.isfinite(list(log[-1].values()))):
+    step = 0
+
+    def train_steps(n: int) -> None:
+        nonlocal agent, key, step
+        for _ in range(n):
+            step += 1
+            batch = replay.sample(rng, agent.batch_size)
+            key, k = jax.random.split(key)
+            agent, info = agent.update(**batch, key=k)
+            if step % args.log_every == 0 or step == total_updates:
+                row = {
+                    "step": step,
+                    "seconds": time.time() - t0,
+                    "replay_transitions": replay.n_transitions,
+                    **{
+                        k_: float(np.asarray(info[k_]))
+                        for k_ in ("total_loss", "consistency_loss", "reward_loss", "value_loss", "continue_loss", "red_loss", "policy_loss")
+                    },
+                }
+                log.append(row)
+                print(
+                    f"[{args.mode}/{args.encoder} h{args.heldout} s{args.seed}] step {step:6d} "
+                    f"total {row['total_loss']:.4f} cons {row['consistency_loss']:.4f} rew {row['reward_loss']:.4f} "
+                    f"val {row['value_loss']:.4f} cont {row['continue_loss']:.4f} red {row['red_loss']:.4f} "
+                    f"pi {row['policy_loss']:.4f} ({row['seconds']:.0f}s)",
+                    flush=True,
+                )
+
+    total_updates = args.updates + args.online_rounds * args.updates_per_round
+    train_steps(args.updates)
+    online_log: list[dict[str, Any]] = []
+    collect_rng = np.random.default_rng(777 + args.seed)
+    for round_index in range(args.online_rounds):
+        summary = collect_online_round(
+            agent, ds, replay, encoder,
+            heldout=args.heldout, features=args.features, context_source=args.context_source,
+            mode=args.mode, episodes_per_group=args.online_episodes, logdir=args.logdir,
+            rng=collect_rng, horizon=int(ds.blue_action.shape[1]),
+        )
+        summary["round"] = round_index
+        summary["seconds"] = time.time() - t0
+        online_log.append(summary)
+        mean_ret = float(np.mean([g["blue_return_mean"] for g in summary["groups"]]))
+        print(
+            f"[{args.mode}/{args.encoder} h{args.heldout} s{args.seed}] online round {round_index}: "
+            f"{summary['n_episodes']} episodes, {summary['n_transitions']} transitions, "
+            f"mean collected return {mean_ret:.2f}; replay {replay.n_transitions} ({summary['seconds']:.0f}s)",
+            flush=True,
+        )
+        train_steps(args.updates_per_round)
+    if not all(np.isfinite([v for v in log[-1].values() if isinstance(v, float)])):
         raise RuntimeError("non-finite loss at end of training")
 
     save_agent(agent, out / "agent.msgpack")
@@ -197,10 +229,22 @@ def cmd_train(args: argparse.Namespace) -> int:
         "profile": args.profile,
         "mode": args.mode,
         "encoder": args.encoder,
+        "features": args.features,
         "context_source": args.context_source,
         "heldout_checkpoint": args.heldout,
         "seed": args.seed,
         "updates": args.updates,
+        "online": {
+            "rounds": args.online_rounds,
+            "episodes_per_group_per_round": args.online_episodes,
+            "updates_per_round": args.updates_per_round,
+            "opponents": "training checkpoint families only (held-out family never collected)",
+            "exploration": "upstream train=True elite sample + MPPI noise",
+            "log": online_log,
+        },
+        "total_updates": total_updates,
+        "final_replay_transitions": replay.n_transitions,
+        "final_replay_episodes": replay.n_episodes,
         "state_dim": state_dim,
         "dataset": {"path": str(args.dataset), "sha256": file_sha256(args.dataset)},
         "context_encoder": {"path": str(enc_path), "sha256": file_sha256(enc_path), "frozen": True},
@@ -221,22 +265,101 @@ def cmd_train(args: argparse.Namespace) -> int:
 # --------------------------------------------------------------------------- #
 # evaluate
 # --------------------------------------------------------------------------- #
-def tdmpc_controller(agent, env):  # noqa: ANN001
-    act = jax.jit(
-        lambda a, s, prev, ctx, key: a.act(
-            markov_state(env, s), prev_plan=prev, mpc=True, deterministic=True, context=ctx, key=key
-        )
-    )
+class TDMPCController:
+    """``BlueController`` wrapper around a TD-MPC agent (agent swappable per round).
 
-    def blue(state, obs, context, carry, key, t):  # noqa: ANN001
+    ``explore=True`` uses the upstream training-time action (sample from the
+    elite distribution plus MPPI noise); ``False`` evaluates the best elite.
+    """
+
+    def __init__(self, agent, env, features: str = "markov", *, explore: bool = False):  # noqa: ANN001
+        self.agent = agent
+        self._act = jax.jit(
+            lambda a, s, prev, ctx, key: a.act(
+                world_model_observation(markov_state(env, s), feature_map=features),
+                prev_plan=prev,
+                mpc=True,
+                deterministic=not explore,
+                train=explore,
+                context=ctx,
+                key=key,
+            )
+        )
+
+    def __call__(self, state, obs, context, carry, key, t):  # noqa: ANN001
         del obs, t
-        action, plan = act(agent, state, carry, context, key)
+        action, plan = self._act(self.agent, state, carry, context, key)
         return action, plan
 
-    return blue
+
+def tdmpc_controller(agent, env, features: str = "markov"):  # noqa: ANN001
+    return TDMPCController(agent, env, features, explore=False)
 
 
-def factored_invariance_checks(agent, ds, eval_eps, context, seed: int) -> dict[str, Any] | None:  # noqa: ANN001
+def collect_online_round(
+    agent,  # noqa: ANN001
+    ds,  # noqa: ANN001
+    replay: SequenceReplay,
+    encoder: CausalContextEncoder,
+    *,
+    heldout: int,
+    features: str,
+    context_source: str,
+    mode: str,
+    episodes_per_group: int,
+    logdir: Path,
+    rng: np.random.Generator,
+    horizon: int,
+) -> dict[str, Any]:
+    """Collect episodes with the current planner against the *training* specialists.
+
+    Fresh reset/step keys, exploration noise on, causal context computed online
+    from the real history (the same frozen encoder used for training data).
+    """
+    env = make_env("capture", continuous=True)
+    controller = TDMPCController(agent, env, features, explore=True)
+    train_ckpts = sorted(int(c) for c in set(ds.checkpoint_seed.tolist()) - {heldout})
+    summary: dict[str, Any] = {"groups": [], "n_episodes": 0, "n_transitions": 0}
+    for ckpt in train_ckpts:
+        for label, pred_type in enumerate(OBJECTIVE_TYPES):
+            red_params = load_continuous_actor_params(
+                continuous_checkpoint_path(logdir, pred_type, "pred", ckpt)
+            )
+            base = int(rng.integers(0, 2**31 - 1))
+            reset_keys = np.asarray(jax.random.split(jax.random.PRNGKey(base), episodes_per_group), np.uint32)
+            step_seed = np.asarray(jax.random.split(jax.random.PRNGKey(base + 1), episodes_per_group), np.uint32)
+            out = run_matched_episodes(
+                env, red_params, controller, reset_keys, step_seed, horizon=horizon,
+                context_mode="online", label=label, encoder=encoder,
+                shuffle_seed=base, record_transitions=True,
+            )
+            tr = out["transitions"]
+            if context_source == "oracle":
+                ctx = np.repeat(np.eye(CONTEXT_DIM, dtype=np.float32)[label][None, None], horizon + 1, axis=1)
+                ctx = np.repeat(ctx, episodes_per_group, axis=0)
+            elif context_source in {"zero", "none"}:
+                ctx = np.zeros((episodes_per_group, horizon + 1, CONTEXT_DIM), np.float32)
+            else:
+                ctx = encoder.causal_context(tr["prey_pos"], tr["pred_pos"], tr["valid_length"])
+            if mode == "implicit":
+                ctx = ctx[..., : replay.context.shape[-1]] * 0.0
+            replay.append(tr, ctx, feature_map=features)
+            summary["groups"].append(
+                {
+                    "checkpoint": ckpt,
+                    "opponent": pred_type,
+                    "n_episodes": int(episodes_per_group),
+                    "blue_return_mean": float(np.mean(out["blue_return"])),
+                    "captured_mean": float(np.mean(out["captured"])),
+                    "resources_mean": float(np.mean(out["resources_collected"])),
+                }
+            )
+            summary["n_episodes"] += int(episodes_per_group)
+            summary["n_transitions"] += int(tr["valid_length"].sum())
+    return summary
+
+
+def factored_invariance_checks(agent, ds, eval_eps, context, seed: int, features: str = "markov") -> dict[str, Any] | None:  # noqa: ANN001
     """Numerical Gate 5 requirements for Equation 3 on real held-out latents."""
     m = agent.model
     if m.opponent_mode != "factored":
@@ -245,7 +368,8 @@ def factored_invariance_checks(agent, ds, eval_eps, context, seed: int) -> dict[
     e = rng.choice(eval_eps, size=64)
     t = np.floor(rng.random(64) * (ds.valid_length[e] - 1)).astype(int)
     key = jax.random.PRNGKey(seed)
-    x = m.encode(jnp.asarray(ds.state[e, t]), m.encoder.params, key)
+    obs = world_model_observation(ds.state[e, t], feature_map=features)
+    x = m.encode(jnp.asarray(obs), m.encoder.params, key)
     u = jnp.asarray(ds.blue_action[e, t])
     v = jnp.asarray(ds.red_action[e, t])
     c_real = jnp.asarray(context[e, t])
@@ -290,7 +414,8 @@ def cmd_evaluate(args: argparse.Namespace) -> int:
     context_modes = ["online", "zero", "shuffled", "wrong_oracle", "oracle"] if mode != "implicit" else ["zero"]
     if args.context_modes:
         context_modes = args.context_modes.split(",")
-    blue = tdmpc_controller(agent, env)
+    features = manifest.get("features", "markov")
+    blue = tdmpc_controller(agent, env, features)
     prey_params = load_continuous_actor_params(continuous_checkpoint_path(args.logdir, "capture", "prey", heldout))
     runs = []
     per_episode: dict[str, np.ndarray] = {}
@@ -339,12 +464,13 @@ def cmd_evaluate(args: argparse.Namespace) -> int:
         "manifest_sha256": file_sha256(args.run / "manifest.json"),
         "mode": mode,
         "encoder": manifest["encoder"],
+        "features": features,
         "seed": manifest["seed"],
         "heldout_checkpoint": heldout,
         "n_eps_per_opponent": args.n_eps,
         "planner": {k: manifest["config"]["tdmpc2"][k] for k in ("horizon", "population_size", "policy_prior_samples", "num_elites", "mppi_iterations")},
         "runs": runs,
-        "factored_invariance": factored_invariance_checks(agent, ds, eval_eps, context, int(manifest["seed"])),
+        "factored_invariance": factored_invariance_checks(agent, ds, eval_eps, context, int(manifest["seed"]), features),
     }
     (args.run / "evaluation.json").write_text(json.dumps(_jsonable(result), indent=2, sort_keys=True) + "\n")
     np.savez_compressed(args.run / "evaluation_per_episode.npz", **per_episode)
@@ -489,10 +615,15 @@ def build_parser() -> argparse.ArgumentParser:
     tr.add_argument("--mode", choices=("implicit", "conditioned", "factored"), required=True)
     tr.add_argument("--encoder", choices=("identity", "mlp"), default="identity")
     tr.add_argument("--context-source", choices=("causal", "oracle", "zero", "none"), default="causal")
+    tr.add_argument("--features", choices=FEATURE_MAPS, default="markov")
     tr.add_argument("--heldout", type=int, default=2)
     tr.add_argument("--seed", type=int, default=0)
     tr.add_argument("--updates", type=int, default=10000)
     tr.add_argument("--log-every", type=int, default=500)
+    tr.add_argument("--online-rounds", type=int, default=0)
+    tr.add_argument("--online-episodes", type=int, default=8, help="per opponent x training checkpoint")
+    tr.add_argument("--updates-per-round", type=int, default=2000)
+    tr.add_argument("--logdir", type=Path, default=DEFAULT_CONTINUOUS_LOGDIR)
     tr.set_defaults(func=cmd_train)
     ev = sub.add_parser("evaluate")
     ev.add_argument("run", type=Path)

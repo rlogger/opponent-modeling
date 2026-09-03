@@ -100,18 +100,26 @@ def test_continuous_drivers_compose(tmp_path):
     td_root = tmp_path / "tdmpc"
     run_td = _load("run_tdmpc.py")
     for mode in ("implicit", "factored"):
+        online = ["--online-rounds", "1", "--online-episodes", "1", "--updates-per-round", "2", "--logdir", str(logdir)] if mode == "factored" else []
         assert run_td.main(
             [
                 "train", "--mode", mode, "--encoder", "identity", "--profile", "smoke",
-                "--heldout", "1", "--seed", "0", "--updates", "3", "--log-every", "1",
-                "--dataset", str(data_dir / "dataset.npz"), "--bc-artifacts", str(bc_dir),
-                "--out", str(td_root),
+                "--features", "relative", "--heldout", "1", "--seed", "0", "--updates", "3",
+                "--log-every", "1", "--dataset", str(data_dir / "dataset.npz"),
+                "--bc-artifacts", str(bc_dir), "--out", str(td_root), *online,
             ]
         ) == 0
     runs = sorted(p for p in td_root.iterdir() if p.is_dir())
     assert len(runs) == 2
-    manifest = json.loads((runs[0] / "manifest.json").read_text())
+    by_mode = {json.loads((p / "manifest.json").read_text())["mode"]: p for p in runs}
+    manifest = json.loads((by_mode["implicit"] / "manifest.json").read_text())
     assert manifest["evaluation"]["heldout"]["model_error"]["per_horizon"]["1"]["n_starts"] > 0
+    assert manifest["features"] == "relative" and manifest["state_dim"] == 111
+    factored_manifest = json.loads((by_mode["factored"] / "manifest.json").read_text())
+    assert factored_manifest["online"]["rounds"] == 1
+    # 3 opponents x 1 training checkpoint (checkpoint 1 is held out) x 1 episode.
+    assert factored_manifest["online"]["log"][0]["n_episodes"] == 3
+    assert factored_manifest["final_replay_episodes"] > factored_manifest["train_episodes"]
     for run in runs:
         assert run_td.main(
             [

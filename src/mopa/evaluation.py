@@ -20,7 +20,7 @@ import jax.numpy as jnp
 import numpy as np
 
 from mopa.context import CONTEXT_DIM, CausalContextEncoder, derangement
-from mopa.continuous_data import deterministic_specialist_action
+from mopa.continuous_data import deterministic_specialist_action, markov_state
 from tag_objectives import CONTINUOUS_ACTION_DIM, joint_action_dict
 from tag_objectives.teams import freeze_tree
 
@@ -71,8 +71,16 @@ def run_matched_episodes(
     shuffle_seed: int = 0,
     initial_carry: Any = None,
     record_positions: bool = False,
+    record_transitions: bool = False,
 ) -> dict[str, Any]:
-    """Run ``B`` matched episodes; return per-episode metrics and bound checks."""
+    """Run ``B`` matched episodes; return per-episode metrics and bound checks.
+
+    ``record_transitions=True`` additionally returns the episodes in the
+    continuous data contract (``state``, ``blue_action``, ``red_action``,
+    ``blue_reward``, ``terminated_capture``, ``truncated_timeout``,
+    ``valid_mask``, ``valid_length``, positions) so collected experience can be
+    appended to a world-model replay.
+    """
     if context_mode not in CONTEXT_MODES:
         raise ValueError(f"context_mode must be one of {CONTEXT_MODES}")
     if context_mode in {"online", "shuffled"} and encoder is None:
@@ -82,6 +90,7 @@ def run_matched_episodes(
     obs_width = max(env.observation_space(a).shape[0] for a in env.agents)
     red_act = jax.jit(lambda o: deterministic_specialist_action(red_params, o, obs_width))
     step_fn = jax.jit(jax.vmap(env.step_env))
+    state_fn = jax.jit(lambda s: markov_state(env, s))
 
     batch = len(reset_keys)
     obs, state = jax.vmap(env.reset)(jnp.asarray(reset_keys, jnp.uint32))
@@ -95,9 +104,16 @@ def run_matched_episodes(
     action_abs_max = 0.0
     acted_after_done = False
     carry = initial_carry
-    shuffle = derangement(np.arange(batch, dtype=np.int32), np.random.default_rng(shuffle_seed))
+    shuffle = (
+        derangement(np.arange(batch, dtype=np.int32), np.random.default_rng(shuffle_seed))
+        if context_mode == "shuffled"
+        else None
+    )
     key = jax.random.PRNGKey(int(shuffle_seed) + 7)
     one_hot = np.eye(CONTEXT_DIM, dtype=np.float32)
+    rec: dict[str, list[np.ndarray]] = {k: [] for k in ("state", "blue", "red", "reward", "term", "trunc", "valid")}
+    if record_transitions:
+        rec["state"].append(np.asarray(state_fn(state)))
 
     for t in range(horizon):
         active = ~done
@@ -121,15 +137,27 @@ def run_matched_episodes(
         keys = jax.vmap(lambda k: jax.random.fold_in(k, t))(step_seed_j)
         actions = joint_action_dict(env, jnp.asarray(blue_np), red_action[:, None, :])
         new_obs, new_state, rew, dones, info = step_fn(keys, state, actions)
-        ret += np.asarray(rew[prey_name]) * active
+        reward_np = np.asarray(rew[prey_name])
+        ret += reward_np * active
         pred_lava += np.asarray(info["pred_lava"][:, pred_index]) * active
         prey_lava += np.asarray(info["prey_lava"][:, prey_index]) * active
+        if record_transitions:
+            capture_now = np.asarray(info["captured"][:, prey_index] > 0.5)
+            ep_done = np.asarray(dones["__all__"]) | (t == horizon - 1)
+            rec["blue"].append(np.where(active[:, None], blue_np, 0.0).astype(np.float32))
+            rec["red"].append(np.where(active[:, None], np.asarray(red_action), 0.0).astype(np.float32))
+            rec["reward"].append(np.where(active, reward_np, 0.0).astype(np.float32))
+            rec["term"].append(active & capture_now)
+            rec["trunc"].append(active & ep_done & ~capture_now)
+            rec["valid"].append(active.copy())
         active_j = jnp.asarray(active)
         state = freeze_tree(active_j, new_state, state)
         obs = freeze_tree(active_j, new_obs, obs)
         done = done | np.asarray(dones["__all__"])
         prey_hist.append(np.asarray(state.p_pos[:, prey_index]))
         pred_hist.append(np.asarray(state.p_pos[:, pred_index : pred_index + 1]))
+        if record_transitions:
+            rec["state"].append(np.asarray(state_fn(state)))
 
     capture_t = np.asarray(state.capture_t)
     captured = capture_t >= 0
@@ -144,7 +172,22 @@ def run_matched_episodes(
         "blue_action_abs_max": action_abs_max,
         "acted_after_done": acted_after_done,
     }
-    if record_positions:
+    if record_positions or record_transitions:
         out["prey_pos"] = np.stack(prey_hist, axis=1)
         out["pred_pos"] = np.stack(pred_hist, axis=1)
+    if record_transitions:
+        valid = np.stack(rec["valid"], axis=1)
+        out["transitions"] = {
+            "state": np.stack(rec["state"], axis=1).astype(np.float32),
+            "blue_action": np.stack(rec["blue"], axis=1),
+            "red_action": np.stack(rec["red"], axis=1),
+            "blue_reward": np.stack(rec["reward"], axis=1),
+            "terminated_capture": np.stack(rec["term"], axis=1),
+            "truncated_timeout": np.stack(rec["trunc"], axis=1),
+            "valid_mask": valid,
+            "valid_length": valid.sum(axis=1).astype(np.int32),
+            "capture_t": capture_t.astype(np.int32),
+            "prey_pos": out["prey_pos"].astype(np.float32),
+            "pred_pos": out["pred_pos"].astype(np.float32),
+        }
     return out
