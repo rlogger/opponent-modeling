@@ -1,20 +1,5 @@
 # Handoff: Continuous Opponent-Aware TD-MPC
 
-## Purpose
-
-Implement a continuous-action TD-MPC controller for the prey (blue) that plans
-against one of three fixed predator policies (red): capture/prey-seeking, risk-
-averse, or curious. The opponent type is sampled uniformly once per episode.
-Use Shane Flandermeyer's JAX/Flax TD-MPC2 implementation as the algorithmic
-base, pinned and adapted as described below.
-
-The immediate experiment is fixed-opponent adaptation, not co-training. The
-prey should infer opponent behavior causally, use that information while
-planning, and be evaluated against matched no-context controls.
-
-This handoff interprets Ellen's September 1, 2026 MBCT slides. The slides are
-technical source material; the decisions below define the implementation.
-
 ## Snapshot and evidence boundary
 
 - Base checkout when this handoff was written: `main` at `8c24db3`.
