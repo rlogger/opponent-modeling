@@ -136,3 +136,15 @@ def test_continuous_drivers_compose(tmp_path):
     inv = cmp_["factored_invariance"]
     assert len(inv) == 1 and inv[0]["physics_reward_termination_context_invariant"] is True
     assert np.isfinite(cmp_["summary"]["factored__identity"]["rows"]["capture__tdmpc__zero"]["blue_return"]["mean"])
+    # Gate 4 model-quality scalars are carried from the manifests into the record.
+    mq = cmp_["summary"]["factored__identity"]["model_quality"]
+    assert mq["n_seeds"] == 1
+    assert mq["heldout"]["model_error"]["1"]["ratio_model_over_persistence"]["n"] == 1
+    assert mq["heldout"]["reward"]["explained_variance"] is not None
+    # The smoke profile has no continuation head, so no termination block is aggregated.
+    assert ("termination" in mq["heldout"]) == (
+        factored_manifest["evaluation"]["heldout"]["termination_calibration"] is not None
+    )
+    assert len(mq["online_rounds"]) == 1 and set(mq["online_rounds"][0]["per_opponent"]) == set(OBJECTIVE_TYPES)
+    assert cmp_["summary"]["implicit__identity"]["model_quality"]["online_rounds"] == []
+    assert cmp_["summary"]["factored__identity"]["model_quality_per_seed"][0]["total_updates"] == 5

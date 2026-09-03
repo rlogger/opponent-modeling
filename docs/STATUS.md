@@ -38,13 +38,13 @@ implemented end to end; its experiment record with all numbers is
 | 1 continuous env + specialists | `tag_objectives.actions`, `mopa.continuous`, `mopa.nets.ContinuousActor`, `scripts/train_mappo.py` (`ACTION_TYPE: Continuous`), `mopa.continuous_data`, `scripts/make_continuous_dataset.py` | Adapter tests (zero/axes/diagonals/bounds/batch/jit/vmap), tanh-Gaussian log-prob vs Distrax, data-contract tests, bitwise exact replay of 1,800 episodes, 96% family probe | pass |
 | 2 continuous opponent BC | `mopa.context`, `mopa.bc_continuous`, `scripts/run_bc_continuous.py` | Unit tests; 3 folds × 3 seeds experiment | partial: oracle and closed-loop criteria pass, strict offline `real_c` criterion fails on one fold |
 | 3 simulator-backed planner | `mopa.sim_planner`, `mopa.evaluation`, `scripts/run_sim_planner.py` | `tests/test_mppi.py`; 9 fold × opponent groups | pass |
-| 4 TD-MPC world model | `mopa.tdmpc` (implicit / conditioned / factored, identity or learned encoder, same-transition continuation head), `mopa.tdmpc_data`, `scripts/run_tdmpc.py` | `tests/test_tdmpc.py` (modes, EMA target, causal inputs, context invariance, termination masking); model error vs persistence and calibration reports per run | see experiment record |
-| 5 matched comparison | `scripts/run_tdmpc.py compare` | Paired matched-reset deltas across modes × seeds, factored action-clamp invariance, claim gates | see experiment record |
+| 4 TD-MPC world model | `mopa.tdmpc` (implicit / conditioned / factored, identity or learned encoder, same-transition continuation head), `mopa.tdmpc_data` (episode-bounded replay, `relative` reward-relevant features, online append), `scripts/run_tdmpc.py` (offline updates plus online collection rounds against training families) | `tests/test_tdmpc.py` (modes, EMA target, causal inputs, context invariance, termination masking); model error vs persistence and calibration reports per run; 3 modes × 3 seeds experiment | pass for the identity-encoder state-space baseline: every mode beats persistence at 1 / 3 / 10 steps on the held-out family, reward EV 0.46–0.54, capture AUROC 0.99; learned `mlp` encoder not yet run |
+| 5 matched comparison | `scripts/run_tdmpc.py compare` | Paired matched-reset deltas across modes × seeds, factored action-clamp invariance, claim gates; 32 matched held-out resets × 3 opponents × 3 seeds | nominal pass, weak evidence: all modes beat the fixed prey and random; `factored` − `implicit` = +1.19 ± 4.77 return (6 / 9 pairs, seed-consistent only vs the capture predator); invariance exact in all factored seeds |
 
-Deferred within this programme: sampled (non-deterministic) red opponents in
-factored rollouts, a calibrated tanh-Gaussian red head, online data collection
-with the learned planner, opponent switching, co-training, and the cyclic /
-Spatial Blotto tasks.
+Deferred within this programme: the learned-encoder (`mlp`) comparison,
+sampled (non-deterministic) red opponents in factored rollouts, a calibrated
+tanh-Gaussian red head, an oracle-context training arm, opponent switching,
+co-training, and the cyclic / Spatial Blotto tasks.
 
 ## Evidence boundary
 

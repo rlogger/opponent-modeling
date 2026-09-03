@@ -39,9 +39,16 @@ uv run --locked --all-extras python scripts/make_continuous_dataset.py
 uv run --locked --all-extras python scripts/run_bc_continuous.py
 # Gate 3: simulator-backed MPPI ladder with opponent-context controls
 uv run --locked --all-extras python scripts/run_sim_planner.py --n-eps 48
-# Gates 4-5: TD-MPC world models (implicit | conditioned | factored) and comparison
-uv run --locked --all-extras python scripts/run_tdmpc.py train --mode factored --encoder identity --seed 0
-uv run --locked --all-extras python scripts/run_tdmpc.py evaluate artifacts/tdmpc/factored__identity__ctx-causal__h2__s0
+# Gates 4-5: TD-MPC world models (implicit | conditioned | factored) and comparison.
+# Reward-relevant relative features plus online collection rounds are the recorded
+# configuration; purely offline training on the raw state leaves the arena.
+for mode in implicit conditioned factored; do
+  uv run --locked --all-extras python scripts/run_tdmpc.py train --mode $mode --encoder identity \
+    --features relative --seed 0 --updates 10000 --online-rounds 6 --online-episodes 8 \
+    --updates-per-round 2000 --out artifacts/tdmpc
+  uv run --locked --all-extras python scripts/run_tdmpc.py evaluate \
+    artifacts/tdmpc/${mode}__identity__ctx-causal__h2__s0__relative --n-eps 32 --controls
+done
 uv run --locked --all-extras python scripts/run_tdmpc.py compare --root artifacts/tdmpc
 ```
 

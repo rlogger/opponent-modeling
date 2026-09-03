@@ -481,6 +481,91 @@ def cmd_evaluate(args: argparse.Namespace) -> int:
 # --------------------------------------------------------------------------- #
 # compare
 # --------------------------------------------------------------------------- #
+_MODEL_ERROR_KEYS = ("model_mse", "persistence_mse", "ratio_model_over_persistence", "position_rmse_model", "position_rmse_persistence")
+_REWARD_KEYS = ("explained_variance", "mae", "mse")
+_TERMINATION_KEYS = ("brier", "ece_10_bins", "capture_auroc", "capture_recall_at_0.5", "hard_threshold_accuracy")
+
+
+def _model_quality(manifest: dict[str, Any]) -> dict[str, Any]:
+    """Gate 4 model-quality scalars of one training run (from its manifest)."""
+    out: dict[str, Any] = {
+        "seed": manifest["seed"],
+        "features": manifest.get("features", "markov"),
+        "total_updates": manifest.get("total_updates", manifest["updates"]),
+        "final_replay_transitions": manifest.get("final_replay_transitions"),
+    }
+    for split in ("train", "heldout"):
+        ev = manifest["evaluation"][split]
+        entry: dict[str, Any] = {
+            "model_error": {
+                k: {kk: vv for kk, vv in row.items() if kk in _MODEL_ERROR_KEYS}
+                for k, row in ev["model_error"]["per_horizon"].items()
+                if row is not None
+            },
+            "reward": {k: ev["reward_calibration"][k] for k in _REWARD_KEYS},
+        }
+        if ev.get("termination_calibration"):
+            entry["termination"] = {k: ev["termination_calibration"][k] for k in _TERMINATION_KEYS}
+        out[split] = entry
+    online = manifest.get("online", {}).get("log", [])
+    out["online_rounds"] = [
+        {
+            "round": r["round"],
+            "n_transitions": r["n_transitions"],
+            "mean_collected_return": float(np.mean([g["blue_return_mean"] for g in r["groups"]])),
+            "per_opponent": {
+                typ: {
+                    "blue_return_mean": float(np.mean([g["blue_return_mean"] for g in r["groups"] if g["opponent"] == typ])),
+                    "captured_mean": float(np.mean([g["captured_mean"] for g in r["groups"] if g["opponent"] == typ])),
+                }
+                for typ in OBJECTIVE_TYPES
+                if any(g["opponent"] == typ for g in r["groups"])
+            },
+        }
+        for r in online
+    ]
+    return out
+
+
+def _aggregate_model_quality(per_seed: list[dict[str, Any]]) -> dict[str, Any]:
+    """Mean / std over seeds of every Gate 4 scalar in ``_model_quality`` output."""
+
+    def agg(values: list[Any]) -> dict[str, float] | None:
+        vals = [float(v) for v in values if v is not None]
+        if not vals:
+            return None
+        return {"mean": float(np.mean(vals)), "std": float(np.std(vals)), "n": len(vals)}
+
+    out: dict[str, Any] = {"n_seeds": len(per_seed)}
+    for split in ("train", "heldout"):
+        entry: dict[str, Any] = {"model_error": {}, "reward": {}}
+        horizons = sorted({k for q in per_seed for k in q[split]["model_error"]}, key=int)
+        for k in horizons:
+            entry["model_error"][k] = {
+                m: agg([q[split]["model_error"].get(k, {}).get(m) for q in per_seed]) for m in _MODEL_ERROR_KEYS
+            }
+        entry["reward"] = {m: agg([q[split]["reward"][m] for q in per_seed]) for m in _REWARD_KEYS}
+        if all("termination" in q[split] for q in per_seed):
+            entry["termination"] = {m: agg([q[split]["termination"][m] for q in per_seed]) for m in _TERMINATION_KEYS}
+        out[split] = entry
+    n_rounds = min((len(q["online_rounds"]) for q in per_seed), default=0)
+    out["online_rounds"] = [
+        {
+            "round": i,
+            "mean_collected_return": agg([q["online_rounds"][i]["mean_collected_return"] for q in per_seed]),
+            "per_opponent": {
+                typ: {
+                    m: agg([q["online_rounds"][i]["per_opponent"].get(typ, {}).get(m) for q in per_seed])
+                    for m in ("blue_return_mean", "captured_mean")
+                }
+                for typ in OBJECTIVE_TYPES
+            },
+        }
+        for i in range(n_rounds)
+    ]
+    return out
+
+
 def cmd_compare(args: argparse.Namespace) -> int:
     runs = sorted(p for p in args.root.iterdir() if (p / "evaluation.json").is_file())
     if not runs:
@@ -492,9 +577,9 @@ def cmd_compare(args: argparse.Namespace) -> int:
     modes = sorted({e["mode"] for e in evals})
     for e, m, pe in zip(evals, manifests, per_ep):
         key = f"{e['mode']}__{e['encoder']}"
-        table.setdefault(key, {"seeds": [], "model_error_heldout": [], "rows": {}})
+        table.setdefault(key, {"seeds": [], "model_quality": [], "rows": {}})
         table[key]["seeds"].append(e["seed"])
-        table[key]["model_error_heldout"].append(m["evaluation"]["heldout"]["model_error"]["per_horizon"])
+        table[key]["model_quality"].append(_model_quality(m))
         for row in e["runs"]:
             r_key = f"{row['opponent']}__{row['controller']}__{row['context_mode']}"
             table[key]["rows"].setdefault(r_key, {mtr: [] for mtr in METRICS})
@@ -505,6 +590,8 @@ def cmd_compare(args: argparse.Namespace) -> int:
         summary[key] = {
             "n_seeds": len(entry["seeds"]),
             "seeds": entry["seeds"],
+            "model_quality_per_seed": entry["model_quality"],
+            "model_quality": _aggregate_model_quality(entry["model_quality"]),
             "rows": {
                 r: {mtr: {"mean": float(np.mean(v)), "std": float(np.std(v)), "per_seed": v} for mtr, v in vals.items()}
                 for r, vals in entry["rows"].items()
