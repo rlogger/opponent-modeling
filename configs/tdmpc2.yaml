@@ -1,0 +1,72 @@
+# Reference single-agent TD-MPC2 configuration (Gate 0).
+#
+# Ported from tdmpc2_jax/config.yaml in ShaneFlandermeyer/tdmpc2-jax, pinned
+# commit 5b05ff452424896d709848e1f249bd67e269b8a1. Upstream section and
+# parameter names are preserved. Hydra, env, buffer, logging, and tabulate keys
+# were dropped because those upstream components are not ported.
+#
+# Loaded by mopa.tdmpc.load_config. The top-level values are the reference
+# defaults and must not be weakened; use ``profiles.smoke`` for fast tests.
+
+seed: 0
+
+# Local Gate 0 settings. Validated at construction only; they reduce to the
+# unchanged upstream single-agent computation (Equation 1: x_next = d(x, u)).
+action_dim: 2
+opponent_mode: implicit
+context_dim: 0
+
+encoder:
+  encoder_dim: 256
+  num_encoder_layers: 2
+  learning_rate: 1.0e-4
+
+world_model:
+  latent_dim: 512
+  value_dropout: 0.01
+  num_value_nets: 5
+  num_bins: 101
+  symlog_min: -10
+  symlog_max: 10
+  simnorm_dim: 8
+  learning_rate: 3.0e-4
+  predict_continues: false
+  dtype: float32
+  max_grad_norm: 20
+
+tdmpc2:
+  # Planning
+  horizon: 3
+  mppi_iterations: 6
+  population_size: 512
+  policy_prior_samples: 24
+  num_elites: 64
+  min_plan_std: 0.05
+  max_plan_std: 2
+  temperature: 1.0
+  # Optimization
+  batch_size: 256
+  discount: 0.99
+  rho: 0.5
+  consistency_loss_scale: 20
+  reward_loss_scale: 0.1
+  value_loss_scale: 0.1
+  continue_loss_scale: 0.0
+  entropy_coef: 1.0e-4
+  tau: 0.01
+
+# Named override profiles. ``smoke`` shrinks widths and planner population for
+# compilation speed in tests only. It is not a replacement for the reference
+# configuration above and must never be used for reported results.
+profiles:
+  smoke:
+    encoder:
+      encoder_dim: 32
+    world_model:
+      latent_dim: 32
+    tdmpc2:
+      mppi_iterations: 2
+      population_size: 32
+      policy_prior_samples: 8
+      num_elites: 8
+      batch_size: 8
