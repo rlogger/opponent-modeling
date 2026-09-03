@@ -9,9 +9,14 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 20
     env:
+      # Local Mac float32 / XLA reductions can disagree with ubuntu-latest CI
+      # even under --locked; pin a deterministic CPU backend on the runner.
       MPLCONFIGDIR: /tmp/opponent-modeling-mpl
       UV_PROJECT_ENVIRONMENT: venv
       XLA_PYTHON_CLIENT_PREALLOCATE: "false"
+      JAX_PLATFORM_NAME: cpu
+      OPENBLAS_NUM_THREADS: "1"
+      OMP_NUM_THREADS: "1"
     steps:
       - uses: actions/checkout@v4
       - uses: astral-sh/setup-uv@v6
