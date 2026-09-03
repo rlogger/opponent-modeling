@@ -87,6 +87,30 @@ Conclusion: every deterministic expression is unchanged; the only divergence is
 the sampler's internal key handling, which is the documented Distrax
 substitution. Bitwise equality is **not** claimed for stochastic paths.
 
+## Post-Gate-0 local changes (Gate 4)
+
+Made after the parity gate, in the same files, and guarded so that
+``opponent_mode="implicit"``, ``context_dim=0``, ``encoder.type="mlp"``,
+``predict_continues=False`` reproduces the golden fixed-seed values recorded
+from the verified port:
+
+- batch size derived from the sampled tensors;
+- continuation head ``continue(x, u[, c | v])`` on the same transition as the
+  dynamics, trained on ``1 - terminated`` over valid steps, queried at the same
+  location in ``estimate_value``;
+- ``encoder.type="identity"``: parameter-free normalized Markov-state encoder
+  with a residual dynamics head ``x + f(x, a)`` whose output layer is a plain
+  zero-initialized ``Dense`` (upstream's final ``LayerNorm`` is appropriate
+  before SimNorm but forced a per-sample normalized *state* and lost to
+  persistence); optional ``world_model.hidden_dim`` head width;
+- opponent modes ``implicit`` / ``conditioned`` / ``factored`` via mode-aware
+  input assembly (``transition_inputs`` / ``value_inputs`` /
+  ``policy_inputs``); a separately identified red head ``red(x, c) -> v`` and
+  MSE loss in factored mode; per-step red PRNG keys split only in factored
+  mode; context concatenated to policy-prior and Q inputs in the planner.
+- Episode-bounded sequence replay (``mopa.tdmpc_data``) replaces the upstream
+  buffer that let samples cross episode boundaries.
+
 ## Preserved upstream behavior worth knowing
 
 These are upstream properties kept verbatim for parity. They are candidates

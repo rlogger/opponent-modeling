@@ -24,6 +24,27 @@ uv run --locked python scripts/train_mappo.py alg=mappo_objectives_risk NUM_SEED
 uv run --locked python scripts/train_mappo.py alg=mappo_objectives_curious NUM_SEEDS=3
 ```
 
+## Continuous opponent-aware TD-MPC
+
+The gated pipeline from [`handoff.md`](handoff.md); results and status are in
+[`experiments/continuous/README.md`](experiments/continuous/README.md).
+
+```bash
+# Gate 1: continuous tanh-Gaussian specialists and the matched dataset
+for t in capture risk curious; do
+  uv run --locked --all-extras python scripts/train_mappo.py alg=mappo_continuous_$t NUM_SEEDS=3
+done
+uv run --locked --all-extras python scripts/make_continuous_dataset.py
+# Gate 2: four-arm continuous opponent BC with a frozen causal context encoder
+uv run --locked --all-extras python scripts/run_bc_continuous.py
+# Gate 3: simulator-backed MPPI ladder with opponent-context controls
+uv run --locked --all-extras python scripts/run_sim_planner.py --n-eps 48
+# Gates 4-5: TD-MPC world models (implicit | conditioned | factored) and comparison
+uv run --locked --all-extras python scripts/run_tdmpc.py train --mode factored --encoder identity --seed 0
+uv run --locked --all-extras python scripts/run_tdmpc.py evaluate artifacts/tdmpc/factored__identity__ctx-causal__h2__s0
+uv run --locked --all-extras python scripts/run_tdmpc.py compare --root artifacts/tdmpc
+```
+
 ## Smoke test
 
 ```bash

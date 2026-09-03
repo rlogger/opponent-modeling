@@ -131,8 +131,8 @@ def cmd_train(args: argparse.Namespace) -> int:
     cfg = load_config(profile=args.profile)
     cfg["opponent_mode"] = args.mode
     cfg["encoder"]["type"] = args.encoder
-    if args.mode == "implicit":
-        cfg["context_dim"] = 0 if args.context_source == "none" else CONTEXT_DIM
+    # The frozen context encoder always produces CONTEXT_DIM columns.
+    cfg["context_dim"] = 0 if (args.mode == "implicit" and args.context_source == "none") else CONTEXT_DIM
     ds = load_continuous_dataset(args.dataset)
     data = ds.as_dict()
     source = "zero" if args.context_source == "none" else args.context_source
