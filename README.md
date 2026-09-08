@@ -16,11 +16,21 @@ The continuous workflow is:
 BC is a separate experiment; it is not a prerequisite for the `0s` workflow.
 The older discrete experiments remain available but are not part of this path.
 
+For collaborators, start with the [handoff and artifact guide](docs/COLLABORATOR_GUIDE.md).
+The [results and development record](docs/RESULTS.md) explains what was run,
+how the implementation changed, and what the evidence supports. This README
+covers execution from scratch.
+
 ## Installation
 
 Requires Git, [uv](https://docs.astral.sh/uv/), and Python 3.11 or 3.12. The examples
 below use Python 3.11 and the `td-mpc2` branch. Run all commands from the repository
 root, in the same shell.
+
+`uv` manages the Python environment and packages—roughly the job of `venv` plus
+`pip`. `uv sync` installs the locked dependencies; `uv run` runs a command in that
+environment. It is not part of the learning algorithm. Install it once using the
+[uv installation guide](https://docs.astral.sh/uv/getting-started/installation/).
 
 ```bash
 git clone --branch td-mpc2 https://github.com/rlogger/opponent-modeling.git
@@ -197,7 +207,9 @@ the exact dataset used for the initial fit. The output directory must be new or
 empty. Updated checkpoints and training logs are saved after each round; collected
 episodes are stored under `online_round_000/`, `online_round_001/`, and so on.
 To continue an adapted run, use it as the positional input and choose another
-fresh output directory. Retain its recorded experience files.
+fresh output directory. Retain its recorded experience files. Historical replay
+paths are absolute, so moving an adapted run to another machine needs the
+[resume precautions](docs/COLLABORATOR_GUIDE.md#continuing-an-adapted-run).
 
 ## 5. Evaluate the controller
 
@@ -379,10 +391,12 @@ local artifacts; pushing a report does not upload its training data.
 
 ## Reference
 
+- [Collaborator handoff, artifact transfer, and reproduction](docs/COLLABORATOR_GUIDE.md)
+- [Results, implementation history, and limitations](docs/RESULTS.md)
 - [Environment and reward definitions](docs/ENVIRONMENT.md)
 - [TD-MPC and `0s` implementation](docs/TD_MPC_0S.md)
-- [Implementation status](docs/STATUS.md)
-- [Continuous experiment protocols](experiments/continuous/README.md)
+- [Historical implementation and gate status](docs/STATUS.md)
+- [Earlier continuous GRU-JEPA experiment protocols](experiments/continuous/README.md)
 - [Completed main-environment rerun](experiments/main_env_20260908/REPORT.md)
 - [TD-MPC2-JAX source provenance and license](third_party/tdmpc2-jax/UPSTREAM.md)
 
