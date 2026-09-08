@@ -1,0 +1,319 @@
+{
+  "causal_three_seed_summary": {
+    "decoder_action_accuracy": {
+      "mean": 0.7633928355289594,
+      "std": 0.0010856600530196202,
+      "values": [
+        0.7648477102063937,
+        0.7622405554183793,
+        0.7630902409621054
+      ]
+    },
+    "heldout_ari": {
+      "mean": 0.5247889908819335,
+      "std": 0.01684835798579954,
+      "values": [
+        0.5270716595533744,
+        0.5441876861963573,
+        0.503107626896069
+      ]
+    },
+    "heldout_decoder_accuracy": {
+      "mean": 0.7964670406935443,
+      "std": 0.0015920832104833308,
+      "values": [
+        0.7984821467403123,
+        0.7945896577219154,
+        0.7963293176184056
+      ]
+    },
+    "heldout_probe": {
+      "mean": 0.7338888888888889,
+      "std": 0.04554877998393252,
+      "values": [
+        0.7966666666666666,
+        0.715,
+        0.69
+      ]
+    },
+    "unit_probe": {
+      "mean": 0.5807787903893952,
+      "std": 0.03126627819019356,
+      "values": [
+        0.6167357083678542,
+        0.5405136702568352,
+        0.5850869925434963
+      ]
+    }
+  },
+  "controls": {
+    "chance": 0.3333333333333333,
+    "length_probe": 0.6166666666666667
+  },
+  "integrated_causal_seed0": {
+    "causal_features": true,
+    "decoder_accuracy_scope": "all valid windows including train and held-out, same as source",
+    "decoder_action_accuracy": 0.7648477102063937,
+    "effective_rank": 3.0861869664039108,
+    "episode_latent_scope": "post-hoc full valid episode; not an online next-action claim",
+    "heldout_ari": 0.5270716595533744,
+    "heldout_decoder_accuracy": 0.7984821467403123,
+    "heldout_knn_probe": 0.8366666666666667,
+    "heldout_probe": 0.7966666666666666,
+    "heldout_silhouette": 0.06481187790632248,
+    "jax_key_seed": 1000,
+    "latent_dim": 8,
+    "logical_seed": 0,
+    "per_dim_std_mean": 0.2907528877258301,
+    "prefix_probe": [
+      {
+        "heldout_probe": 0.49666666666666665,
+        "steps": 2
+      },
+      {
+        "heldout_probe": 0.4866666666666667,
+        "steps": 5
+      },
+      {
+        "heldout_probe": 0.5166666666666667,
+        "steps": 8
+      },
+      {
+        "heldout_probe": 0.5216666666666666,
+        "steps": 10
+      },
+      {
+        "heldout_probe": 0.6566666666666666,
+        "steps": 20
+      },
+      {
+        "heldout_probe": 0.72,
+        "steps": 40
+      },
+      {
+        "heldout_probe": 0.77,
+        "steps": 70
+      },
+      {
+        "heldout_probe": 0.7966666666666666,
+        "steps": 100
+      }
+    ],
+    "prefix_scope": "representation after observing k state/action pairs; use before next action only",
+    "seconds": 6.765350957983173,
+    "train_cv_probe": 0.6933333333333334,
+    "unit_probe": 0.6167357083678542
+  },
+  "integrated_causal_seed1": {
+    "causal_features": true,
+    "decoder_accuracy_scope": "all valid windows including train and held-out, same as source",
+    "decoder_action_accuracy": 0.7622405554183793,
+    "effective_rank": 2.7622450076649376,
+    "episode_latent_scope": "post-hoc full valid episode; not an online next-action claim",
+    "heldout_ari": 0.5441876861963573,
+    "heldout_decoder_accuracy": 0.7945896577219154,
+    "heldout_knn_probe": 0.78,
+    "heldout_probe": 0.715,
+    "heldout_silhouette": 0.04484013840556145,
+    "jax_key_seed": 1001,
+    "latent_dim": 8,
+    "logical_seed": 1,
+    "per_dim_std_mean": 0.292056679725647,
+    "prefix_probe": [
+      {
+        "heldout_probe": 0.4533333333333333,
+        "steps": 2
+      },
+      {
+        "heldout_probe": 0.505,
+        "steps": 5
+      },
+      {
+        "heldout_probe": 0.52,
+        "steps": 8
+      },
+      {
+        "heldout_probe": 0.5416666666666666,
+        "steps": 10
+      },
+      {
+        "heldout_probe": 0.5583333333333333,
+        "steps": 20
+      },
+      {
+        "heldout_probe": 0.6016666666666667,
+        "steps": 40
+      },
+      {
+        "heldout_probe": 0.665,
+        "steps": 70
+      },
+      {
+        "heldout_probe": 0.715,
+        "steps": 100
+      }
+    ],
+    "prefix_scope": "representation after observing k state/action pairs; use before next action only",
+    "seconds": 6.814431083970703,
+    "train_cv_probe": 0.6683333333333332,
+    "unit_probe": 0.5405136702568352
+  },
+  "integrated_causal_seed2": {
+    "causal_features": true,
+    "decoder_accuracy_scope": "all valid windows including train and held-out, same as source",
+    "decoder_action_accuracy": 0.7630902409621054,
+    "effective_rank": 2.8286684733471357,
+    "episode_latent_scope": "post-hoc full valid episode; not an online next-action claim",
+    "heldout_ari": 0.503107626896069,
+    "heldout_decoder_accuracy": 0.7963293176184056,
+    "heldout_knn_probe": 0.8066666666666666,
+    "heldout_probe": 0.69,
+    "heldout_silhouette": 0.050860870629549026,
+    "jax_key_seed": 1002,
+    "latent_dim": 8,
+    "logical_seed": 2,
+    "per_dim_std_mean": 0.29225730895996094,
+    "prefix_probe": [
+      {
+        "heldout_probe": 0.53,
+        "steps": 2
+      },
+      {
+        "heldout_probe": 0.47333333333333333,
+        "steps": 5
+      },
+      {
+        "heldout_probe": 0.435,
+        "steps": 8
+      },
+      {
+        "heldout_probe": 0.4766666666666667,
+        "steps": 10
+      },
+      {
+        "heldout_probe": 0.53,
+        "steps": 20
+      },
+      {
+        "heldout_probe": 0.5833333333333334,
+        "steps": 40
+      },
+      {
+        "heldout_probe": 0.6366666666666667,
+        "steps": 70
+      },
+      {
+        "heldout_probe": 0.69,
+        "steps": 100
+      }
+    ],
+    "prefix_scope": "representation after observing k state/action pairs; use before next action only",
+    "seconds": 7.024954374996014,
+    "train_cv_probe": 0.6491666666666667,
+    "unit_probe": 0.5850869925434963
+  },
+  "integrated_legacy_forward": {
+    "causal_features": false,
+    "decoder_accuracy_scope": "all valid windows including train and held-out, same as source",
+    "decoder_action_accuracy": 0.789336083312757,
+    "effective_rank": 2.4886622844800894,
+    "episode_latent_scope": "post-hoc full valid episode; not an online next-action claim",
+    "heldout_ari": 0.5384042590105123,
+    "heldout_decoder_accuracy": 0.8255338581307354,
+    "heldout_knn_probe": 0.8316666666666667,
+    "heldout_probe": 0.755,
+    "heldout_silhouette": 0.05969849228858948,
+    "jax_key_seed": 1000,
+    "latent_dim": 8,
+    "logical_seed": 0,
+    "per_dim_std_mean": 0.290249228477478,
+    "prefix_probe": [
+      {
+        "heldout_probe": 0.48833333333333334,
+        "steps": 2
+      },
+      {
+        "heldout_probe": 0.47833333333333333,
+        "steps": 5
+      },
+      {
+        "heldout_probe": 0.4766666666666667,
+        "steps": 8
+      },
+      {
+        "heldout_probe": 0.5366666666666666,
+        "steps": 10
+      },
+      {
+        "heldout_probe": 0.66,
+        "steps": 20
+      },
+      {
+        "heldout_probe": 0.6633333333333333,
+        "steps": 40
+      },
+      {
+        "heldout_probe": 0.73,
+        "steps": 70
+      },
+      {
+        "heldout_probe": 0.755,
+        "steps": 100
+      }
+    ],
+    "prefix_scope": "representation after observing k state/action pairs; use before next action only",
+    "seconds": 7.032022375031374,
+    "train_cv_probe": 0.7175,
+    "unit_probe": 0.5660314830157415
+  },
+  "parity": {
+    "decoder_accuracy_abs": 0.0,
+    "episode_latent_max_abs": 0.0,
+    "history_max_abs": 0.0,
+    "window_latent_max_abs": 0.0
+  },
+  "protocol": {
+    "config": {
+      "action_dim": 2,
+      "action_type": "discrete",
+      "batch": 128,
+      "beta_max": 1.0,
+      "free_bits": 0.2,
+      "hid": 64,
+      "lat": 8,
+      "learning_rate": 0.001,
+      "n_actions": 5,
+      "steps": 1500,
+      "window": 8
+    },
+    "dataset_sha256": "e391221052e269fad8687b9fead4c7f2eca10df4a33e3e76d51d6cc7273b5b3b",
+    "heldout_checkpoint": 2,
+    "scoring_seed": 0,
+    "source_hashes": {
+      "encoding_viz/embed_maps.py": "23cb72a96e28b151a0c6d9c8d438adc309d3ba955057641b757762cc6cf08481",
+      "encoding_viz/eval_metrics.py": "8960d6062ef701b491caa7dd79af7ac818e8a15c0fde4eec2cab497b3a6063aa",
+      "encoding_viz/nets.py": "8162acd231343416bb8e1f8b3ff5858ad801874c85b27a289744a113fa136bca",
+      "encoding_viz/plots.py": "31c1fbd6e4b4386e1e75c9c01149179f61171b82044b5d903e627d29f4513b5c",
+      "encoding_viz/run.py": "05126e2c748a4069dbf1c0e6d60ac8020b06febe5b74dc280c73519bacfa3cd6",
+      "encoding_viz/strategies.py": "d0e531ac1ea1ac19da181b5c31963000f0c73a66ebe5a06803deb61fb0968aa3",
+      "encoding_viz/train.py": "880551234e9ce8b78c1612d8627b07d695b9307d6e0d5c97b4c81c12b525439c",
+      "encoding_viz/traj_data.py": "41f6db4e299280ef2ebc02c766033931078a8ae1f747e878bb389d46e969b59c"
+    },
+    "source_pin": "7bae281091a96fc83cadad3671bef070bd371675",
+    "std_definition": "population std across encoder seeds; not confidence interval"
+  },
+  "source_legacy_forward": {
+    "decoder_accuracy_scope": "all valid windows including train and held-out, same as source",
+    "decoder_action_accuracy": 0.789336083312757,
+    "effective_rank": 2.4886622844800894,
+    "heldout_ari": 0.5384042590105123,
+    "heldout_knn_probe": 0.8316666666666667,
+    "heldout_probe": 0.755,
+    "heldout_silhouette": 0.05969849228858948,
+    "latent_dim": 8,
+    "per_dim_std_mean": 0.290249228477478,
+    "seconds": 9.449351832969114,
+    "train_cv_probe": 0.7175,
+    "unit_probe": 0.5660314830157415
+  }
+}

@@ -5,6 +5,8 @@ jax = pytest.importorskip("jax")
 jnp = pytest.importorskip("jax.numpy")
 pytest.importorskip("jaxmarl")
 
+from jaxmarl.environments.spaces import Box, Discrete  # noqa: E402
+
 from tag_objectives import (  # noqa: E402
     ObjectiveSpec,
     SimpleTagObjectivesMPE,
@@ -369,7 +371,7 @@ def test_adapter_roundtrip_on_batches_under_jit_and_vmap():
 
 def test_env_decodes_adapter_output_to_the_original_force_times_accel():
     env = make_env("capture", continuous=True)
-    assert env.continuous_actions
+    assert isinstance(env.action_space(env.agents[0]), Box)
     assert env.action_space(env.agents[0]).shape == (5,)
     rng = np.random.default_rng(1)
     a = jnp.asarray(rng.uniform(-1.0, 1.0, size=(env.num_agents, 2)), dtype=jnp.float32)
@@ -388,6 +390,8 @@ def test_continuous_env_steps_and_matches_discrete_axis_moves():
     """A unit continuous action along +x equals the discrete '+x' action (2)."""
     disc = make_env("capture")
     cont = make_env("capture", continuous=True)
+    assert isinstance(disc.action_space(disc.agents[0]), Discrete)
+    assert isinstance(cont.action_space(cont.agents[0]), Box)
     _, s0 = disc.reset(jax.random.PRNGKey(5))
     _, c0 = cont.reset(jax.random.PRNGKey(5))
     assert bool(jnp.all(s0.p_pos == c0.p_pos))
@@ -403,7 +407,8 @@ def test_continuous_env_steps_and_matches_discrete_axis_moves():
         cont, random_policy(cont), n_eps=3, key=jax.random.PRNGKey(0), num_steps=4
     )
     assert all(v.shape == (3,) for v in m.values())
-    with pytest.raises(ValueError):
+    # The exact main constructor delegates invalid action modes to JaxMARL.
+    with pytest.raises(NotImplementedError, match="Action type: Bogus is not supported"):
         SimpleTagObjectivesMPE(action_type="Bogus")
 
 

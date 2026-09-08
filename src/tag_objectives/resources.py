@@ -1,26 +1,20 @@
 """SimpleTagMPE variant with collectible resources.
 
-Extends simple_tag_v3 with:
+Extends JaxMARL simple-tag with:
 
 1. **Fixed obstacles.** Landmark positions are fixed at construction time and
-   reapplied on every reset (same mechanism as SimpleTagStaticMPE).
-2. **Collectible resources.** At reset, ``num_resources`` resource positions
-   are spawned according to the chosen placement pattern. The prey can see
-   the resource positions (and their collection status) in its observation;
-   predators cannot. The prey earns ``collect_reward`` for each resource
-   it collects (moves within ``collect_radius``). Predator reward is
-   unchanged (collision with prey).
-3. **Two placement modes** designed to produce distinguishable prey strategies:
-   - ``"circle"``: resources evenly spaced on a circle of radius
-     ``circle_radius`` centred at the origin.
-   - ``"corners"``: resources at the corners of a square with half-width
-     ``corner_offset``.
-   - ``"random"``: each episode randomly selects one of the above.
-
-Why two modes?  The prey's optimal collection path differs between circle
-(orbital sweep) and corners (cross-map dashes).  Predators, which cannot
-see the resources, must infer the prey's strategy from observed behaviour.
+   reapplied on every reset.
+2. **Collectible resources.** At reset, ``num_resources`` positions spawn
+   according to the placement pattern. The prey sees resource positions and
+   collection status; predators do not. The prey earns ``collect_reward`` for
+   each resource within ``collect_radius``.
+3. **Placement modes** that induce distinguishable prey strategies:
+   - ``"circle"``: evenly spaced on a circle of radius ``circle_radius``.
+   - ``"corners"``: corners of a square with half-width ``corner_offset``.
+   - ``"random"``: each episode picks circle or corners.
 """
+from __future__ import annotations
+
 from functools import partial
 from typing import List, Optional
 
@@ -45,19 +39,7 @@ class ResourceState:
 
 
 class SimpleTagResourcesMPE(SimpleTagMPE):
-    """SimpleTagMPE with fixed obstacles and collectible resources.
-
-    Args:
-        num_resources: how many resources to place per episode.
-        placement: ``"circle"``, ``"corners"``, or ``"random"``.
-        collect_radius: prey collects a resource when within this distance.
-        collect_reward: reward given to the prey per collected resource.
-        circle_radius: radius for the ``"circle"`` placement.
-        corner_offset: half-width for the ``"corners"`` placement.
-        obstacle_positions: fixed (x, y) per landmark. ``None`` → JaxMARL
-            default random landmarks (no fixed obstacles).
-        **kwargs: forwarded to SimpleTagMPE.
-    """
+    """SimpleTagMPE with fixed obstacles and collectible resources."""
 
     def __init__(
         self,
@@ -74,16 +56,12 @@ class SimpleTagResourcesMPE(SimpleTagMPE):
     ):
         super().__init__(**kwargs)
 
-        # Optionally weaken the predators so the prey is not fully dominated and
-        # can execute a resource-collection route. Without this the dominated
-        # prey just evades, and its placement strategy is only a weak aggregate
-        # perturbation rather than a per-trajectory-recoverable behaviour.
         if pred_max_speed is not None:
-            self.max_speed = self.max_speed.at[:self.num_adversaries].set(
-                float(pred_max_speed))
+            self.max_speed = self.max_speed.at[: self.num_adversaries].set(
+                float(pred_max_speed)
+            )
         if pred_accel is not None:
-            self.accel = self.accel.at[:self.num_adversaries].set(
-                float(pred_accel))
+            self.accel = self.accel.at[: self.num_adversaries].set(float(pred_accel))
 
         assert placement in ("circle", "corners", "random"), placement
         self.num_resources = num_resources
@@ -93,30 +71,36 @@ class SimpleTagResourcesMPE(SimpleTagMPE):
 
         angles = 2 * jnp.pi * jnp.arange(num_resources) / num_resources
         self._circle_positions = jnp.stack(
-            [circle_radius * jnp.cos(angles),
-             circle_radius * jnp.sin(angles)],
+            [circle_radius * jnp.cos(angles), circle_radius * jnp.sin(angles)],
             axis=-1,
         )
 
         if num_resources == 4:
-            self._corner_positions = jnp.array([
-                [-corner_offset, -corner_offset],
-                [-corner_offset,  corner_offset],
-                [ corner_offset, -corner_offset],
-                [ corner_offset,  corner_offset],
-            ])
+            self._corner_positions = jnp.array(
+                [
+                    [-corner_offset, -corner_offset],
+                    [-corner_offset, corner_offset],
+                    [corner_offset, -corner_offset],
+                    [corner_offset, corner_offset],
+                ]
+            )
         else:
-            angles_c = jnp.pi / 4 + 2 * jnp.pi * jnp.arange(num_resources) / num_resources
+            angles_c = (
+                jnp.pi / 4 + 2 * jnp.pi * jnp.arange(num_resources) / num_resources
+            )
             self._corner_positions = jnp.stack(
-                [corner_offset * jnp.cos(angles_c),
-                 corner_offset * jnp.sin(angles_c)],
+                [
+                    corner_offset * jnp.cos(angles_c),
+                    corner_offset * jnp.sin(angles_c),
+                ],
                 axis=-1,
             )
 
         if obstacle_positions is not None:
             positions = jnp.asarray(obstacle_positions, dtype=jnp.float32)
             assert positions.shape == (self.num_landmarks, 2), (
-                f"obstacle_positions must be ({self.num_landmarks}, 2); got {positions.shape}"
+                f"obstacle_positions must be ({self.num_landmarks}, 2); "
+                f"got {positions.shape}"
             )
             self.fixed_obstacle_positions = positions
         else:
@@ -129,11 +113,10 @@ class SimpleTagResourcesMPE(SimpleTagMPE):
     def _place_resources(self, key: chex.PRNGKey) -> chex.Array:
         if self._placement == "circle":
             return self._circle_positions
-        elif self._placement == "corners":
+        if self._placement == "corners":
             return self._corner_positions
-        else:
-            use_circle = jax.random.bernoulli(key)
-            return jnp.where(use_circle, self._circle_positions, self._corner_positions)
+        use_circle = jax.random.bernoulli(key)
+        return jnp.where(use_circle, self._circle_positions, self._corner_positions)
 
     @partial(jax.jit, static_argnums=[0])
     def reset(self, key: chex.PRNGKey):
@@ -175,12 +158,10 @@ class SimpleTagResourcesMPE(SimpleTagMPE):
         n_new = jnp.sum(newly_collected.astype(jnp.float32))
 
         new_state = new_state.replace(collected=new_collected)
-
         obs = self.get_obs(new_state)
 
         prey_name = self.good_agents[0]
         reward = {**reward, prey_name: reward[prey_name] + self.collect_reward * n_new}
-
         info["resources_collected"] = jnp.sum(new_collected.astype(jnp.float32))
 
         return obs, new_state, reward, dones, info

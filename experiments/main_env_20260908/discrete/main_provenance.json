@@ -1,0 +1,68 @@
+{
+  "all_dataset_arrays_exact_equal": true,
+  "claim_boundary": "Fresh native discrete specialists and representation fits; not TD-MPC control.",
+  "dataset_arrays_exact_equal": {
+    "capture_t": true,
+    "captured": true,
+    "ckpt_seed": true,
+    "env_seed": true,
+    "label": true,
+    "lava_pos": true,
+    "lava_rad": true,
+    "pred_act": true,
+    "pred_coverage": true,
+    "pred_lava_steps": true,
+    "pred_obs": true,
+    "pred_pos": true,
+    "prey_act": true,
+    "prey_lava_steps": true,
+    "prey_pos": true,
+    "resources_collected": true,
+    "survival_time": true,
+    "valid_length": true
+  },
+  "environment_main_commit": "8c24db3c7deff8bd32610b04c3f1ebc08bf5e429",
+  "environment_source_hashes": {
+    "src/tag_objectives/objectives.py": "71332590fc61490bfd6271ab72da01f41df952963c10d86b577035ac74796f84",
+    "src/tag_objectives/resources.py": "72910059f63c01613b4ad3803236497723724e3c16525d9b21ca51b920b0d4d4"
+  },
+  "existing_driver_sha256": "ef04d4d0c770bb2c67e773325b181cc5a2d089f204fd744dbcd83db81b3de733",
+  "fresh_dataset_sha256": "e391221052e269fad8687b9fead4c7f2eca10df4a33e3e76d51d6cc7273b5b3b",
+  "metric_deltas_vs_previous": {
+    "integrated_causal_seed0": {
+      "decoder_action_accuracy": 0.0,
+      "heldout_ari": 0.0,
+      "heldout_probe": 0.0,
+      "unit_probe": 0.0
+    },
+    "integrated_causal_seed1": {
+      "decoder_action_accuracy": 0.0,
+      "heldout_ari": 0.0,
+      "heldout_probe": 0.0,
+      "unit_probe": 0.0
+    },
+    "integrated_causal_seed2": {
+      "decoder_action_accuracy": 0.0,
+      "heldout_ari": 0.0,
+      "heldout_probe": 0.0,
+      "unit_probe": 0.0
+    },
+    "integrated_legacy_forward": {
+      "decoder_action_accuracy": 0.0,
+      "heldout_ari": 0.0,
+      "heldout_probe": 0.0,
+      "unit_probe": 0.0
+    },
+    "source_legacy_forward": {
+      "decoder_action_accuracy": 0.0,
+      "heldout_ari": 0.0,
+      "heldout_probe": 0.0,
+      "unit_probe": 0.0
+    }
+  },
+  "previous_dataset_sha256": "e391221052e269fad8687b9fead4c7f2eca10df4a33e3e76d51d6cc7273b5b3b",
+  "total_collection_and_fit_seconds": 54.64443662494887,
+  "training_valid_transitions": 91712,
+  "valid_transitions": 137698,
+  "wrapper_sha256": "c14712ea4304cd40ef2da5735bc7ea631411b2d15779c7f232d28fbb09b69ef3"
+}

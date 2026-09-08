@@ -2,57 +2,28 @@
 
 One-to-many predators vs one prey, scattered resources, lava discs, early
 termination on first capture, and predator rewards that differ by hidden
-objective type. The environment is the project's research instrument, so
-objectives are PLUGGABLE: a predator type is an entry in OBJECTIVES, either a
-declarative linear spec over the standard event channels or an arbitrary
-callable. Adding a new type never requires editing the environment.
+objective type. Objectives are pluggable: a predator type is an entry in
+``OBJECTIVES``, either a declarative linear spec or an arbitrary callable.
 
-    from simple_tag_objectives import ObjectiveSpec, register_objective
+    from tag_objectives import ObjectiveSpec, register_objective
 
-    # declarative: reward = capture*cf + dist*d_i + lava*in_lava_i + novelty*new_i
     register_objective("ambusher", lambda env: ObjectiveSpec(
         capture=env.capture_bonus, dist=0.0, lava=-env.base_lava_penalty,
         novelty=0.0, still=0.05))
 
-    # or fully custom: fn(env, ctx) -> per-predator reward (P,)
     register_objective("my_type", lambda env: my_reward_fn)
 
-ctx channels (all computed once per step): capture_f scalar, per-predator
-dist/in_lava/new_cell/pred_pos, prey_pos, prey_lava, plus state/new_state.
+ctx channels (computed once per step): ``capture_f`` scalar, per-predator
+``dist`` / ``in_lava`` / ``new_cell`` / ``pred_pos``, ``prey_pos``,
+``prey_lava``, plus ``state`` / ``new_state``.
 
-Lava history (design record):
-  v2: random uniform lava was strategically irrelevant; fixed by attaching
-      half the resources to lava discs and enlarging discs.
-  v3: lava penalizes BOTH agents. Every predator pays base_lava_penalty
-      (default 1.0) per lava step; the risk type pays lava_penalty (default
-      5.0) instead, its defining trait. The prey pays prey_lava_penalty
-      (default 1.0). A resource inside a disc still nets positive for the
-      prey (+5 collect vs ~2-3 penalty), so near-lava resources stay
-      contested but camping is priced.
+Current defaults: lava penalty is -100 for the risk-averse predator and 0 for
+everyone else (``lava_penalty=100``, ``base_lava_penalty=0``,
+``prey_lava_penalty=0``).
 
-Current defaults (v5): lava penalty constants are -100 for the risk-averse
-predator and 0 for everyone else (base_lava_penalty 0.0, lava_penalty 100.0,
-prey_lava_penalty 0.0). Lava is a hard constraint for the risk type and free
-terrain for all other agents.
-
-Version 4 established the task asymmetry: the prey is not penalized for lava
-(prey_lava_penalty default 0.0; the constructor arg remains for the v3
-priced-sanctuary variant). With a heterogeneous predator team this is safe by
-construction: sheltering in lava stops the risk-averse predator but not the
-capture-focused one, so the degeneracy that motivated v3 cannot occur in the
-mixed system.
-
-Mixed predator teams: pred_type may be a TUPLE of registered names, one per
-predator, e.g. pred_type=("capture", "risk", "curious") with
-num_adversaries=3. Each predator is rewarded by its own objective (spec-based
-objectives only); capture credit remains shared.
-
-Multi-predator mode is enabled with num_adversaries=P. Capture means any
-predator touching the prey; the capture
-bonus is shared (team credit); dist/lava/novelty channels are per-predator;
-the novelty bitmap is team-shared, so curious teams are rewarded for
-covering DIFFERENT cells (shared-cell novelty pays only the earliest predator
-index). Defaults remain 1v1.
+Mixed teams: ``pred_type`` may be a tuple of registered names, one per
+predator (spec-based objectives only). Capture credit is shared; novelty is
+team-shared.
 """
 from __future__ import annotations
 
@@ -63,13 +34,11 @@ import chex
 import jax
 import jax.numpy as jnp
 from flax import struct
-from jaxmarl.environments.mpe.default_params import CONTINUOUS_ACT, DISCRETE_ACT
 from jaxmarl.environments.mpe.simple_tag import SimpleTagMPE
 from jaxmarl.environments.spaces import Box
 
 from tag_objectives.resources import ResourceState, SimpleTagResourcesMPE
 
-# builder(env) -> ObjectiveSpec | callable(env, ctx) -> (P,) rewards
 ObjectiveBuilder = Callable[[Any], Union["ObjectiveSpec", Callable[..., Any]]]
 
 
@@ -85,12 +54,13 @@ class ObjectiveState(ResourceState):
 class ObjectiveSpec:
     """Linear reward over the standard channels, applied per predator i:
 
-        r_i = capture * capture_f          (team: any predator tagged the prey)
-            + dist * dist_i                (that predator's distance to the prey)
-            + lava * in_lava_i             (that predator in lava this step)
-            + novelty * new_cell_i         (first team visit of predator i's cell)
-            + still * -|v_i|               (optional stillness shaping, default 0)
+        r_i = capture * capture_f
+            + dist * dist_i
+            + lava * in_lava_i
+            + novelty * new_cell_i
+            + still * -|v_i|
     """
+
     capture: float = 0.0
     dist: float = 0.0
     lava: float = 0.0
@@ -110,20 +80,32 @@ def register_objective(name: str, builder: ObjectiveBuilder) -> None:
     OBJECTIVES[name] = builder
 
 
-register_objective("capture", lambda env: ObjectiveSpec(
-    dist=-1.0, lava=-env.base_lava_penalty))
-register_objective("risk", lambda env: ObjectiveSpec(
-    capture=env.capture_bonus, dist=-env.dense_chase_coef,
-    lava=-env.lava_penalty))
-register_objective("curious", lambda env: ObjectiveSpec(
-    capture=env.capture_bonus, dist=-env.dense_chase_coef,
-    lava=-env.base_lava_penalty, novelty=env.novelty_bonus))
+register_objective(
+    "capture", lambda env: ObjectiveSpec(dist=-1.0, lava=-env.base_lava_penalty)
+)
+register_objective(
+    "risk",
+    lambda env: ObjectiveSpec(
+        capture=env.capture_bonus,
+        dist=-env.dense_chase_coef,
+        lava=-env.lava_penalty,
+    ),
+)
+register_objective(
+    "curious",
+    lambda env: ObjectiveSpec(
+        capture=env.capture_bonus,
+        dist=-env.dense_chase_coef,
+        lava=-env.base_lava_penalty,
+        novelty=env.novelty_bonus,
+    ),
+)
 
 
 class SimpleTagObjectivesMPE(SimpleTagResourcesMPE):
     """Resource/lava simple-tag with pluggable predator objectives."""
 
-    PRED_TYPES = ("capture", "risk", "curious")   # built-ins, for tooling
+    PRED_TYPES = ("capture", "risk", "curious")
 
     def __init__(
         self,
@@ -154,13 +136,15 @@ class SimpleTagObjectivesMPE(SimpleTagResourcesMPE):
         max_steps: int = 100,
         **kwargs,
     ):
-        pred_types = (tuple(pred_type) if isinstance(pred_type, (tuple, list))
-                      else (pred_type,))
+        pred_types = (
+            tuple(pred_type) if isinstance(pred_type, (tuple, list)) else (pred_type,)
+        )
         for t in pred_types:
             if t not in OBJECTIVES:
                 raise ValueError(
                     f"pred_type must be a registered objective {sorted(OBJECTIVES)}, "
-                    f"got {t!r}")
+                    f"got {t!r}"
+                )
         if not 1 <= m_nearest_resources <= num_resources:
             raise ValueError("m_nearest_resources must be in [1, num_resources]")
         if not 1 <= n_nearest_lava <= num_lava:
@@ -172,13 +156,6 @@ class SimpleTagObjectivesMPE(SimpleTagResourcesMPE):
         kwargs.setdefault("num_good_agents", 1)
         kwargs.setdefault("num_obs", 0)
         kwargs.setdefault("max_steps", max_steps)
-        kwargs.setdefault("action_type", DISCRETE_ACT)
-        if kwargs["action_type"] not in (DISCRETE_ACT, CONTINUOUS_ACT):
-            raise ValueError(
-                f"action_type must be {DISCRETE_ACT!r} or {CONTINUOUS_ACT!r}, "
-                f"got {kwargs['action_type']!r}"
-            )
-        self.action_type = kwargs["action_type"]
 
         super().__init__(
             num_resources=num_resources,
@@ -206,7 +183,9 @@ class SimpleTagObjectivesMPE(SimpleTagResourcesMPE):
         self.lava_radius_min = float(lava_radius_min)
         self.lava_radius_max = float(lava_radius_max)
         self.frac_resources_near_lava = float(frac_resources_near_lava)
-        self.n_near_lava_resources = int(round(self.frac_resources_near_lava * num_resources))
+        self.n_near_lava_resources = int(
+            round(self.frac_resources_near_lava * num_resources)
+        )
         self.lava_penalty = float(lava_penalty)
         self.base_lava_penalty = float(base_lava_penalty)
         self.prey_lava_penalty = float(prey_lava_penalty)
@@ -218,11 +197,13 @@ class SimpleTagObjectivesMPE(SimpleTagResourcesMPE):
 
         if len(pred_types) > 1 and len(pred_types) != self.num_adversaries:
             raise ValueError("tuple pred_type must have one entry per predator")
-        self.pred_types = (pred_types if len(pred_types) > 1
-                           else pred_types * self.num_adversaries)
-        self.pred_type = pred_type if isinstance(pred_type, str) else "+".join(pred_types)
+        self.pred_types = (
+            pred_types if len(pred_types) > 1 else pred_types * self.num_adversaries
+        )
+        self.pred_type = (
+            pred_type if isinstance(pred_type, str) else "+".join(pred_types)
+        )
 
-        # resolved once; specs compile to pure jnp arithmetic inside step_env
         resolved = [OBJECTIVES[t](self) for t in self.pred_types]
         if len(set(self.pred_types)) == 1 and not isinstance(resolved[0], ObjectiveSpec):
             self._objective: Union[ObjectiveSpec, Callable] = resolved[0]
@@ -237,8 +218,12 @@ class SimpleTagObjectivesMPE(SimpleTagResourcesMPE):
                 still=jnp.array([r.still for r in resolved]),
             )
 
-        pred_base = (4 + 2 * self.num_landmarks + 2 * (self.num_agents - 1)
-                     + 2 * self.num_good_agents)
+        pred_base = (
+            4
+            + 2 * self.num_landmarks
+            + 2 * (self.num_agents - 1)
+            + 2 * self.num_good_agents
+        )
         prey_base = 4 + 2 * self.num_landmarks + 2 * (self.num_agents - 1)
         lava_dim = self.n_nearest_lava * 3
         resource_dim = self.m_nearest_resources * 2
@@ -249,15 +234,7 @@ class SimpleTagObjectivesMPE(SimpleTagResourcesMPE):
                 -jnp.inf, jnp.inf, (prey_base + resource_dim + lava_dim,)
             )
 
-    @property
-    def continuous_actions(self) -> bool:
-        """True for the inherited MPE continuous action space (see actions.py)."""
-        return self.action_type == CONTINUOUS_ACT
-
-    # ---------------- geometry helpers ----------------
-
     def _grid_index(self, pos: chex.Array) -> chex.Array:
-        """(..., 2) positions -> (...,) flat 16x16 cell ids."""
         scaled = jnp.floor((pos + self.arena) / (2.0 * self.arena) * self.grid_size)
         cell = jnp.clip(scaled.astype(jnp.int32), 0, self.grid_size - 1)
         return cell[..., 0] * self.grid_size + cell[..., 1]
@@ -266,7 +243,6 @@ class SimpleTagObjectivesMPE(SimpleTagResourcesMPE):
         return jnp.sum(self.map_bounds_reward(jnp.abs(pos) / self.arena))
 
     def _in_lava_pos(self, state: ObjectiveState, pos: chex.Array) -> chex.Array:
-        """(..., 2) positions -> (...,) bool inside any lava disc."""
         d = jnp.linalg.norm(pos[..., None, :] - state.lava_pos, axis=-1)
         return jnp.any(d < state.lava_rad, axis=-1)
 
@@ -280,35 +256,41 @@ class SimpleTagObjectivesMPE(SimpleTagResourcesMPE):
         lava = jnp.concatenate([rel[idx], state.lava_rad[idx, None]], axis=-1)
         return lava.reshape(-1)
 
-    def _nearest_resource_obs(self, state: ObjectiveState, pos: chex.Array) -> chex.Array:
+    def _nearest_resource_obs(
+        self, state: ObjectiveState, pos: chex.Array
+    ) -> chex.Array:
         rel = state.resource_pos - pos[None, :]
         d = jnp.linalg.norm(rel, axis=-1) + state.collected.astype(jnp.float32) * 1e6
         _, idx = jax.lax.top_k(-d, self.m_nearest_resources)
         return rel[idx].reshape(-1)
 
-    # ---------------- reset-time sampling ----------------
-
     def _sample_lava(self, key_pos, key_rad, agent_pos):
         lava_rad = jax.random.uniform(
-            key_rad, (self.num_lava,),
-            minval=self.lava_radius_min, maxval=self.lava_radius_max)
+            key_rad,
+            (self.num_lava,),
+            minval=self.lava_radius_min,
+            maxval=self.lava_radius_max,
+        )
         cands = jax.random.uniform(
-            key_pos, (self.num_lava, 4, 2),
-            minval=-0.9 * self.arena, maxval=0.9 * self.arena)
-        d = jnp.linalg.norm(cands[:, :, None, :] - agent_pos[None, None, :, :], axis=-1)
+            key_pos,
+            (self.num_lava, 4, 2),
+            minval=-0.9 * self.arena,
+            maxval=0.9 * self.arena,
+        )
+        d = jnp.linalg.norm(
+            cands[:, :, None, :] - agent_pos[None, None, :, :], axis=-1
+        )
         valid = jnp.all(d > lava_rad[:, None, None] + 0.35, axis=-1)
         first_valid = jnp.argmax(valid.astype(jnp.int32), axis=1)
         lava_pos = cands[jnp.arange(self.num_lava), first_valid]
         return lava_pos, lava_rad
 
     def _sample_resources(self, key, lava_pos, lava_rad):
-        """k resources attached to lava discs (inside or ringed), rest uniform:
-        this supports prey strategies that exploit lava-adjacent resources."""
         key_disc, key_r, key_ang, key_uni = jax.random.split(key, 4)
         k = self.n_near_lava_resources
         uniform = jax.random.uniform(
-            key_uni, (self.num_resources, 2),
-            minval=-self.arena, maxval=self.arena)
+            key_uni, (self.num_resources, 2), minval=-self.arena, maxval=self.arena
+        )
         if k == 0:
             return uniform
         disc = jax.random.randint(key_disc, (k,), 0, self.num_lava)
@@ -327,10 +309,11 @@ class SimpleTagObjectivesMPE(SimpleTagResourcesMPE):
         angle = jax.random.uniform(key_ang, (), minval=0.0, maxval=2.0 * jnp.pi)
         direction = jnp.array([jnp.cos(angle), jnp.sin(angle)])
         dist = jax.random.uniform(
-            key_dist, (), minval=self.min_start_dist, maxval=1.35 * self.arena)
+            key_dist, (), minval=self.min_start_dist, maxval=1.35 * self.arena
+        )
         center = jax.random.uniform(key_center, (2,), minval=-0.15, maxval=0.15)
         jitter = jax.random.uniform(key_jitter, (P + 1, 2), minval=-0.08, maxval=0.08)
-        pred_pos = center - 0.5 * dist * direction + jitter[:P]      # (P, 2) cluster
+        pred_pos = center - 0.5 * dist * direction + jitter[:P]
         prey_pos = center + 0.5 * dist * direction + jitter[P]
         agent_pos = jnp.concatenate([pred_pos, prey_pos[None]], axis=0)
         agent_pos = jnp.clip(agent_pos, -0.85 * self.arena, 0.85 * self.arena)
@@ -339,16 +322,19 @@ class SimpleTagObjectivesMPE(SimpleTagResourcesMPE):
             landmark_pos = self.fixed_obstacle_positions
         else:
             landmark_pos = jax.random.uniform(
-                key_l, (self.num_landmarks, 2),
-                minval=-self.arena, maxval=self.arena)
+                key_l, (self.num_landmarks, 2), minval=-self.arena, maxval=self.arena
+            )
         p_pos = jnp.concatenate([agent_pos, landmark_pos], axis=0)
 
         lava_pos, lava_rad = self._sample_lava(key_lava, key_rad, agent_pos)
         resource_pos = self._sample_resources(key_res, lava_pos, lava_rad)
 
-        start_cells = self._grid_index(agent_pos[:P])                 # (P,)
-        visited = jnp.zeros((self.grid_size * self.grid_size,), dtype=bool
-                            ).at[start_cells].set(True)
+        start_cells = self._grid_index(agent_pos[:P])
+        visited = (
+            jnp.zeros((self.grid_size * self.grid_size,), dtype=bool)
+            .at[start_cells]
+            .set(True)
+        )
 
         state = ObjectiveState(
             p_pos=p_pos,
@@ -365,8 +351,6 @@ class SimpleTagObjectivesMPE(SimpleTagResourcesMPE):
         )
         return self.get_obs(state), state
 
-    # ---------------- step ----------------
-
     @partial(jax.jit, static_argnums=[0])
     def step_env(self, key: chex.PRNGKey, state: ObjectiveState, actions: dict):
         _, new_state, _, _, info = super().step_env(key, state, actions)
@@ -377,40 +361,50 @@ class SimpleTagObjectivesMPE(SimpleTagResourcesMPE):
         prey_name = self.good_agents[0]
 
         captures = jnp.stack(
-            [self.is_collision(prey_idx, i, new_state) for i in range(P)])   # (P,)
+            [self.is_collision(prey_idx, i, new_state) for i in range(P)]
+        )
         capture = jnp.any(captures)
         capture_f = capture.astype(jnp.float32)
-        pred_pos = new_state.p_pos[:P]                                       # (P, 2)
+        pred_pos = new_state.p_pos[:P]
         prey_pos = new_state.p_pos[prey_idx]
-        dist = jnp.linalg.norm(pred_pos - prey_pos[None, :], axis=-1)        # (P,)
+        dist = jnp.linalg.norm(pred_pos - prey_pos[None, :], axis=-1)
         pred_lava = self._in_lava_pos(new_state, pred_pos).astype(jnp.float32)
         prey_lava = self._in_lava(new_state, prey_idx).astype(jnp.float32)
 
-        cells = self._grid_index(pred_pos)                                   # (P,)
+        cells = self._grid_index(pred_pos)
         unvisited = ~new_state.visited[cells]
-        # One novelty credit per newly visited cell: if two predators enter the
-        # same unvisited cell this step, only the earliest predator index pays.
         same = cells[:, None] == cells[None, :]
         first_owner = jnp.argmax(same, axis=1)
         new_cell = (unvisited & (first_owner == pred_idxs)).astype(jnp.float32)
         visited = new_state.visited.at[cells].set(True)
 
-        ctx = dict(capture_f=capture_f, dist=dist, in_lava=pred_lava,
-                   new_cell=new_cell, pred_pos=pred_pos, prey_pos=prey_pos,
-                   prey_lava=prey_lava, state=state, new_state=new_state)
+        ctx = dict(
+            capture_f=capture_f,
+            dist=dist,
+            in_lava=pred_lava,
+            new_cell=new_cell,
+            pred_pos=pred_pos,
+            prey_pos=prey_pos,
+            prey_lava=prey_lava,
+            state=state,
+            new_state=new_state,
+        )
         obj = self._objective
         if isinstance(obj, ObjectiveSpec):
             speed = jnp.linalg.norm(new_state.p_vel[:P], axis=-1)
-            pred_rewards = (obj.capture * capture_f
-                            + obj.dist * dist
-                            + obj.lava * pred_lava
-                            + obj.novelty * new_cell
-                            - obj.still * speed)
+            pred_rewards = (
+                obj.capture * capture_f
+                + obj.dist * dist
+                + obj.lava * pred_lava
+                + obj.novelty * new_cell
+                - obj.still * speed
+            )
         else:
-            pred_rewards = obj(self, ctx)                                    # (P,)
+            pred_rewards = obj(self, ctx)
 
-        n_new = jnp.sum(new_state.collected.astype(jnp.float32)
-                        - state.collected.astype(jnp.float32))
+        n_new = jnp.sum(
+            new_state.collected.astype(jnp.float32) - state.collected.astype(jnp.float32)
+        )
         prey_reward = (
             -10.0 * capture_f
             - self._arena_bounds_reward(prey_pos)
@@ -436,9 +430,13 @@ class SimpleTagObjectivesMPE(SimpleTagResourcesMPE):
 
         resources_collected = jnp.sum(new_state.collected.astype(jnp.float32))
         res_lava_d = jnp.linalg.norm(
-            new_state.resource_pos[:, None, :] - new_state.lava_pos[None, :, :], axis=-1)
+            new_state.resource_pos[:, None, :] - new_state.lava_pos[None, :, :],
+            axis=-1,
+        )
         near_lava = jnp.any(res_lava_d < 1.25 * new_state.lava_rad[None, :], axis=-1)
-        near_lava_collected = jnp.sum((new_state.collected & near_lava).astype(jnp.float32))
+        near_lava_collected = jnp.sum(
+            (new_state.collected & near_lava).astype(jnp.float32)
+        )
         coverage = jnp.sum(visited.astype(jnp.float32))
         zeros = jnp.zeros((self.num_agents,), dtype=jnp.float32)
         info["resources_collected"] = zeros.at[prey_idx].set(resources_collected)
@@ -458,7 +456,9 @@ class SimpleTagObjectivesMPE(SimpleTagResourcesMPE):
 
         for i, a in enumerate(self.adversaries):
             pos = state.p_pos[i]
-            base_obs[a] = jnp.concatenate([base_obs[a], self._nearest_lava_obs(state, pos)])
+            base_obs[a] = jnp.concatenate(
+                [base_obs[a], self._nearest_lava_obs(state, pos)]
+            )
 
         for i, a in enumerate(self.good_agents):
             idx = i + self.num_adversaries

@@ -1,0 +1,29 @@
+{
+  "capture": {
+    "blue_return": 5.0,
+    "captured": true,
+    "checkpoint_seed": 0,
+    "dataset_episode": 0,
+    "max_position_error_vs_dataset": 0.0,
+    "selection": "first episode of checkpoint 0; no outcome selection",
+    "valid_length": 22
+  },
+  "curious": {
+    "blue_return": 47.74337553977966,
+    "captured": false,
+    "checkpoint_seed": 0,
+    "dataset_episode": 1200,
+    "max_position_error_vs_dataset": 0.0,
+    "selection": "first episode of checkpoint 0; no outcome selection",
+    "valid_length": 100
+  },
+  "risk": {
+    "blue_return": 25.0,
+    "captured": false,
+    "checkpoint_seed": 0,
+    "dataset_episode": 600,
+    "max_position_error_vs_dataset": 0.0,
+    "selection": "first episode of checkpoint 0; no outcome selection",
+    "valid_length": 100
+  }
+}

@@ -1,5 +1,46 @@
 # Original environment provenance
 
+## Current source: opponent-modeling main
+
+On 2026-09-08, at the user's request, the two core modules were replaced by
+byte-identical files from this repository's `main` commit
+[`8c24db3c7deff8bd32610b04c3f1ebc08bf5e429`](https://github.com/rlogger/opponent-modeling/tree/8c24db3c7deff8bd32610b04c3f1ebc08bf5e429).
+The previous version is preserved on `new-env` at `180571beed82326a0d11da8fad20c1ebb1886841`.
+
+| Main file | SHA256 |
+| --- | --- |
+| `src/tag_objectives/objectives.py` | `71332590fc61490bfd6271ab72da01f41df952963c10d86b577035ac74796f84` |
+| `src/tag_objectives/resources.py` | `72910059f63c01613b4ad3803236497723724e3c16525d9b21ca51b920b0d4d4` |
+
+There are no deviations in these two core files. Continuous support remains in
+the existing API and action adapter: `action_type="Continuous"` was already
+accepted by main's JaxMARL parent. The API now inspects the declared `Box` action
+space instead of requiring extra attributes on the environment. Main's default
+and existing `mappo_objectives_*` configurations remain discrete; continuous
+specialists use the explicitly separate `mappo_continuous_*` configurations.
+
+Before replacement, main versus `new-env` was compared under locked JAX 0.4.38 /
+JaxMARL 0.1.0: three reset seeds, 20 transitions, all three objectives, discrete
+and continuous actions. Every reset/state/observation/reward/done/info field
+matched exactly across **360 transitions**, maximum absolute error **0.0**.
+All task defaults also matched. Replacing these sources does not itself change
+the reward definitions or make learned specialist behavior more faithful.
+
+`tests/test_original_environment.py` now checks the exact main-source hashes
+above while retaining the original numerical goldens below. Its old AST-only
+checks were superseded because formatting/control-flow cleanup in main is
+semantically equivalent but not AST-identical.
+
+Validation after main-source replacement: **72 passed** across
+`test_original_environment.py`, `test_objectives_env.py`,
+`test_continuous_data.py`, `test_zero_s_evaluation.py`, `test_mpc_replay.py`,
+and `test_rendering.py`; Ruff and scoped `git diff --check` passed.
+
+## Historical marl-opp-aware restoration audit
+
+The remaining record describes the earlier restoration, before the main-source
+replacement above; its local deviations and AST checks are historical.
+
 Source: [rlogger/marl-opp-aware](https://github.com/rlogger/marl-opp-aware), pinned
 at [`aecbab5daf6da402029e953be114a52e62a46c26`](https://github.com/rlogger/marl-opp-aware/tree/aecbab5daf6da402029e953be114a52e62a46c26).
 

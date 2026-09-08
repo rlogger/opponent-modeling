@@ -1,0 +1,227 @@
+{
+  "adaptation": "Drop final pred_obs frame only to match upstream pre-action observation schema.",
+  "checkpoint_seeds": [
+    0,
+    1,
+    2
+  ],
+  "checkpoints": [
+    {
+      "path": "logs/MPE_simple_tag_v3/mappo_objectives_capture_MPE_simple_tag_v3_pred_actor_seed0_vmap0.safetensors",
+      "sha256": "169c0d46e6dd715925e2d348670baf7c1d6190c727cb521ad77c1d6b7995ade5"
+    },
+    {
+      "path": "logs/MPE_simple_tag_v3/mappo_objectives_capture_MPE_simple_tag_v3_pred_actor_seed0_vmap1.safetensors",
+      "sha256": "8b2cf8006ce8b553adfcb67b4ce30ae6a9dd087c19754e215ee91a2944a94c4b"
+    },
+    {
+      "path": "logs/MPE_simple_tag_v3/mappo_objectives_capture_MPE_simple_tag_v3_pred_actor_seed0_vmap2.safetensors",
+      "sha256": "8fd5d6cd134f8126a5e05906c54a500dd5935d0a4cc6c647b938fe504b9a96b2"
+    },
+    {
+      "path": "logs/MPE_simple_tag_v3/mappo_objectives_risk_MPE_simple_tag_v3_pred_actor_seed0_vmap0.safetensors",
+      "sha256": "0e706770817f16db1f623b959a65e14d45a0286c15793c4839b724495b42c965"
+    },
+    {
+      "path": "logs/MPE_simple_tag_v3/mappo_objectives_risk_MPE_simple_tag_v3_pred_actor_seed0_vmap1.safetensors",
+      "sha256": "75a35486703b7ba4427a1e7f183ddb60a47d37ce69ea59406573e241595eb5b1"
+    },
+    {
+      "path": "logs/MPE_simple_tag_v3/mappo_objectives_risk_MPE_simple_tag_v3_pred_actor_seed0_vmap2.safetensors",
+      "sha256": "0dc1d02b6df3c01f5ad27b93796ccf127c8387e60d18553b1c62f2e97fc30455"
+    },
+    {
+      "path": "logs/MPE_simple_tag_v3/mappo_objectives_curious_MPE_simple_tag_v3_pred_actor_seed0_vmap0.safetensors",
+      "sha256": "d03524fcb78f1929b3027e14f85617c328e2de943773ad58c6127c0f656cb411"
+    },
+    {
+      "path": "logs/MPE_simple_tag_v3/mappo_objectives_curious_MPE_simple_tag_v3_pred_actor_seed0_vmap1.safetensors",
+      "sha256": "a9e694c4c1ee50f4f3fbdde4db1db5fdb9b5384c20c2082f943f74d0c918b071"
+    },
+    {
+      "path": "logs/MPE_simple_tag_v3/mappo_objectives_curious_MPE_simple_tag_v3_pred_actor_seed0_vmap2.safetensors",
+      "sha256": "653a40e0f6d91627aec8e470595de4b33b44e75c85ddea29e7bc5d50ee367766"
+    },
+    {
+      "path": "logs/MPE_simple_tag_v3/mappo_objectives_capture_MPE_simple_tag_v3_prey_actor_seed0_vmap0.safetensors",
+      "sha256": "9276e4b7217dada793470bc83bae7faf4ed56ba5688bf38078381d52994bb2f2"
+    },
+    {
+      "path": "logs/MPE_simple_tag_v3/mappo_objectives_capture_MPE_simple_tag_v3_prey_actor_seed0_vmap1.safetensors",
+      "sha256": "07e4fe70c1c06c10da9c3e3240e34a4a341980e039a87e3973ecc834d85f85d6"
+    },
+    {
+      "path": "logs/MPE_simple_tag_v3/mappo_objectives_capture_MPE_simple_tag_v3_prey_actor_seed0_vmap2.safetensors",
+      "sha256": "edff847191bafa4b868807e2c6fbba6157ad82e8a3130b2405cd89a10f490075"
+    }
+  ],
+  "collection_seconds": 13.350369791965932,
+  "created_utc": "2026-09-08T12:57:45Z",
+  "dataset": "/Users/rajdeepsingh/Documents/Playground/opponent-modeling/experiments/main_env_20260908/discrete/dataset.npz",
+  "dataset_sha256": "e391221052e269fad8687b9fead4c7f2eca10df4a33e3e76d51d6cc7273b5b3b",
+  "environment_changed": false,
+  "environment_rng0": 0,
+  "episodes": 1800,
+  "episodes_per_objective_checkpoint": 200,
+  "horizon": 100,
+  "matched_reset_validation": "passed exact equality across objectives within each checkpoint seed",
+  "objective_metrics": {
+    "capture": {
+      "captured": 0.9516666666666667,
+      "pred_coverage": 14.34000015258789,
+      "pred_lava_steps": 8.776666641235352,
+      "resources_collected": 2.7116665840148926,
+      "survival_time": 39.04166793823242
+    },
+    "curious": {
+      "captured": 0.13333333333333333,
+      "pred_coverage": 39.72833251953125,
+      "pred_lava_steps": 10.693333625793457,
+      "resources_collected": 5.7816667556762695,
+      "survival_time": 92.63999938964844
+    },
+    "risk": {
+      "captured": 0.045,
+      "pred_coverage": 8.916666984558105,
+      "pred_lava_steps": 0.34166666865348816,
+      "resources_collected": 6.038333415985107,
+      "survival_time": 97.81500244140625
+    }
+  },
+  "prey_family": "capture",
+  "schema": {
+    "capture_t": {
+      "dtype": "int32",
+      "shape": [
+        1800
+      ]
+    },
+    "captured": {
+      "dtype": "int32",
+      "shape": [
+        1800
+      ]
+    },
+    "ckpt_seed": {
+      "dtype": "int32",
+      "shape": [
+        1800
+      ]
+    },
+    "env_seed": {
+      "dtype": "uint32",
+      "shape": [
+        1800,
+        2
+      ]
+    },
+    "label": {
+      "dtype": "int32",
+      "shape": [
+        1800
+      ]
+    },
+    "lava_pos": {
+      "dtype": "float32",
+      "shape": [
+        1800,
+        3,
+        2
+      ]
+    },
+    "lava_rad": {
+      "dtype": "float32",
+      "shape": [
+        1800,
+        3
+      ]
+    },
+    "pred_act": {
+      "dtype": "int32",
+      "shape": [
+        1800,
+        100,
+        1
+      ]
+    },
+    "pred_coverage": {
+      "dtype": "float32",
+      "shape": [
+        1800
+      ]
+    },
+    "pred_lava_steps": {
+      "dtype": "float32",
+      "shape": [
+        1800
+      ]
+    },
+    "pred_obs": {
+      "dtype": "float32",
+      "shape": [
+        1800,
+        100,
+        1,
+        17
+      ]
+    },
+    "pred_pos": {
+      "dtype": "float32",
+      "shape": [
+        1800,
+        101,
+        1,
+        2
+      ]
+    },
+    "prey_act": {
+      "dtype": "int32",
+      "shape": [
+        1800,
+        100
+      ]
+    },
+    "prey_lava_steps": {
+      "dtype": "float32",
+      "shape": [
+        1800
+      ]
+    },
+    "prey_pos": {
+      "dtype": "float32",
+      "shape": [
+        1800,
+        101,
+        2
+      ]
+    },
+    "resources_collected": {
+      "dtype": "float32",
+      "shape": [
+        1800
+      ]
+    },
+    "survival_time": {
+      "dtype": "float32",
+      "shape": [
+        1800
+      ]
+    },
+    "valid_length": {
+      "dtype": "int32",
+      "shape": [
+        1800
+      ]
+    }
+  },
+  "source_commit": "180571beed82326a0d11da8fad20c1ebb1886841",
+  "source_hashes": {
+    "src/mopa/action_decoder.py": "47df75708cdf4be8a8cc789b46d8d8382177e39b8335c2b4cfa55cc28070b8e2",
+    "src/mopa/data.py": "c0849e994e1060ec02309dd6a1b3c027b887574a33fdfea8602c4ff0334d89ac",
+    "src/mopa/features.py": "afea866a0ee35f9efe63815815840c5d7929237b7d1eb004c5f420bceae84def",
+    "src/tag_objectives/objectives.py": "71332590fc61490bfd6271ab72da01f41df952963c10d86b577035ac74796f84",
+    "src/tag_objectives/resources.py": "72910059f63c01613b4ad3803236497723724e3c16525d9b21ca51b920b0d4d4"
+  },
+  "source_worktree_dirty": true,
+  "specialists_retrained": false
+}

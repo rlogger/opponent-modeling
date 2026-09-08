@@ -1,15 +1,13 @@
-"""Portable regression contract for marl-opp-aware@aecbab5 (no sibling checkout).
+"""Exact main-source contract plus original marl-opp-aware numerical goldens.
 
-AST fingerprints and numerical goldens were obtained from the pinned original
-source, not from the restored implementation. See third_party/marl-opp-aware.
+Source hashes are from opponent-modeling@8c24db3. Numerical goldens were obtained
+from marl-opp-aware@aecbab5, whose mechanics match main under the locked runtime.
+Neither check needs a sibling checkout. See third_party/marl-opp-aware.
 """
 from __future__ import annotations
 
-import ast
 import hashlib
-import inspect
-import json
-import textwrap
+from pathlib import Path
 
 import numpy as np
 import pytest
@@ -21,43 +19,17 @@ pytest.importorskip("jaxmarl")
 from mopa.continuous_data import markov_state  # noqa: E402
 from mopa.zero_s import zero_s_features  # noqa: E402
 from tag_objectives import SimpleTagObjectivesMPE, to_mpe_action  # noqa: E402
-from tag_objectives.resources import SimpleTagResourcesMPE  # noqa: E402
 
 
-def _canonical(node):
-    """Ignore docstrings/location/Python 3.12 type-parameter metadata only."""
-    if isinstance(node, list):
-        return [
-            _canonical(item) for item in node
-            if not (isinstance(item, ast.Expr)
-                    and isinstance(item.value, ast.Constant)
-                    and isinstance(item.value.value, str))
-        ]
-    if isinstance(node, ast.AST):
-        return [type(node).__name__, [
-            [name, _canonical(value)] for name, value in ast.iter_fields(node)
-            if name != "type_params"
-        ]]
-    if node is Ellipsis:
-        return ["literal", "Ellipsis"]
-    return node
-
-
-@pytest.mark.parametrize("cls,expected", [
-    (SimpleTagObjectivesMPE,
-     "1108c4aa13a0590584fa185af6a87b723ab00bf89267b88f191097ed0afbb498"),
-    (SimpleTagResourcesMPE,
-     "88d4546379d373659112b615cdcbeb4f1dcfdb62062a0800b724ff376cc238d2"),
+@pytest.mark.parametrize("filename,expected", [
+    ("objectives.py",
+     "71332590fc61490bfd6271ab72da01f41df952963c10d86b577035ac74796f84"),
+    ("resources.py",
+     "72910059f63c01613b4ad3803236497723724e3c16525d9b21ca51b920b0d4d4"),
 ])
-def test_original_transition_observation_and_sampling_source_contract(cls, expected):
-    tree = ast.parse(textwrap.dedent(inspect.getsource(cls)))
-    methods = [
-        node for node in tree.body[0].body if isinstance(node, ast.FunctionDef)
-        and node.name != "continuous_actions"
-        and (node.name != "__init__" or cls is SimpleTagResourcesMPE)
-    ]
-    payload = json.dumps(_canonical(methods), separators=(",", ":"), ensure_ascii=True)
-    assert hashlib.sha256(payload.encode()).hexdigest() == expected
+def test_environment_source_is_byte_identical_to_main_8c24db3(filename, expected):
+    source = Path(__file__).resolve().parents[1] / "src" / "tag_objectives" / filename
+    assert hashlib.sha256(source.read_bytes()).hexdigest() == expected
 
 
 # Seed 7 from original aecbab5, JAX 0.4.38 / JaxMARL 0.1.0, CPU float32.

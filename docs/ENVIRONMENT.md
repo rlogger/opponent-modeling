@@ -4,9 +4,10 @@
 a predator's hidden objective shapes its behaviour, a prey must infer and
 exploit it, and terrain (lava plus resources) makes the objectives observable.
 
-The environment source is restored from `rlogger/marl-opp-aware@aecbab5`;
-[provenance and parity tests](../third_party/marl-opp-aware/UPSTREAM.md) document
-the package/API adaptations. Continuous actions remain supported.
+The environment core is byte-identical to this repository's `main@8c24db3`.
+[Provenance and parity tests](../third_party/marl-opp-aware/UPSTREAM.md) document
+the rollback; the previous version is preserved on `new-env`. Main's default
+is discrete; the external API/action adapter also supports continuous callers.
 
 ## Task summary
 

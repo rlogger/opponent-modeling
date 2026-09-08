@@ -1,0 +1,223 @@
+{
+  "passed": true,
+  "main_commit": "8c24db3c7deff8bd32610b04c3f1ebc08bf5e429",
+  "backup_commit": "180571beed82326a0d11da8fad20c1ebb1886841",
+  "verification_sources": {
+    "experiments/main_env_20260908/verify.py": "66a6ce62e900e91f7ed0708a32e990c511bc31eb049bfb357474296a48c43fcb",
+    "experiments/original_env_20260908/verify.py": "9e7c18cd77718478d5882e2597d25d769c63649e9f8204fbda827bc92287983b"
+  },
+  "main_source": {
+    "objectives.py": "71332590fc61490bfd6271ab72da01f41df952963c10d86b577035ac74796f84",
+    "resources.py": "72910059f63c01613b4ad3803236497723724e3c16525d9b21ca51b920b0d4d4"
+  },
+  "continuous_data": {
+    "arrays_identical": 26,
+    "episodes": 1800,
+    "fresh_sha256": "928181027a9e5e86b106190b1487cda90c09e2cc5df08b569f7b93ba8350b5f5",
+    "previous_sha256": "928181027a9e5e86b106190b1487cda90c09e2cc5df08b569f7b93ba8350b5f5"
+  },
+  "controller_audit": {
+    "directory": "/Users/rajdeepsingh/Documents/Playground/opponent-modeling/experiments/main_env_20260908/controller",
+    "evaluation_sha256": "5da52d3282ee65ac71a9226e5b665a0f1b299ef7fdb2b870899c327173cfafdd",
+    "checkpoint_artifacts": {
+      "agent.msgpack": "1559f6fbb55cc455cede3376134b08b716bfb3fc538790f0004f5226f0c82f16",
+      "config.json": "d759122e7f6f9777ec42da5de7e013d195801fae2066fef11188d3873c287818",
+      "opponent.msgpack": "048233bf8c1f8165556db1e089b6e85e9110fbf2d67d8638031a9dcd206e0271",
+      "state_stats.npz": "49246c7fd646630d30308284dd49fa3d3df1fea7693a6dae26ce4eb6fbca46b4"
+    },
+    "metrics_match": true,
+    "traces": [
+      {
+        "path": "/Users/rajdeepsingh/Documents/Playground/opponent-modeling/experiments/main_env_20260908/controller/capture__tdmpc__online.npz",
+        "sha256": "73464b6336446d5cd620d9dcaeb9e964788aa38e175af761ad7b95c1625805dd",
+        "episodes": 24,
+        "valid_transitions": 1122,
+        "state_max_error": 0.0,
+        "reward_max_error": 0.0,
+        "specialist_action_max_error": 0.0,
+        "capture_timeout_and_padding_exact": true,
+        "causal_context_max_error": 5.364418029785156e-07,
+        "replay_context_max_error": null,
+        "future_pair_perturbation_max_error": 0.0
+      },
+      {
+        "path": "/Users/rajdeepsingh/Documents/Playground/opponent-modeling/experiments/main_env_20260908/controller/capture__mappo_prey__zero.npz",
+        "sha256": "7a95c069725d497935de3647e9369604cb45cf13beba98c9bc22b9a9d39e5701",
+        "episodes": 24,
+        "valid_transitions": 612,
+        "state_max_error": 0.0,
+        "reward_max_error": 0.0,
+        "specialist_action_max_error": 0.0,
+        "capture_timeout_and_padding_exact": true,
+        "causal_context_max_error": null,
+        "replay_context_max_error": null,
+        "future_pair_perturbation_max_error": null
+      },
+      {
+        "path": "/Users/rajdeepsingh/Documents/Playground/opponent-modeling/experiments/main_env_20260908/controller/capture__random__zero.npz",
+        "sha256": "58f3295a1ddd8ee0cdb7c1f25f5d7150900ee141a38bf3a49367b1d898032393",
+        "episodes": 24,
+        "valid_transitions": 1909,
+        "state_max_error": 0.0,
+        "reward_max_error": 0.0,
+        "specialist_action_max_error": 0.0,
+        "capture_timeout_and_padding_exact": true,
+        "causal_context_max_error": null,
+        "replay_context_max_error": null,
+        "future_pair_perturbation_max_error": null
+      },
+      {
+        "path": "/Users/rajdeepsingh/Documents/Playground/opponent-modeling/experiments/main_env_20260908/controller/risk__tdmpc__online.npz",
+        "sha256": "8e8e225afba6c941281fb285df9ee1168b85862ca78bbf56bb0e08f28c15f527",
+        "episodes": 24,
+        "valid_transitions": 2400,
+        "state_max_error": 0.0,
+        "reward_max_error": 0.0,
+        "specialist_action_max_error": 0.0,
+        "capture_timeout_and_padding_exact": true,
+        "causal_context_max_error": 5.364418029785156e-07,
+        "replay_context_max_error": null,
+        "future_pair_perturbation_max_error": 0.0
+      },
+      {
+        "path": "/Users/rajdeepsingh/Documents/Playground/opponent-modeling/experiments/main_env_20260908/controller/risk__mappo_prey__zero.npz",
+        "sha256": "2887d74ade427148fd9bbc0d2528bebe6a6ea07e8375bbbb9ed51e922816ae95",
+        "episodes": 24,
+        "valid_transitions": 2400,
+        "state_max_error": 0.0,
+        "reward_max_error": 0.0,
+        "specialist_action_max_error": 0.0,
+        "capture_timeout_and_padding_exact": true,
+        "causal_context_max_error": null,
+        "replay_context_max_error": null,
+        "future_pair_perturbation_max_error": null
+      },
+      {
+        "path": "/Users/rajdeepsingh/Documents/Playground/opponent-modeling/experiments/main_env_20260908/controller/risk__random__zero.npz",
+        "sha256": "95b65520299e86574b5d754df3226ec636545631f1a01ea80cc6b460d31ef7e8",
+        "episodes": 24,
+        "valid_transitions": 2353,
+        "state_max_error": 0.0,
+        "reward_max_error": 0.0,
+        "specialist_action_max_error": 0.0,
+        "capture_timeout_and_padding_exact": true,
+        "causal_context_max_error": null,
+        "replay_context_max_error": null,
+        "future_pair_perturbation_max_error": null
+      },
+      {
+        "path": "/Users/rajdeepsingh/Documents/Playground/opponent-modeling/experiments/main_env_20260908/controller/curious__tdmpc__online.npz",
+        "sha256": "33ad604a74111d80d1d2b2cacb681a6eaa2dce6194d3650d5033aa8b8b3e8440",
+        "episodes": 24,
+        "valid_transitions": 2136,
+        "state_max_error": 0.0,
+        "reward_max_error": 0.0,
+        "specialist_action_max_error": 0.0,
+        "capture_timeout_and_padding_exact": true,
+        "causal_context_max_error": 5.960464477539062e-07,
+        "replay_context_max_error": null,
+        "future_pair_perturbation_max_error": 0.0
+      },
+      {
+        "path": "/Users/rajdeepsingh/Documents/Playground/opponent-modeling/experiments/main_env_20260908/controller/curious__mappo_prey__zero.npz",
+        "sha256": "8558638dc3d0852e675665fae0f413d9bf4c3601494ea1e0c7a0857f9b1bcf41",
+        "episodes": 24,
+        "valid_transitions": 2108,
+        "state_max_error": 0.0,
+        "reward_max_error": 0.0,
+        "specialist_action_max_error": 0.0,
+        "capture_timeout_and_padding_exact": true,
+        "causal_context_max_error": null,
+        "replay_context_max_error": null,
+        "future_pair_perturbation_max_error": null
+      },
+      {
+        "path": "/Users/rajdeepsingh/Documents/Playground/opponent-modeling/experiments/main_env_20260908/controller/curious__random__zero.npz",
+        "sha256": "cce3bf02f9fdd4273d832532bcd7653e17c11a40c9e6fdf866840a7491c7de58",
+        "episodes": 24,
+        "valid_transitions": 2160,
+        "state_max_error": 0.0,
+        "reward_max_error": 0.0,
+        "specialist_action_max_error": 0.0,
+        "capture_timeout_and_padding_exact": true,
+        "causal_context_max_error": null,
+        "replay_context_max_error": null,
+        "future_pair_perturbation_max_error": null
+      }
+    ]
+  },
+  "previous_controller_comparison": [
+    {
+      "opponent": "capture",
+      "controller": "tdmpc",
+      "all_arrays_identical": true,
+      "return_mean": -2.4324464797973633,
+      "fresh_sha256": "73464b6336446d5cd620d9dcaeb9e964788aa38e175af761ad7b95c1625805dd",
+      "previous_sha256": "73464b6336446d5cd620d9dcaeb9e964788aa38e175af761ad7b95c1625805dd"
+    },
+    {
+      "opponent": "capture",
+      "controller": "mappo_prey",
+      "all_arrays_identical": true,
+      "return_mean": -0.607314944267273,
+      "fresh_sha256": "7a95c069725d497935de3647e9369604cb45cf13beba98c9bc22b9a9d39e5701",
+      "previous_sha256": "7a95c069725d497935de3647e9369604cb45cf13beba98c9bc22b9a9d39e5701"
+    },
+    {
+      "opponent": "capture",
+      "controller": "random",
+      "all_arrays_identical": true,
+      "return_mean": -10.578954696655273,
+      "fresh_sha256": "58f3295a1ddd8ee0cdb7c1f25f5d7150900ee141a38bf3a49367b1d898032393",
+      "previous_sha256": "58f3295a1ddd8ee0cdb7c1f25f5d7150900ee141a38bf3a49367b1d898032393"
+    },
+    {
+      "opponent": "risk",
+      "controller": "tdmpc",
+      "all_arrays_identical": true,
+      "return_mean": 8.700117111206055,
+      "fresh_sha256": "8e8e225afba6c941281fb285df9ee1168b85862ca78bbf56bb0e08f28c15f527",
+      "previous_sha256": "8e8e225afba6c941281fb285df9ee1168b85862ca78bbf56bb0e08f28c15f527"
+    },
+    {
+      "opponent": "risk",
+      "controller": "mappo_prey",
+      "all_arrays_identical": true,
+      "return_mean": 26.573989868164062,
+      "fresh_sha256": "2887d74ade427148fd9bbc0d2528bebe6a6ea07e8375bbbb9ed51e922816ae95",
+      "previous_sha256": "2887d74ade427148fd9bbc0d2528bebe6a6ea07e8375bbbb9ed51e922816ae95"
+    },
+    {
+      "opponent": "risk",
+      "controller": "random",
+      "all_arrays_identical": true,
+      "return_mean": -13.82728099822998,
+      "fresh_sha256": "95b65520299e86574b5d754df3226ec636545631f1a01ea80cc6b460d31ef7e8",
+      "previous_sha256": "95b65520299e86574b5d754df3226ec636545631f1a01ea80cc6b460d31ef7e8"
+    },
+    {
+      "opponent": "curious",
+      "controller": "tdmpc",
+      "all_arrays_identical": true,
+      "return_mean": 6.040811061859131,
+      "fresh_sha256": "33ad604a74111d80d1d2b2cacb681a6eaa2dce6194d3650d5033aa8b8b3e8440",
+      "previous_sha256": "33ad604a74111d80d1d2b2cacb681a6eaa2dce6194d3650d5033aa8b8b3e8440"
+    },
+    {
+      "opponent": "curious",
+      "controller": "mappo_prey",
+      "all_arrays_identical": true,
+      "return_mean": 25.84977149963379,
+      "fresh_sha256": "8558638dc3d0852e675665fae0f413d9bf4c3601494ea1e0c7a0857f9b1bcf41",
+      "previous_sha256": "8558638dc3d0852e675665fae0f413d9bf4c3601494ea1e0c7a0857f9b1bcf41"
+    },
+    {
+      "opponent": "curious",
+      "controller": "random",
+      "all_arrays_identical": true,
+      "return_mean": -8.520255088806152,
+      "fresh_sha256": "cce3bf02f9fdd4273d832532bcd7653e17c11a40c9e6fdf866840a7491c7de58",
+      "previous_sha256": "cce3bf02f9fdd4273d832532bcd7653e17c11a40c9e6fdf866840a7491c7de58"
+    }
+  ]
+}

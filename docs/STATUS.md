@@ -4,11 +4,13 @@ This file is the source of truth for what the repository implements and what
 still needs experiment evidence. It consolidates the historical research
 requirements and later implementation updates.
 
-Latest targeted rerun: [original environment + frozen `0s` controller adaptation](../experiments/original_env_20260908/REPORT.md).
-The original environment is source-restored and data-identical. Six online
-controller-training rounds improve held-out mean return from −588.22 to +4.10
-(one model seed, 24 matched resets per opponent); MAPPO remains higher at +17.27.
-This is not a new multi-seed or latent-conditioning ablation claim.
+Latest targeted rerun: [exact main-branch environment](../experiments/main_env_20260908/REPORT.md).
+The prior version is backed up as `new-env`; the environment core now matches
+`main@8c24db3` byte-for-byte. Fresh native discrete and continuous datasets,
+native `0s` fits and matched controller outcomes are unchanged. The earlier
+[controller adaptation](../experiments/original_env_20260908/REPORT.md) still
+scores +4.10 versus MAPPO +17.27 (one model seed, 24 resets per opponent).
+Source rollback does not establish faithful learned three-way behavior control.
 
 ## Current lean scope
 

@@ -15,6 +15,7 @@ from typing import Any
 import jax
 import jax.numpy as jnp
 import numpy as np
+from jaxmarl.environments.spaces import Box
 
 from tag_objectives.actions import (
     CONTINUOUS_ACTION_DIM,
@@ -78,7 +79,7 @@ def random_policy(env: SimpleTagObjectivesMPE) -> PolicyFn:
     Continuous environments receive uniform ``[-1, 1]^2`` actions converted at
     the boundary; discrete environments receive uniform action indices.
     """
-    if env.continuous_actions:
+    if isinstance(env.action_space(env.agents[0]), Box):
 
         def policy(obs: Mapping[str, Any], rng: Any) -> dict[str, Any]:
             acts: dict[str, Any] = {}
@@ -135,7 +136,7 @@ def evaluate_policy(
         active = ~done
         key, kp, ks = jax.random.split(key, 3)
         raw = policy(obs, kp)
-        if env.continuous_actions:
+        if isinstance(env.action_space(env.agents[0]), Box):
             acts = {a: jnp.asarray(v, dtype=jnp.float32) for a, v in raw.items()}
         else:
             acts = {a: v.astype(jnp.int32) for a, v in raw.items()}

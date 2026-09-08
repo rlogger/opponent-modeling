@@ -1,0 +1,113 @@
+{
+  "dependencies": {
+    "distrax": "0.1.5",
+    "flax": "0.10.4",
+    "jax": "0.4.38",
+    "jaxlib": "0.4.38",
+    "jaxmarl": "0.1.0",
+    "numpy": "1.26.4",
+    "opponent-modeling": "0.2.0",
+    "optax": "0.2.5",
+    "scikit-learn": "1.9.0"
+  },
+  "git_dirty": true,
+  "git_sha": "180571beed82326a0d11da8fad20c1ebb1886841",
+  "rollout": {
+    "action_contract": "(a_x, a_y) in [-1, 1]^2 -> to_mpe_action at env boundary",
+    "checkpoint_seeds": [
+      0,
+      1,
+      2
+    ],
+    "markov_state_fields": [
+      "agent_positions",
+      "agent_velocities",
+      "resource_positions",
+      "resource_collected",
+      "lava_positions",
+      "lava_radii",
+      "time_fraction"
+    ],
+    "n_eps": 200,
+    "num_adversaries": 1,
+    "num_steps": 100,
+    "policy_action": "deterministic_tanh_mean",
+    "prey_type": "capture",
+    "rollout_seed": 0
+  },
+  "schema_version": 1,
+  "source_checkpoints": [
+    {
+      "objective": "capture",
+      "seed": 0,
+      "sha256": "e88a8d1e7d884c39c4b96df282071b3b483d6c3e2adaaf72010907e8885291a6",
+      "team": "pred"
+    },
+    {
+      "objective": "risk",
+      "seed": 0,
+      "sha256": "6c720d97836c9b7175859985f2002d3734f529e9738e8205e67e85bb558e47c9",
+      "team": "pred"
+    },
+    {
+      "objective": "curious",
+      "seed": 0,
+      "sha256": "70ce23992cf59fedaa9568314a83710feb4870e649b982900a42a169e7eea195",
+      "team": "pred"
+    },
+    {
+      "objective": "capture",
+      "seed": 1,
+      "sha256": "def2c3aaa8d5a206b9e401ba9e757cf1348148b1c8fd34d0630acaaf335339fb",
+      "team": "pred"
+    },
+    {
+      "objective": "risk",
+      "seed": 1,
+      "sha256": "f6bad7cbb9912986b2b201b156934fa4801f2aada4514b4992aed3a6d15787b0",
+      "team": "pred"
+    },
+    {
+      "objective": "curious",
+      "seed": 1,
+      "sha256": "300eb2fe9a119f0b7d640f309d189e0bea55fabc5616a8c224aff9aa963784df",
+      "team": "pred"
+    },
+    {
+      "objective": "capture",
+      "seed": 2,
+      "sha256": "bd17f86b36448bcb885e2eed04240892729883e0129c0b13b66706703c026940",
+      "team": "pred"
+    },
+    {
+      "objective": "risk",
+      "seed": 2,
+      "sha256": "b895d4d645cb06d689f2feb862b8a1079063415cc471b7e887bc0a0bbdfb4b08",
+      "team": "pred"
+    },
+    {
+      "objective": "curious",
+      "seed": 2,
+      "sha256": "07b9439945cfa656156fa62b767e0cd8068fe2c8b110803f0b61ec3e8372efba",
+      "team": "pred"
+    },
+    {
+      "objective": "capture",
+      "seed": 0,
+      "sha256": "7ae4ab41ba1daac6654bf19473aa1a2be47298ef47f162a52fb0c34dc9ae05d7",
+      "team": "prey"
+    },
+    {
+      "objective": "capture",
+      "seed": 1,
+      "sha256": "5400aebae9d18c85fdbb06af676df9b690e73f7b046361b8e728ac43edf289d6",
+      "team": "prey"
+    },
+    {
+      "objective": "capture",
+      "seed": 2,
+      "sha256": "e20c31b26e8792b6cbb27a6b90aa39be4a11dc1153f1d14ceae3f033f6b075c7",
+      "team": "prey"
+    }
+  ]
+}
