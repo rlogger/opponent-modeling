@@ -1,0 +1,20 @@
+{
+  "targeted_pytest": {
+    "passed": 35,
+    "failed": 0,
+    "seconds": 109.16,
+    "files": ["tests/test_action_decoder.py", "tests/test_zero_s.py", "tests/test_zero_s_report.py", "tests/test_rendering.py", "tests/test_continuous_data.py", "tests/test_continuous_pipeline.py", "tests/test_tdmpc_implicit.py"]
+  },
+  "continuous_recollection": {
+    "old_dataset": "artifacts/continuous/dataset.npz",
+    "new_dataset": "experiments/shashank_comparison_20260908/continuous_data/dataset.npz",
+    "same_field_names": true,
+    "n_arrays_compared": 26,
+    "different_arrays": [],
+    "method": "numpy.array_equal on each freshly loaded array; checked before the old file was cloud-offloaded",
+    "all_1800_episodes_replayed": true,
+    "max_abs_state_observation_reward_error": 0.0,
+    "termination_flags_match_fraction": 1.0
+  },
+  "scope": "Fresh trajectory collection and model fits; specialist checkpoints and game dynamics unchanged. No new specialist-policy training."
+}

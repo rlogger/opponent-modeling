@@ -1,0 +1,215 @@
+{
+  "episode_probe": {
+    "accuracy": 0.97,
+    "balanced_accuracy": 0.9700000000000001,
+    "n_train": 1200,
+    "n_heldout": 600
+  },
+  "window_probe": {
+    "accuracy": 0.858008658008658,
+    "balanced_accuracy": 0.7205988483600801,
+    "n_train": 11412,
+    "n_heldout": 5775
+  },
+  "gmm_ari": 0.4550315085040345,
+  "length_only_probe": {
+    "accuracy": 0.6483333333333333,
+    "balanced_accuracy": 0.6483333333333333,
+    "n_train": 1200,
+    "n_heldout": 600
+  },
+  "prefix8_probe": {
+    "accuracy": 0.655,
+    "balanced_accuracy": 0.6549999999999999,
+    "n_train": 1200,
+    "n_heldout": 600
+  },
+  "posthoc_reconstruction": {
+    "macro_episode_mse": 0.3253145890949984,
+    "per_type": {
+      "capture": 0.39767798723908265,
+      "risk": 0.512438045697379,
+      "curious": 0.06582773434853352
+    }
+  },
+  "action_prediction": {
+    "causal_history": {
+      "macro_episode_mse": 0.4846656858016494,
+      "per_type": {
+        "capture": 0.6979207266692222,
+        "risk": 0.6241112798660491,
+        "curious": 0.1319650508696771
+      }
+    },
+    "zero": {
+      "macro_episode_mse": 0.4963638067244684,
+      "per_type": {
+        "capture": 0.6672863299766234,
+        "risk": 0.663508091432843,
+        "curious": 0.15829699876393857
+      }
+    },
+    "correct_prototype": {
+      "macro_episode_mse": 0.4722827683878441,
+      "per_type": {
+        "capture": 0.647446066622405,
+        "risk": 0.6385140563449901,
+        "curious": 0.13088818219613718
+      }
+    },
+    "wrong_prototype_1": {
+      "macro_episode_mse": 0.5128301030363477,
+      "per_type": {
+        "capture": 0.6817324614513126,
+        "risk": 0.7159405746867863,
+        "curious": 0.1408172729709442
+      }
+    },
+    "wrong_prototype_2": {
+      "macro_episode_mse": 0.512959022915396,
+      "per_type": {
+        "capture": 0.6573309956092293,
+        "risk": 0.6988624582317757,
+        "curious": 0.18268361490518287
+      }
+    }
+  },
+  "matched_state_specialists": {
+    "n_states": 2400,
+    "row_prototypes": [
+      "capture",
+      "risk",
+      "curious"
+    ],
+    "column_specialists": [
+      "capture",
+      "risk",
+      "curious"
+    ],
+    "prototype_vs_specialist_mse": [
+      [
+        2.1130878925323486,
+        1.7382277250289917,
+        1.2969516515731812
+      ],
+      [
+        2.0987651348114014,
+        1.5785046815872192,
+        1.260653018951416
+      ],
+      [
+        2.1267266273498535,
+        1.778709888458252,
+        1.3018546104431152
+      ]
+    ],
+    "diagonal_mse": 1.6644824345906575,
+    "off_diagonal_mse": 1.7166723012924194,
+    "off_diagonal_minus_diagonal": 0.052189866701761956,
+    "best_prototype_per_specialist": [
+      "risk",
+      "risk",
+      "risk"
+    ],
+    "correct_best_prototypes": 1,
+    "checkpoints": [
+      {
+        "type": "capture",
+        "path": "/Users/rajdeepsingh/Documents/Playground/opponent-modeling/logs/MPE_simple_tag_v3_continuous/mappo_continuous_capture_MPE_simple_tag_v3_continuous_pred_actor_seed0_vmap2.safetensors",
+        "sha256": "bd17f86b36448bcb885e2eed04240892729883e0129c0b13b66706703c026940"
+      },
+      {
+        "type": "risk",
+        "path": "/Users/rajdeepsingh/Documents/Playground/opponent-modeling/logs/MPE_simple_tag_v3_continuous/mappo_continuous_risk_MPE_simple_tag_v3_continuous_pred_actor_seed0_vmap2.safetensors",
+        "sha256": "b895d4d645cb06d689f2feb862b8a1079063415cc471b7e887bc0a0bbdfb4b08"
+      },
+      {
+        "type": "curious",
+        "path": "/Users/rajdeepsingh/Documents/Playground/opponent-modeling/logs/MPE_simple_tag_v3_continuous/mappo_continuous_curious_MPE_simple_tag_v3_continuous_pred_actor_seed0_vmap2.safetensors",
+        "sha256": "07b9439945cfa656156fa62b767e0cd8068fe2c8b110803f0b61ec3e8372efba"
+      }
+    ],
+    "sampling": "up to four seeded valid steps per held-out episode; same states for every type"
+  },
+  "physics_recorded_joint_actions": {
+    "train": {
+      "horizons": [
+        1,
+        3,
+        10
+      ],
+      "per_horizon": {
+        "1": {
+          "n_starts": 4096,
+          "model_mse": 0.006344515364617109,
+          "persistence_mse": 0.010501095093786716,
+          "model_beats_persistence": true,
+          "ratio_model_over_persistence": 0.6041765213012695,
+          "position_rmse_model": 0.013949950225651264,
+          "position_rmse_persistence": 0.07991770654916763
+        },
+        "3": {
+          "n_starts": 4096,
+          "model_mse": 0.01918962597846985,
+          "persistence_mse": 0.048586755990982056,
+          "model_beats_persistence": true,
+          "ratio_model_over_persistence": 0.39495590329170227,
+          "position_rmse_model": 0.0391370989382267,
+          "position_rmse_persistence": 0.23648236691951752
+        },
+        "10": {
+          "n_starts": 4096,
+          "model_mse": 0.05836255103349686,
+          "persistence_mse": 0.1959221065044403,
+          "model_beats_persistence": true,
+          "ratio_model_over_persistence": 0.2978864908218384,
+          "position_rmse_model": 0.11458037048578262,
+          "position_rmse_persistence": 0.6916568875312805
+        }
+      }
+    },
+    "heldout": {
+      "horizons": [
+        1,
+        3,
+        10
+      ],
+      "per_horizon": {
+        "1": {
+          "n_starts": 4096,
+          "model_mse": 0.006433429196476936,
+          "persistence_mse": 0.010226257145404816,
+          "model_beats_persistence": true,
+          "ratio_model_over_persistence": 0.6291089057922363,
+          "position_rmse_model": 0.015121621079742908,
+          "position_rmse_persistence": 0.0804976373910904
+        },
+        "3": {
+          "n_starts": 4096,
+          "model_mse": 0.019029658287763596,
+          "persistence_mse": 0.047057170420885086,
+          "model_beats_persistence": true,
+          "ratio_model_over_persistence": 0.4043944478034973,
+          "position_rmse_model": 0.04270709678530693,
+          "position_rmse_persistence": 0.23867899179458618
+        },
+        "10": {
+          "n_starts": 4096,
+          "model_mse": 0.06431008130311966,
+          "persistence_mse": 0.19255435466766357,
+          "model_beats_persistence": true,
+          "ratio_model_over_persistence": 0.33398404717445374,
+          "position_rmse_model": 0.12811267375946045,
+          "position_rmse_persistence": 0.6986165046691895
+        }
+      }
+    }
+  },
+  "latent_swap": {
+    "episode": 1000,
+    "horizon": 30,
+    "simulator_ground_truth": false,
+    "max_absolute_position": 2.097118854522705,
+    "mean_pairwise_red_position_distance": 0.6128533482551575
+  }
+}

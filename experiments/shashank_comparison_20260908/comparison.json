@@ -1,0 +1,337 @@
+{
+  "discrete": {
+    "Shashank published (historical data)": {
+      "heldout_probe": {
+        "mean": 0.785,
+        "std": 0.0,
+        "values": [
+          0.785
+        ]
+      },
+      "heldout_ari": {
+        "mean": 0.4352407364439583,
+        "std": 0.0,
+        "values": [
+          0.4352407364439583
+        ]
+      },
+      "unit_probe": {
+        "mean": 0.5471287460237736,
+        "std": 0.0,
+        "values": [
+          0.5471287460237736
+        ]
+      },
+      "decoder_action_accuracy": {
+        "mean": 0.8291831026321451,
+        "std": 0.0,
+        "values": [
+          0.8291831026321451
+        ]
+      }
+    },
+    "Source code, fresh current discrete data": {
+      "heldout_probe": {
+        "mean": 0.755,
+        "std": 0.0,
+        "values": [
+          0.755
+        ]
+      },
+      "heldout_ari": {
+        "mean": 0.5384042590105123,
+        "std": 0.0,
+        "values": [
+          0.5384042590105123
+        ]
+      },
+      "unit_probe": {
+        "mean": 0.5660314830157415,
+        "std": 0.0,
+        "values": [
+          0.5660314830157415
+        ]
+      },
+      "decoder_action_accuracy": {
+        "mean": 0.789336083312757,
+        "std": 0.0,
+        "values": [
+          0.789336083312757
+        ]
+      }
+    },
+    "Integrated port, identical source settings": {
+      "heldout_probe": {
+        "mean": 0.755,
+        "std": 0.0,
+        "values": [
+          0.755
+        ]
+      },
+      "heldout_ari": {
+        "mean": 0.5384042590105123,
+        "std": 0.0,
+        "values": [
+          0.5384042590105123
+        ]
+      },
+      "unit_probe": {
+        "mean": 0.5660314830157415,
+        "std": 0.0,
+        "values": [
+          0.5660314830157415
+        ]
+      },
+      "decoder_action_accuracy": {
+        "mean": 0.789336083312757,
+        "std": 0.0,
+        "values": [
+          0.789336083312757
+        ]
+      }
+    },
+    "Integrated causal features, 3 fits": {
+      "heldout_probe": {
+        "mean": 0.7338888888888889,
+        "std": 0.04554877998393252,
+        "values": [
+          0.7966666666666666,
+          0.715,
+          0.69
+        ]
+      },
+      "heldout_ari": {
+        "mean": 0.5247889908819335,
+        "std": 0.01684835798579954,
+        "values": [
+          0.5270716595533744,
+          0.5441876861963573,
+          0.503107626896069
+        ]
+      },
+      "unit_probe": {
+        "mean": 0.5807787903893952,
+        "std": 0.03126627819019356,
+        "values": [
+          0.6167357083678542,
+          0.5405136702568352,
+          0.5850869925434963
+        ]
+      },
+      "decoder_action_accuracy": {
+        "mean": 0.7633928355289594,
+        "std": 0.0010856600530196202,
+        "values": [
+          0.7648477102063937,
+          0.7622405554183793,
+          0.7630902409621054
+        ]
+      }
+    }
+  },
+  "parity": {
+    "decoder_accuracy_abs": 0.0,
+    "episode_latent_max_abs": 0.0,
+    "history_max_abs": 0.0,
+    "window_latent_max_abs": 0.0
+  },
+  "continuous": {
+    "episode_probe": {
+      "mean": 0.9311111111111111,
+      "std": 0.030681558381075703,
+      "values": [
+        0.97,
+        0.895,
+        0.9283333333333333
+      ]
+    },
+    "window_probe": {
+      "mean": 0.8324386724386724,
+      "std": 0.02455389817214423,
+      "values": [
+        0.858008658008658,
+        0.7993073593073593,
+        0.84
+      ]
+    },
+    "prefix8_probe": {
+      "mean": 0.6744444444444445,
+      "std": 0.01634882107729126,
+      "values": [
+        0.655,
+        0.695,
+        0.6733333333333333
+      ]
+    },
+    "length_only_probe": {
+      "mean": 0.6483333333333333,
+      "std": 0.0,
+      "values": [
+        0.6483333333333333,
+        0.6483333333333333,
+        0.6483333333333333
+      ]
+    },
+    "gmm_ari": {
+      "mean": 0.4651667612224634,
+      "std": 0.034855353888599866,
+      "values": [
+        0.4550315085040345,
+        0.5120111877379785,
+        0.4284575874253771
+      ]
+    },
+    "window_balanced_accuracy": {
+      "mean": 0.6787144549309964,
+      "std": 0.030452206562726195,
+      "values": [
+        0.7205988483600801,
+        0.6490959388864211,
+        0.6664485775464879
+      ]
+    }
+  },
+  "continuous_action_mse": {
+    "causal_history": {
+      "mean": 0.4909335320303736,
+      "std": 0.004436324386168605,
+      "values": [
+        0.4846656858016494,
+        0.4943062831765337,
+        0.4938286271129377
+      ]
+    },
+    "zero": {
+      "mean": 0.49465714258990595,
+      "std": 0.0024336384555889005,
+      "values": [
+        0.4963638067244684,
+        0.4912154969118676,
+        0.49639212413338174
+      ]
+    },
+    "correct_prototype": {
+      "mean": 0.4768039339426944,
+      "std": 0.0032486207396790253,
+      "values": [
+        0.4722827683878441,
+        0.4783576917172822,
+        0.4797713417229567
+      ]
+    },
+    "wrong_prototype_1": {
+      "mean": 0.5098065274423084,
+      "std": 0.0052268457877535585,
+      "values": [
+        0.5128301030363477,
+        0.5024532185844875,
+        0.5141362607060898
+      ]
+    },
+    "wrong_prototype_2": {
+      "mean": 0.5098298849061047,
+      "std": 0.0071254401419448485,
+      "values": [
+        0.512959022915396,
+        0.49996988237970963,
+        0.5165607494232086
+      ]
+    }
+  },
+  "intended_prototype_matches_per_seed": [
+    1,
+    1,
+    1
+  ],
+  "physics": {
+    "1": {
+      "position_rmse_model": {
+        "mean": 0.01574553952862819,
+        "std": 0.0004495349823973951,
+        "values": [
+          0.015121621079742908,
+          0.01616317220032215,
+          0.01595182530581951
+        ]
+      },
+      "position_rmse_persistence": {
+        "mean": 0.08045619974533717,
+        "std": 2.969284135217324e-05,
+        "values": [
+          0.0804976373910904,
+          0.08044137060642242,
+          0.08042959123849869
+        ]
+      }
+    },
+    "3": {
+      "position_rmse_model": {
+        "mean": 0.04410730302333832,
+        "std": 0.0009901255280811518,
+        "values": [
+          0.04270709678530693,
+          0.04479793459177017,
+          0.04481687769293785
+        ]
+      },
+      "position_rmse_persistence": {
+        "mean": 0.23854233821233115,
+        "std": 0.0002342287530856467,
+        "values": [
+          0.23867899179458618,
+          0.2382126897573471,
+          0.23873533308506012
+        ]
+      }
+    },
+    "10": {
+      "position_rmse_model": {
+        "mean": 0.13103517889976501,
+        "std": 0.002419272793151377,
+        "values": [
+          0.12811267375946045,
+          0.1309558004140854,
+          0.1340370625257492
+        ]
+      },
+      "position_rmse_persistence": {
+        "mean": 0.6968749761581421,
+        "std": 0.0013743968815540335,
+        "values": [
+          0.6986165046691895,
+          0.6952567100524902,
+          0.6967517137527466
+        ]
+      }
+    }
+  },
+  "std_scope": "population SD of 3 run seeds, including seeded evaluation sampling where applicable; checkpoint2 held out in all runs; not CI",
+  "validation": {
+    "targeted_pytest": {
+      "passed": 35,
+      "failed": 0,
+      "seconds": 109.16,
+      "files": [
+        "tests/test_action_decoder.py",
+        "tests/test_zero_s.py",
+        "tests/test_zero_s_report.py",
+        "tests/test_rendering.py",
+        "tests/test_continuous_data.py",
+        "tests/test_continuous_pipeline.py",
+        "tests/test_tdmpc_implicit.py"
+      ]
+    },
+    "continuous_recollection": {
+      "old_dataset": "artifacts/continuous/dataset.npz",
+      "new_dataset": "experiments/shashank_comparison_20260908/continuous_data/dataset.npz",
+      "same_field_names": true,
+      "n_arrays_compared": 26,
+      "different_arrays": [],
+      "method": "numpy.array_equal on each freshly loaded array; checked before the old file was cloud-offloaded",
+      "all_1800_episodes_replayed": true,
+      "max_abs_state_observation_reward_error": 0.0,
+      "termination_flags_match_fraction": 1.0
+    },
+    "scope": "Fresh trajectory collection and model fits; specialist checkpoints and game dynamics unchanged. No new specialist-policy training."
+  }
+}

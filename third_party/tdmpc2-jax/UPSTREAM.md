@@ -111,7 +111,21 @@ from the verified port:
 - Episode-bounded sequence replay (``mopa.tdmpc_data``) replaces the upstream
   buffer that let samples cross episode boundaries.
 
-## Preserved upstream behavior worth knowing
+## Equation 1 implementation update
+
+The standalone driver now defaults to Equation 1 (`implicit`, `context_dim=0`)
+and bypasses context-checkpoint loading during training, collection, and
+evaluation. The `equation1` profile retains the reference planner settings and
+enables frozen training-set input normalization for an explicitly selected MLP
+encoder. Reference and `smoke` profiles retain upstream input preprocessing.
+
+The consistency loss uses a masked sum with a denominator clamped to at least
+one, so fully padded timesteps contribute zero loss and gradient. Nonempty
+steps retain the same mean-squared-error objective. The regression tests cover
+all-terminal and all-truncated batches, normalized-encoder checkpoint round
+trips, and Equation 1 operation without BC artifacts.
+
+## Preserved upstream behavior at Gate 0
 
 These are upstream properties kept verbatim for parity. They are candidates
 for the post-Gate-0 local correctness changes listed in `handoff.md` (Gate 4),
@@ -127,7 +141,7 @@ not for this port:
 - `predict_continues=False` by default, so the continuation head is `None` and
   its loss term is `0.0`.
 
-## Behavioral confirmation
+## Gate 0 behavioral confirmation (before the local changes above)
 
 - No algorithmic changes: equations, loss coefficients, temporal weights
   (`rho`), optimizer chains (`zero_nans -> clip_by_global_norm -> adam(w)`),

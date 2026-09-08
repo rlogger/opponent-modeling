@@ -1,0 +1,25 @@
+{
+  "input_hashes": {
+    "metrics.json": "46952b971a2684ce1fa1fe5b50de2995b55f36672705e637014eb85ed9ea1e2f",
+    "latents.npz": "44fae97c3c97137081633ea22e38267c184630b55efd53ac74b0658db1c6998a",
+    "matched_state_actions.npz": "ac6effdf10cadd3fb6a435acd9a35a5e23b3cb6aa1d3df071ceabecb8d26b981",
+    "dataset.npz": "928181027a9e5e86b106190b1487cda90c09e2cc5df08b569f7b93ba8350b5f5"
+  },
+  "source_sha256": "7a587093f0287901a60e5442ac4d8834d81263b6301e4c9d844180e9d5cf368c",
+  "selected_action_scene_rows": [
+    0,
+    800,
+    1600
+  ],
+  "run": "/Users/rajdeepsingh/Documents/Playground/opponent-modeling/experiments/shashank_comparison_20260908/continuous/seed_0",
+  "output_hashes": {
+    "latent_prototypes.png": "5cf91618a172ab2ec906423ccf5a96498bbb1eed8a6491233c1c89d29e2642e8",
+    "specialist_match.png": "ebcd9188c74f963a76edb2022b54c12aa1012a143a71b9ca4417c585f893a0aa",
+    "causal_prefix.png": "a9f5ad403e5dcc404ac2166a7425a74fb76e339660e7d08f58a6d4eabd6e9f04",
+    "action_controls.png": "461da09ba78b459f85f296116f8dc894f959f8b136259884cc0a037186dd615b",
+    "action_vectors.png": "b2d704466df51b69f68b939c3ea96de11d8fa51239b450a47eb0e2c47526baef",
+    "physics_error.png": "e1b1e994bfa15565c71a97052fc274d9cbb6e6bb209d82e1136e77b70c67cae3",
+    "prefix_metrics.json": "1921c6510ce49c0a9866fd937958244b530aaa8844c41665fa9326ebd212ac6c",
+    "README.md": "69068ffbee0d5edaa83058817301d37b970bf8b797243e9a3295cfbbffec510b"
+  }
+}

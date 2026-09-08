@@ -18,10 +18,11 @@ Compatibility substitutions (documented in ``third_party/tdmpc2-jax/UPSTREAM.md`
 The world latent is named ``x`` (upstream ``z``) per the handoff notation.
 
 Gate 4 local changes (``opponent_mode="implicit"`` with ``context_dim=0``,
-``encoder.type="mlp"`` and ``predict_continues=False`` remains the unchanged
+``encoder.type="mlp"``, ``normalize_inputs=False`` and ``predict_continues=False`` remain the unchanged
 upstream computation, guarded by fixed-seed golden values in the tests):
 
-- batch size is derived from the sampled tensors;
+- batch size is derived from the sampled tensors; empty padded steps have zero
+  consistency loss;
 - the continuation head predicts ``continue(x, u[, c | v])`` for the same
   transition, is trained on ``1 - terminated`` over valid steps, and is queried
   at the same location during planning;
@@ -853,8 +854,13 @@ class TDMPC2(struct.PyTreeNode):
             consistency_loss = 0
             for t in range(horizon):
                 x = model.next(x=latent_xs[t], a=transition_a[t], params=dynamics_params)
-                consistency_loss += lam[t] * jnp.mean(
-                    (x - sg(next_xs[t])) ** 2, where=~finished[t][:, None]
+                squared_error = (x - sg(next_xs[t])) ** 2
+                active = jnp.broadcast_to(~finished[t][:, None], squared_error.shape)
+                # A padded window can have no remaining transitions. Its loss
+                # and gradient must be zero rather than a masked mean of 0/0.
+                consistency_loss += lam[t] * (
+                    jnp.sum(squared_error, where=active)
+                    / jnp.maximum(jnp.sum(active), 1)
                 )
                 latent_xs = latent_xs.at[t + 1].set(x)
                 finished = finished.at[t + 1].set(
@@ -1082,15 +1088,25 @@ def build_encoder(
     dtype: jnp.dtype = jnp.float32,
     *,
     key: PRNGKey,
+    obs_mean: Optional[np.ndarray] = None,
+    obs_std: Optional[np.ndarray] = None,
 ) -> TrainState:
-    """State encoder ``h(s) -> pre-SimNorm latent`` as built in upstream ``train.py``."""
-    encoder_module = nn.Sequential(
-        [
-            NormedLinear(encoder_dim, activation=mish, dtype=dtype)
-            for _ in range(num_encoder_layers - 1)
-        ]
-        + [NormedLinear(latent_dim, activation=None, dtype=dtype)]
-    )
+    """Upstream state encoder, with optional frozen train-set input scaling."""
+    layers = [
+        NormedLinear(encoder_dim, activation=mish, dtype=dtype)
+        for _ in range(num_encoder_layers - 1)
+    ] + [NormedLinear(latent_dim, activation=None, dtype=dtype)]
+    if obs_mean is not None or obs_std is not None:
+        mean = np.asarray(obs_mean, np.float32)
+        std = np.asarray(obs_std, np.float32)
+        if (
+            mean.shape != (obs_dim,) or std.shape != (obs_dim,)
+            or not np.isfinite(mean).all() or not np.isfinite(std).all()
+            or np.any(std <= 0)
+        ):
+            raise ValueError("encoder needs finite obs_mean and positive obs_std vectors")
+        layers.insert(0, IdentityEncoder(mean=tuple(mean.tolist()), std=tuple(std.tolist())))
+    encoder_module = nn.Sequential(layers)
     return TrainState.create(
         apply_fn=encoder_module.apply,
         params=encoder_module.init(key, jnp.zeros(obs_dim))["params"],
@@ -1134,7 +1150,7 @@ def load_config(
     """Load ``configs/tdmpc2.yaml``.
 
     ``profile=None`` returns the reference (upstream-default) configuration.
-    Named profiles (``smoke``, ``gate4``) apply explicit overrides; they never
+    Named profiles (``smoke``, ``equation1``, ``gate4``) apply explicit overrides; they never
     replace the reference values on disk.
     """
     with open(path) as f:
@@ -1207,6 +1223,9 @@ def create_agent(
         latent_dim = int(obs_dim)
     else:
         latent_dim = int(model_cfg["latent_dim"])
+        normalize = bool(encoder_cfg.get("normalize_inputs", False))
+        if normalize and (obs_mean is None or obs_std is None):
+            raise ValueError("normalized mlp encoder requires obs_mean and obs_std")
         encoder = build_encoder(
             obs_dim=obs_dim,
             encoder_dim=int(encoder_cfg["encoder_dim"]),
@@ -1216,6 +1235,8 @@ def create_agent(
             max_grad_norm=float(model_cfg["max_grad_norm"]),
             dtype=dtype,
             key=encoder_key,
+            obs_mean=obs_mean if normalize else None,
+            obs_std=obs_std if normalize else None,
         )
     model = WorldModel.create(
         action_dim=int(np.prod(config["action_dim"])),

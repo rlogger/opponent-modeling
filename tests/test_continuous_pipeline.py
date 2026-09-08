@@ -121,11 +121,12 @@ def test_continuous_drivers_compose(tmp_path):
     assert factored_manifest["online"]["log"][0]["n_episodes"] == 3
     assert factored_manifest["final_replay_episodes"] > factored_manifest["train_episodes"]
     for run in runs:
+        contexts = "zero" if run == by_mode["implicit"] else "zero,online"
         assert run_td.main(
             [
                 "evaluate", str(run), "--dataset", str(data_dir / "dataset.npz"),
                 "--bc-artifacts", str(bc_dir), "--logdir", str(logdir), "--n-eps", "2",
-                "--context-modes", "zero,online", "--controls",
+                "--context-modes", contexts, "--controls",
             ]
         ) == 0
         ev = json.loads((run / "evaluation.json").read_text())

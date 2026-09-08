@@ -1,0 +1,41 @@
+{
+  "source": "recorded continuous dataset; no training or new rollout generation",
+  "source_repository": "rlogger/marl-opp-aware",
+  "reference_commit": "aecbab5daf6da402029e953be114a52e62a46c26",
+  "episodes": {
+    "capture": 400,
+    "risk": 1000,
+    "curious": 1600
+  },
+  "selection": "same group index, matched reset keys, no outcome filter",
+  "matched_initial_states": true,
+  "clip_frames": 101,
+  "observed_frames_per_episode": {
+    "capture": 45,
+    "risk": 101,
+    "curious": 101
+  },
+  "captured_panels_hold_terminal_frame": true,
+  "shared_view_halfwidth": 2.698883393406868,
+  "agent_radii": [
+    0.07500000298023224,
+    0.05000000074505806
+  ],
+  "arena_halfwidth": 2.0,
+  "renderer_artist_update_median_ms": 0.6637499900534749,
+  "timing_scope": "artist updates only; excludes image drawing and encoding",
+  "dataset_sha256": "928181027a9e5e86b106190b1487cda90c09e2cc5df08b569f7b93ba8350b5f5",
+  "environment_sources_unchanged": {
+    "src/tag_objectives/objectives.py": "94024e322a5009d04f496f6aacf44b6f8bb51d6c4d65a7abf32c6c82c9560a99",
+    "src/tag_objectives/resources.py": "72910059f63c01613b4ad3803236497723724e3c16525d9b21ca51b920b0d4d4",
+    "src/tag_objectives/actions.py": "8b14d4d9e6eaca11d303e4de07be47a912fc1599f221934d96858089532e1cb7"
+  },
+  "renderer_sha256": "57e2d57eeaa87e73d8bd23d428f61495cabadb57b80cddb95614360c3bd5d2ff",
+  "script_sha256": "ac964fc5306ff0a6de25219caa0a44f0b2cf39be7afafeacdc1f68e2f2c36fb4",
+  "outputs": {
+    "arena.png": "82ac2392d1ec507a9f6156b1c66f77ef04ce04ead79bdcbee5c2f2fb79d63eaf",
+    "replay.gif": "9ef9e9a52b2c61be694d3f8f8f2eee7e3372294f0d497b475e9d7ecbdc6d0ea2",
+    "terminal.png": "252b202a920333e409a5ec8169a6eac10af435d2a22c46d2c30c257715aa0878",
+    "observations.png": "6a19644e669a08744593715628f32d776d3afa6cd0481cb6a48181f7e172ce35"
+  }
+}

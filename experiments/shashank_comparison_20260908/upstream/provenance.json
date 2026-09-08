@@ -1,0 +1,113 @@
+{
+  "status": "completed",
+  "completed_at_utc": "2026-09-08T09:26:36Z",
+  "exit_code": 0,
+  "fit_seconds_total": 429.1,
+  "validation": {
+    "strategy_count": 13,
+    "episode_latents_shape_per_strategy": [
+      1800,
+      8
+    ],
+    "all_latents_and_report_metrics_finite": true,
+    "train_heldout_split_disjoint": true,
+    "separate_source_0s_episode_latents_max_abs_difference": 0,
+    "png_count": 15,
+    "visually_checked": [
+      "images/summary.png",
+      "images/0s_sa_short_seq_action_decoder_vae.png",
+      "images/trajectories.png"
+    ]
+  },
+  "outputs_sha256": {
+    "results.json": "f29ae528051187112b69793547551335851516b8ace9ef8b79df8494c06f5380",
+    "latents.npz": "d730b88b86fd211485679b1c9a4251de8c032ad065d2930f58f455e447a5ce89",
+    "images/summary.png": "d73b23c8e445a7f0e7c53690505f3dc04b7baaf8620fb0356d9675abb71578f9",
+    "images/trajectories.png": "8f102ae80afb3fd0377052dc471f75992376566bedfe1b0ee274dc0505683c89",
+    "images/0s_sa_short_seq_action_decoder_vae.png": "6bd4daace5ffb548baadc685cdbbf62eb3ae1fdfc9afbac453c86ea63d93714d"
+  },
+  "rendering_caution": "Unmodified upstream figures, not the new shared environment renderer. The upstream trajectory overview overlays different episode hazard maps and clips to fixed axes; use the new replay renderer for faithful individual scenes.",
+  "started_at_utc": "2026-09-08T09:19:17Z",
+  "upstream": {
+    "repository": "https://github.com/hegde95/opponent-modeling",
+    "branch": "opponent-trajectory-encodings",
+    "commit": "7bae281091a96fc83cadad3671bef070bd371675",
+    "checkout": "/private/tmp/shashank-encoding-audit.5AsKUv/repo",
+    "tracked_source_modified": false,
+    "source_files_sha256": {
+      "encoding_viz/run.py": "05126e2c748a4069dbf1c0e6d60ac8020b06febe5b74dc280c73519bacfa3cd6",
+      "encoding_viz/strategies.py": "d0e531ac1ea1ac19da181b5c31963000f0c73a66ebe5a06803deb61fb0968aa3",
+      "encoding_viz/nets.py": "8162acd231343416bb8e1f8b3ff5858ad801874c85b27a289744a113fa136bca",
+      "encoding_viz/train.py": "880551234e9ce8b78c1612d8627b07d695b9307d6e0d5c97b4c81c12b525439c",
+      "encoding_viz/traj_data.py": "41f6db4e299280ef2ebc02c766033931078a8ae1f747e878bb389d46e969b59c",
+      "encoding_viz/eval_metrics.py": "8960d6062ef701b491caa7dd79af7ac818e8a15c0fde4eec2cab497b3a6063aa",
+      "encoding_viz/plots.py": "31c1fbd6e4b4386e1e75c9c01149179f61171b82044b5d903e627d29f4513b5c",
+      "encoding_viz/REPORT.md": "2f398254f277476f96fce3e03361653ce14371b09a78df9570ab9f83cc9e14cf"
+    }
+  },
+  "published_artifacts": {
+    "results": "published_results.json",
+    "results_sha256": "177258ef720ea0c8f7c30fc015f859cbfd069f70ad96d944c5089c4fd3d66ff8",
+    "dataset_metadata": "published_dataset_metadata.json",
+    "dataset_metadata_sha256": "2537ae84c3d90a9a1b3bcf6026f032c81af81e55150e935a6f0ffe3205c2ca50",
+    "original_dataset_available": false,
+    "original_checkpoints_available": false,
+    "reason": "No tracked .npz or model checkpoint files exist at the pinned branch; original metadata lists checkpoint hashes that differ from current local checkpoints.",
+    "original_collection_commit": "d6864c97b80a76ec15faec1faff5f22e5a95aa79",
+    "original_dataset_sha256": null
+  },
+  "rerun_dataset": {
+    "path": "/Users/rajdeepsingh/Documents/Playground/opponent-modeling/experiments/shashank_comparison_20260908/discrete/dataset.npz",
+    "sha256": "e391221052e269fad8687b9fead4c7f2eca10df4a33e3e76d51d6cc7273b5b3b",
+    "collection_manifest": "../discrete/dataset_manifest.json",
+    "episodes": 1800,
+    "horizon": 100,
+    "observation_dim": 17,
+    "state_feature_dim": 8,
+    "source_schema_adjustment": "Terminal observation removed by fresh collector wrapper: pred_obs has 100 pre-action rows, not 101 state rows.",
+    "differences_from_published": "Current local specialists and one fixed capture prey policy across objectives; matched reset seeds across objectives. Original collection used objective-specific prey policies and label-offset reset seeds."
+  },
+  "protocol": {
+    "all_strategies": true,
+    "strategy_count": 13,
+    "latent_dim": 8,
+    "hidden_dim": 64,
+    "sequence_steps": 1500,
+    "point_steps": 3000,
+    "sequence_batch": 128,
+    "point_batch": 256,
+    "window": 8,
+    "cli_seed": 0,
+    "holdout_checkpoint_seed": 2,
+    "train_checkpoint_seeds": [
+      0,
+      1
+    ],
+    "n_train": 1200,
+    "n_heldout": 600,
+    "rng": "Unmodified source strategy keys: PRNGKey(cli_seed + 100 * strategy_offset); 0s offset=10, therefore PRNGKey(1000). Metric seed is source default 0.",
+    "skipped_figures": [
+      "t-SNE",
+      "UMAP"
+    ],
+    "skip_reason": "UMAP is not installed in the locked runtime; --no-maps skips only nonlinear embedding maps, not fits, probes, GMM, trajectory figures, PCA strategy panels, or summary.",
+    "decoder_accuracy_scope": "Pooled train+heldout reconstruction accuracy; not heldout causal BC."
+  },
+  "runtime": {
+    "python": "3.11.15",
+    "platform": "macOS-26.5.2-arm64-arm-64bit",
+    "jax_backend": "cpu",
+    "packages": {
+      "jax": "0.4.38",
+      "jaxlib": "0.4.38",
+      "flax": "0.10.4",
+      "optax": "0.2.5",
+      "numpy": "1.26.4",
+      "scikit-learn": "1.9.0",
+      "matplotlib": "3.11.1"
+    },
+    "python_executable": "/private/tmp/tdmpc-equation1-verify.D0J4C8/venv/bin/python"
+  },
+  "command": "PYTHONUNBUFFERED=1 MPLBACKEND=Agg /private/tmp/tdmpc-equation1-verify.D0J4C8/venv/bin/python encoding_viz/run.py --npz /Users/rajdeepsingh/Documents/Playground/opponent-modeling/experiments/shashank_comparison_20260908/discrete/dataset.npz --out-dir /Users/rajdeepsingh/Documents/Playground/opponent-modeling/experiments/shashank_comparison_20260908/upstream/images --results /Users/rajdeepsingh/Documents/Playground/opponent-modeling/experiments/shashank_comparison_20260908/upstream/results.json --latents /Users/rajdeepsingh/Documents/Playground/opponent-modeling/experiments/shashank_comparison_20260908/upstream/latents.npz --holdout-seed 2 --lat 8 --hid 64 --steps-seq 1500 --steps-point 3000 --window 8 --seed 0 --no-maps",
+  "claim_boundary": "A matched-current-discrete-data upstream source rerun, not exact reproduction of the unavailable published dataset, not continuous-action validation, and not causal online behavior control."
+}

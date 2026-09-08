@@ -6,11 +6,14 @@ exploit it, and terrain (lava plus resources) makes the objectives observable.
 
 ## Task summary
 
-P predators (default 1) vs 1 prey in a `[-2, 2]^2` arena. 16 resources (half
+P predators (default 1) vs 1 prey with a nominal `[-2, 2]^2` arena (soft bounds shaping, not walls). 16 resources (half
 attached to lava discs), 3 lava discs (radius 0.35–0.60), no obstacles.
 The prey collects resources (+5 each); predators cannot see resources. Both
 sides observe the 3 nearest lava discs `(dx, dy, radius)`; the prey also sees
-its 10 nearest uncollected resources `(dx, dy)`.
+10 resource slots `(dx, dy)`, prioritizing uncollected resources. When fewer
+remain, collected entries fill the remaining slots.
+
+See [visualization](VISUALIZATION.md) for replay and [environment review](ENVIRONMENT_REVIEW.md) for inherited reset issues.
 
 At the current defaults, lava is -100/step for the risk-averse predator and 0 for
 every other agent (`lava_penalty=100`, `base_lava_penalty=0`,

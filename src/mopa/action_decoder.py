@@ -33,6 +33,8 @@ class ActionDecoderConfig:
     learning_rate: float = 1e-3
     beta_max: float = 1.0
     free_bits: float = 0.2
+    action_type: str = "discrete"
+    action_dim: int = 2
 
 
 @dataclass(frozen=True)
@@ -77,7 +79,8 @@ class ActionDecoderFit:
     decoder_params: Any
     encoding: ActionDecoderEncoding
     history: tuple[dict[str, float | int], ...]
-    decoder_action_accuracy: float
+    decoder_action_accuracy: float | None
+    decoder_action_mse: float | None = None
 
     @property
     def episode_latents(self) -> np.ndarray:
@@ -308,16 +311,32 @@ def _beta(step: int, steps: int, beta_max: float) -> float:
     return beta_max * min(1.0, step / max(1, steps // 2))
 
 
-def _validate_episode_inputs(state, action, lengths):
+def _validate_episode_inputs(state, action, lengths, config: ActionDecoderConfig):
     state = np.asarray(state, dtype=np.float32)
-    action = np.asarray(action, dtype=np.int32)
+    if config.action_type not in {"discrete", "continuous"}:
+        raise ValueError("action_type must be 'discrete' or 'continuous'")
+    if config.action_dim < 1:
+        raise ValueError("action_dim must be positive")
+    continuous = config.action_type == "continuous"
+    action = np.asarray(action, dtype=np.float32 if continuous else np.int32)
     if state.ndim != 3:
         raise ValueError("state must have shape (episodes, time, features)")
-    if action.shape != state.shape[:2]:
-        raise ValueError("action must have shape (episodes, time)")
+    expected_shape = state.shape[:2] + ((config.action_dim,) if continuous else ())
+    if action.shape != expected_shape:
+        suffix = ", action_dim" if continuous else ""
+        raise ValueError(f"action must have shape (episodes, time{suffix})")
     mask = episode_mask(lengths, state.shape[1])
     if mask.shape[0] != state.shape[0]:
         raise ValueError("lengths must have one value per episode")
+    if continuous:
+        valid_action = action[mask]
+        if not np.isfinite(valid_action).all() or np.any(np.abs(valid_action) > 1.0):
+            raise ValueError("valid continuous actions must be finite and lie in [-1, 1]")
+        if not np.isfinite(state[mask]).all():
+            raise ValueError("valid states must be finite")
+        # Padding is absent data, including when an exporter uses NaN sentinels.
+        action = np.where(mask[..., None], action, 0.0)
+        state = np.where(mask[..., None], state, 0.0)
     return state, action, np.asarray(lengths, dtype=np.int32), mask
 
 
@@ -344,15 +363,39 @@ def _window_inputs(
     state_std,
     config: ActionDecoderConfig,
 ):
-    state, action, lengths, mask = _validate_episode_inputs(state, action, lengths)
+    state, action, lengths, mask = _validate_episode_inputs(state, action, lengths, config)
     if state.shape[-1] != len(state_mean):
         raise ValueError("state feature dimension does not match the frozen encoder")
     standardized = _standardize_state(state, mask, state_mean, state_std)
-    one_hot = _one_hot_actions(action, mask, config.n_actions)
+    action_features = (
+        action if config.action_type == "continuous"
+        else _one_hot_actions(action, mask, config.n_actions)
+    )
     windows = make_windows(lengths, config.window)
     state_windows = gather_windows(standardized, windows)
-    action_windows = gather_windows(one_hot, windows)
+    action_windows = gather_windows(action_features, windows)
     return windows, state_windows, action_windows
+
+
+def decode_action_decoder(
+    decoder_params: Any,
+    state: jax.Array,
+    latent: jax.Array,
+    config: ActionDecoderConfig,
+) -> jax.Array:
+    """Decode standardized state and context with matching leading dimensions.
+
+    This pure JAX application can be called inside a compiled planner.  The
+    continuous extension returns bounded actions; the original discrete model
+    returns its unchanged, unsquashed action scores.  Callers normalize state
+    using the frozen encoder's training statistics before invoking this function.
+    """
+
+    out = config.action_dim if config.action_type == "continuous" else config.n_actions
+    value = MLPHead(out=out, hid=config.hid).apply(
+        decoder_params, jnp.concatenate([latent, state], axis=-1)
+    )
+    return jnp.tanh(value) if config.action_type == "continuous" else value
 
 
 def encode_action_decoder_vae(
@@ -413,7 +456,7 @@ def fit_action_decoder_vae(
     if cfg.lat < 1 or cfg.hid < 1 or cfg.steps < 0 or cfg.batch < 1:
         raise ValueError("lat, hid, and batch must be positive; steps cannot be negative")
 
-    state, action, lengths, mask = _validate_episode_inputs(state, action, lengths)
+    state, action, lengths, mask = _validate_episode_inputs(state, action, lengths, cfg)
     train_idx = np.asarray(train_episode_idx, dtype=np.int32)
     if train_idx.ndim != 1 or len(train_idx) == 0:
         raise ValueError("train_episode_idx must be a non-empty vector")
@@ -439,7 +482,10 @@ def fit_action_decoder_vae(
 
     sequence = np.concatenate([state_windows, action_windows], axis=-1)
     encoder_model = SeqGaussian(lat=cfg.lat, hid=cfg.hid)
-    decoder_model = MLPHead(out=cfg.n_actions, hid=cfg.hid)
+    decoder_model = MLPHead(
+        out=cfg.action_dim if cfg.action_type == "continuous" else cfg.n_actions,
+        hid=cfg.hid,
+    )
     rng, encoder_key, decoder_key = jax.random.split(rng, 3)
     params = {
         "e": encoder_model.init(
@@ -466,12 +512,12 @@ def fit_action_decoder_vae(
         repeated = jnp.broadcast_to(
             latent[:, None, :], (batch_size, time_steps, latent.shape[-1])
         )
-        flat = jnp.concatenate([repeated, step_state], axis=-1).reshape(
-            batch_size * time_steps, -1
-        )
-        return decoder_model.apply(model_params["d"], flat).reshape(
-            batch_size, time_steps, -1
-        )
+        return decode_action_decoder(
+            model_params["d"],
+            step_state.reshape(batch_size * time_steps, -1),
+            repeated.reshape(batch_size * time_steps, -1),
+            cfg,
+        ).reshape(batch_size, time_steps, -1)
 
     def loss_fn(model_params, sa_batch, state_batch, target_batch, batch_mask, key, beta):
         mu_prefix, logvar_prefix = encoder_model.apply(
@@ -539,13 +585,20 @@ def fit_action_decoder_vae(
             state_jax,
         )
     )
-    correct = (predicted.argmax(axis=-1) == np.asarray(gather_windows(action, windows)))[
-        windows.mask
-    ]
+    action_accuracy = None
+    action_mse = None
+    if cfg.action_type == "continuous":
+        action_mse = float(np.sum((predicted - action_windows) ** 2, axis=-1)[windows.mask].mean())
+    else:
+        correct = (predicted.argmax(axis=-1) == np.asarray(gather_windows(action, windows)))[
+            windows.mask
+        ]
+        action_accuracy = float(correct.mean())
     return ActionDecoderFit(
         encoder=frozen,
         decoder_params=params["d"],
         encoding=encoding,
         history=tuple(history),
-        decoder_action_accuracy=float(correct.mean()),
+        decoder_action_accuracy=action_accuracy,
+        decoder_action_mse=action_mse,
     )

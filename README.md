@@ -24,10 +24,11 @@ uv run --locked python scripts/train_mappo.py alg=mappo_objectives_risk NUM_SEED
 uv run --locked python scripts/train_mappo.py alg=mappo_objectives_curious NUM_SEEDS=3
 ```
 
-## Continuous opponent-aware TD-MPC
+## Continuous TD-MPC: Equation 1
 
-The gated pipeline from [`handoff.md`](handoff.md); results and status are in
-[`experiments/continuous/README.md`](experiments/continuous/README.md).
+Start with `x_next = dynamics(x, blue_action)`. This baseline needs continuous
+specialists and data; it runs without opponent BC or context-encoder artifacts.
+Historical comparisons are in [`experiments/continuous`](experiments/continuous/README.md).
 
 ```bash
 # Gate 1: continuous tanh-Gaussian specialists and the matched dataset
@@ -35,22 +36,17 @@ for t in capture risk curious; do
   uv run --locked --all-extras python scripts/train_mappo.py alg=mappo_continuous_$t NUM_SEEDS=3
 done
 uv run --locked --all-extras python scripts/make_continuous_dataset.py
-# Gate 2: four-arm continuous opponent BC with a frozen causal context encoder
-uv run --locked --all-extras python scripts/run_bc_continuous.py
-# Gate 3: simulator-backed MPPI ladder with opponent-context controls
-uv run --locked --all-extras python scripts/run_sim_planner.py --n-eps 48
-# Gates 4-5: TD-MPC world models (implicit | conditioned | factored) and comparison.
-# Reward-relevant relative features plus online collection rounds are the recorded
-# configuration; purely offline training on the raw state leaves the arena.
-for mode in implicit conditioned factored; do
-  uv run --locked --all-extras python scripts/run_tdmpc.py train --mode $mode --encoder identity \
-    --features relative --seed 0 --updates 10000 --online-rounds 6 --online-episodes 8 \
-    --updates-per-round 2000 --out artifacts/tdmpc
-  uv run --locked --all-extras python scripts/run_tdmpc.py evaluate \
-    artifacts/tdmpc/${mode}__identity__ctx-causal__h2__s0__relative --n-eps 32 --controls
-done
-uv run --locked --all-extras python scripts/run_tdmpc.py compare --root artifacts/tdmpc
+# Equation 1: normalized state baseline, relative features, then online data.
+uv run --locked --all-extras python scripts/run_tdmpc.py train \
+  --seed 0 --online-rounds 6 --out artifacts/tdmpc_equation1
+uv run --locked --all-extras python scripts/run_tdmpc.py evaluate \
+  artifacts/tdmpc_equation1/implicit__identity__ctx-none__h2__s0__relative \
+  --n-eps 32 --controls
 ```
+
+Use `--encoder mlp` to train the learned SimNorm encoder with frozen training-set
+input normalization. Both encoders use Equation 1; no new training results are
+implied by this implementation update.
 
 ## Smoke test
 
@@ -66,4 +62,5 @@ uv run --locked python scripts/run_part1.py \
 
 - [Environment](docs/ENVIRONMENT.md)
 - [BC experiment](experiments/bc/README.md)
+- [Continuous 0s experiment](experiments/continuous_0s/REPORT.md)
 - [Implementation status](docs/STATUS.md)

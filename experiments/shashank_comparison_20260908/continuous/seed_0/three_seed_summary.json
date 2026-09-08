@@ -1,0 +1,65 @@
+{
+  "seeds": [0, 1, 2],
+  "heldout_checkpoint": 2,
+  "training_episodes": 1200,
+  "heldout_episodes": 600,
+  "encoder_updates_per_seed": 1500,
+  "world_model_updates_per_seed": 2000,
+  "dispersion": "Population standard deviation across three training seeds (ddof=0), not a confidence interval.",
+  "dataset_path": "experiments/shashank_comparison_20260908/continuous_data/dataset.npz",
+  "dataset_sha256": "928181027a9e5e86b106190b1487cda90c09e2cc5df08b569f7b93ba8350b5f5",
+  "metrics": {
+    "episode_probe": {
+      "values": [0.97, 0.895, 0.9283333333333333],
+      "mean": 0.9311111111111111,
+      "population_std": 0.030681558381075703
+    },
+    "gmm_ari": {
+      "values": [0.4550315085040345, 0.5120111877379785, 0.4284575874253771],
+      "mean": 0.4651667612224634,
+      "population_std": 0.034855353888599866
+    },
+    "window_probe": {
+      "values": [0.858008658008658, 0.7993073593073593, 0.84],
+      "mean": 0.8324386724386724,
+      "population_std": 0.02455389817214423
+    },
+    "prefix8_probe": {
+      "values": [0.655, 0.695, 0.6733333333333333],
+      "mean": 0.6744444444444445,
+      "population_std": 0.01634882107729126
+    },
+    "length_only_probe": {
+      "values": [0.6483333333333333, 0.6483333333333333, 0.6483333333333333],
+      "mean": 0.6483333333333333,
+      "population_std": 0.0
+    },
+    "posthoc_reconstruction_mse": {
+      "values": [0.3253145890949984, 0.31723947496380583, 0.32730116118400815],
+      "mean": 0.32328507508093746,
+      "population_std": 0.0043511360775782505
+    },
+    "causal_action_mse": {
+      "values": [0.4846656858016494, 0.4943062831765337, 0.4938286271129377],
+      "mean": 0.4909335320303736,
+      "population_std": 0.004436324386168605
+    },
+    "zero_context_action_mse": {
+      "values": [0.4963638067244684, 0.4912154969118676, 0.49639212413338174],
+      "mean": 0.49465714258990595,
+      "population_std": 0.0024336384555889005
+    },
+    "correct_prototype_action_mse": {
+      "values": [0.4722827683878441, 0.4783576917172822, 0.4797713417229567],
+      "mean": 0.4768039339426944,
+      "population_std": 0.0032486207396790253
+    }
+  },
+  "successful_fit_wall_seconds": [64.46890720899682, 45.97978049993981, 45.7936990839662],
+  "matched_best_prototype_per_specialist": [
+    ["risk", "risk", "risk"],
+    ["risk", "risk", "risk"],
+    ["risk", "risk", "risk"]
+  ],
+  "claim_boundary": "Continuous adaptation, not discrete-source numerical reproduction. Posthoc episode separation does not establish causal strategy control. Zero context uses the same trained decoder, not an independently trained vanilla BC."
+}

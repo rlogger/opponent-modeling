@@ -1,0 +1,202 @@
+{
+  "agent_sha256": "fffb690faa63cdcaf39bef7fa1e3ba41272f88f134d641c1512f98e0079cb45a",
+  "checkpoint_artifacts": {
+    "agent.msgpack": "fffb690faa63cdcaf39bef7fa1e3ba41272f88f134d641c1512f98e0079cb45a",
+    "config.json": "d759122e7f6f9777ec42da5de7e013d195801fae2066fef11188d3873c287818",
+    "opponent.msgpack": "048233bf8c1f8165556db1e089b6e85e9110fbf2d67d8638031a9dcd206e0271",
+    "state_stats.npz": "49246c7fd646630d30308284dd49fa3d3df1fea7693a6dae26ce4eb6fbca46b4"
+  },
+  "code": {
+    "scripts/run_tdmpc.py": "4a0ea33a75c0502b19de4b8884a784175151173fae4e84e3bf3f120948c5ac51",
+    "src/mopa/evaluation.py": "2885625858b4f7453fe30b62a5f0721e39332a80cdea5b4321f8e5476a8f7c64",
+    "src/mopa/mppi.py": "f40ffd192b11979a070f0d9b00bdf4cbeeb126c75d87a8af189a27434e38da79",
+    "src/mopa/tdmpc.py": "21629e5826b32a0caf960b4ba09b3a444d8dc539f8a655bc1e6edcf7418cc9d4",
+    "src/mopa/zero_s.py": "af9ee4b11bed3c21f38c3ffcf55edfca3604e32f7474cfd81830a4abd9d79e82",
+    "src/tag_objectives/__init__.py": "a62de0fa0bb3746f86734aef53f0613e377964549aa8f46318434d645ef8ea15",
+    "src/tag_objectives/actions.py": "8b14d4d9e6eaca11d303e4de07be47a912fc1599f221934d96858089532e1cb7",
+    "src/tag_objectives/api.py": "a12ec62f07f48297e74cc5232fff32966d56fe13f459d29aa34f9ee0879040c5",
+    "src/tag_objectives/objectives.py": "94024e322a5009d04f496f6aacf44b6f8bb51d6c4d65a7abf32c6c82c9560a99",
+    "src/tag_objectives/rendering.py": "ba87c123c8700cc27590f5cecfb9a92b4eb9b096413fb895324a53e167126832",
+    "src/tag_objectives/resources.py": "72910059f63c01613b4ad3803236497723724e3c16525d9b21ca51b920b0d4d4",
+    "src/tag_objectives/teams.py": "7f77b373cd582a68172080a81b14ff602591283e85d74b05700c3cfd0d58cf94",
+    "src/tag_objectives/types.py": "bdf18df9a27bc8a39e7e6b766bd19708164accaeea8209788c07f7e930a4235c"
+  },
+  "context_dim": 8,
+  "context_protocol": "At decision t, only observed (state_s, red_action_s), s < t; frozen within each imagined horizon. Oracle modes use train-only class prototypes, not specialist actions.",
+  "dataset": {
+    "path": "experiments/shashank_comparison_20260908/continuous_data/dataset.npz",
+    "sha256": "928181027a9e5e86b106190b1487cda90c09e2cc5df08b569f7b93ba8350b5f5"
+  },
+  "encoder": "identity",
+  "factored_invariance": null,
+  "features": "markov",
+  "git_dirty": true,
+  "git_sha": "134c455963b2b158d073963f980f2e2a7a8acc6a",
+  "heldout_checkpoint": 2,
+  "manifest_sha256": "c8970800e025cbcae0c2c23164a4778d8dc267875baf4ad4d4fcea870ce77bfc",
+  "mode": "factored",
+  "n_eps_per_opponent": 2,
+  "opponent_model": "frozen_zero_s",
+  "planner": {
+    "horizon": 3,
+    "mppi_iterations": 6,
+    "num_elites": 64,
+    "policy_prior_samples": 24,
+    "population_size": 512
+  },
+  "run": "experiments/shashank_comparison_20260908/continuous/seed_0",
+  "runs": [
+    {
+      "blue_action_abs_max": 1.0,
+      "blue_return": {
+        "mean": -755.75634765625,
+        "std": 129.70614624023438
+      },
+      "captured": {
+        "mean": 0.0,
+        "std": 0.0
+      },
+      "context_mode": "online",
+      "controller": "tdmpc",
+      "controller_timing": {
+        "batch_size": 2,
+        "first_two_calls_seconds": [
+          2.488357916008681,
+          2.2299568339949474
+        ],
+        "scope": "synchronized action calls; first two may compile; excludes context inference and environment stepping",
+        "steady_median_seconds_per_batch": 0.05682114546652883
+      },
+      "n_episodes": 2,
+      "opponent": "capture",
+      "prey_lava_steps": {
+        "mean": 0.0,
+        "std": 0.0
+      },
+      "recordings": {
+        "gif": "capture__tdmpc__online.gif",
+        "png": "capture__tdmpc__online.png",
+        "rendered_dataset_episode": 400,
+        "transitions": "capture__tdmpc__online.npz"
+      },
+      "resources_collected": {
+        "mean": 0.5,
+        "std": 0.5
+      },
+      "seconds_per_env_step": 0.06005542516708374,
+      "seconds_total": 12.011085033416748,
+      "survival_time": {
+        "mean": 100.0,
+        "std": 0.0
+      }
+    },
+    {
+      "blue_action_abs_max": 1.0,
+      "blue_return": {
+        "mean": -625.5403442382812,
+        "std": 203.99183654785156
+      },
+      "captured": {
+        "mean": 0.0,
+        "std": 0.0
+      },
+      "context_mode": "online",
+      "controller": "tdmpc",
+      "controller_timing": {
+        "batch_size": 2,
+        "first_two_calls_seconds": [
+          0.057621999992989004,
+          0.05693362501915544
+        ],
+        "scope": "synchronized action calls; first two may compile; excludes context inference and environment stepping",
+        "steady_median_seconds_per_batch": 0.05446641705930233
+      },
+      "n_episodes": 2,
+      "opponent": "risk",
+      "prey_lava_steps": {
+        "mean": 0.0,
+        "std": 0.0
+      },
+      "recordings": {
+        "gif": "risk__tdmpc__online.gif",
+        "png": "risk__tdmpc__online.png",
+        "rendered_dataset_episode": 1000,
+        "transitions": "risk__tdmpc__online.npz"
+      },
+      "resources_collected": {
+        "mean": 0.5,
+        "std": 0.5
+      },
+      "seconds_per_env_step": 0.03051301956176758,
+      "seconds_total": 6.102603912353516,
+      "survival_time": {
+        "mean": 100.0,
+        "std": 0.0
+      }
+    },
+    {
+      "blue_action_abs_max": 1.0,
+      "blue_return": {
+        "mean": -716.321044921875,
+        "std": 28.31793212890625
+      },
+      "captured": {
+        "mean": 0.0,
+        "std": 0.0
+      },
+      "context_mode": "online",
+      "controller": "tdmpc",
+      "controller_timing": {
+        "batch_size": 2,
+        "first_two_calls_seconds": [
+          0.056267915992066264,
+          0.05485787498764694
+        ],
+        "scope": "synchronized action calls; first two may compile; excludes context inference and environment stepping",
+        "steady_median_seconds_per_batch": 0.055089729023166
+      },
+      "n_episodes": 2,
+      "opponent": "curious",
+      "prey_lava_steps": {
+        "mean": 0.0,
+        "std": 0.0
+      },
+      "recordings": {
+        "gif": "curious__tdmpc__online.gif",
+        "png": "curious__tdmpc__online.png",
+        "rendered_dataset_episode": 1600,
+        "transitions": "curious__tdmpc__online.npz"
+      },
+      "resources_collected": {
+        "mean": 0.5,
+        "std": 0.5
+      },
+      "seconds_per_env_step": 0.031112608909606935,
+      "seconds_total": 6.222521781921387,
+      "survival_time": {
+        "mean": 100.0,
+        "std": 0.0
+      }
+    }
+  ],
+  "schema_version": 1,
+  "scope": "Saved identity-state Equation 3 controller, no training or parameter updates; small runs verify execution, not performance gains.",
+  "seed": 0,
+  "specialist_checkpoints": [
+    {
+      "path": "logs/MPE_simple_tag_v3_continuous/mappo_continuous_capture_MPE_simple_tag_v3_continuous_pred_actor_seed0_vmap2.safetensors",
+      "sha256": "bd17f86b36448bcb885e2eed04240892729883e0129c0b13b66706703c026940",
+      "type": "capture"
+    },
+    {
+      "path": "logs/MPE_simple_tag_v3_continuous/mappo_continuous_risk_MPE_simple_tag_v3_continuous_pred_actor_seed0_vmap2.safetensors",
+      "sha256": "b895d4d645cb06d689f2feb862b8a1079063415cc471b7e887bc0a0bbdfb4b08",
+      "type": "risk"
+    },
+    {
+      "path": "logs/MPE_simple_tag_v3_continuous/mappo_continuous_curious_MPE_simple_tag_v3_continuous_pred_actor_seed0_vmap2.safetensors",
+      "sha256": "07b9439945cfa656156fa62b767e0cd8068fe2c8b110803f0b61ec3e8372efba",
+      "type": "curious"
+    }
+  ]
+}

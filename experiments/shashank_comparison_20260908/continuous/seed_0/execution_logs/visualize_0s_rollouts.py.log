@@ -1,0 +1,15 @@
+{
+  "out": "/Users/rajdeepsingh/Documents/Playground/opponent-modeling/experiments/shashank_comparison_20260908/continuous/seed_0/visuals",
+  "episodes": [
+    1000,
+    1100,
+    1199
+  ],
+  "horizon": 30,
+  "outputs": [
+    "latent_swap_animation.gif",
+    "latent_swap_animation_final.png",
+    "additional_scenes.png",
+    "additional_rollouts.npz"
+  ]
+}

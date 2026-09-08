@@ -1,0 +1,372 @@
+{
+  "action_meanings": [
+    "no_op",
+    "-x",
+    "+x",
+    "-y",
+    "+y"
+  ],
+  "array_notes": {
+    "capture_t": "capture step, or -1 if the prey survived the horizon",
+    "pred_act": "(N, T, P) greedy predator actions",
+    "pred_obs": "(N, T, P, obs_dim) observation that produced each action",
+    "pred_pos": "(N, T + 1, P, 2) predator positions including the reset state",
+    "prey_act": "(N, T) greedy prey actions",
+    "prey_obs": "(N, T, obs_dim) observation that produced each action",
+    "prey_pos": "(N, T + 1, 2) prey positions including the reset state",
+    "valid_steps": "steps t < episode_lengths(capture_t, T); later frames are frozen"
+  },
+  "arrays": {
+    "capture_t": {
+      "dtype": "int32",
+      "shape": [
+        1800
+      ]
+    },
+    "captured": {
+      "dtype": "int32",
+      "shape": [
+        1800
+      ]
+    },
+    "ckpt_seed": {
+      "dtype": "int32",
+      "shape": [
+        1800
+      ]
+    },
+    "label": {
+      "dtype": "int32",
+      "shape": [
+        1800
+      ]
+    },
+    "lava_pos": {
+      "dtype": "float32",
+      "shape": [
+        1800,
+        3,
+        2
+      ]
+    },
+    "lava_rad": {
+      "dtype": "float32",
+      "shape": [
+        1800,
+        3
+      ]
+    },
+    "pred_act": {
+      "dtype": "int32",
+      "shape": [
+        1800,
+        100,
+        1
+      ]
+    },
+    "pred_coverage": {
+      "dtype": "float32",
+      "shape": [
+        1800
+      ]
+    },
+    "pred_lava_steps": {
+      "dtype": "float32",
+      "shape": [
+        1800
+      ]
+    },
+    "pred_obs": {
+      "dtype": "float32",
+      "shape": [
+        1800,
+        100,
+        1,
+        17
+      ]
+    },
+    "pred_pos": {
+      "dtype": "float32",
+      "shape": [
+        1800,
+        101,
+        1,
+        2
+      ]
+    },
+    "prey_act": {
+      "dtype": "int32",
+      "shape": [
+        1800,
+        100
+      ]
+    },
+    "prey_lava_steps": {
+      "dtype": "float32",
+      "shape": [
+        1800
+      ]
+    },
+    "prey_obs": {
+      "dtype": "float32",
+      "shape": [
+        1800,
+        100,
+        35
+      ]
+    },
+    "prey_pos": {
+      "dtype": "float32",
+      "shape": [
+        1800,
+        101,
+        2
+      ]
+    },
+    "resources_collected": {
+      "dtype": "float32",
+      "shape": [
+        1800
+      ]
+    },
+    "survival_time": {
+      "dtype": "float32",
+      "shape": [
+        1800
+      ]
+    }
+  },
+  "checkpoints": [
+    {
+      "alg": "mappo_objectives_capture",
+      "path": "logs/MPE_simple_tag_v3/mappo_objectives_capture_MPE_simple_tag_v3_pred_actor_seed0_vmap0.safetensors",
+      "seed": 0,
+      "sha256": "a9fbcad1d99b13ad9b4ef91754df83765254608a213cb980f99d63c4ea79df63",
+      "team": "pred"
+    },
+    {
+      "alg": "mappo_objectives_capture",
+      "path": "logs/MPE_simple_tag_v3/mappo_objectives_capture_MPE_simple_tag_v3_prey_actor_seed0_vmap0.safetensors",
+      "seed": 0,
+      "sha256": "0922bd019f68398163c3a8829b3486771a964de3a0412e3d43610dc578da9b6e",
+      "team": "prey"
+    },
+    {
+      "alg": "mappo_objectives_capture",
+      "path": "logs/MPE_simple_tag_v3/mappo_objectives_capture_MPE_simple_tag_v3_pred_actor_seed0_vmap1.safetensors",
+      "seed": 1,
+      "sha256": "01cd40538a6dc0d88cef0c1a31806db994be6151b0000641aa2e93768b754e02",
+      "team": "pred"
+    },
+    {
+      "alg": "mappo_objectives_capture",
+      "path": "logs/MPE_simple_tag_v3/mappo_objectives_capture_MPE_simple_tag_v3_prey_actor_seed0_vmap1.safetensors",
+      "seed": 1,
+      "sha256": "1b5dbf312f315f12eb1956e7d06894a7a7ef24ffae899b8a435013c1700388b3",
+      "team": "prey"
+    },
+    {
+      "alg": "mappo_objectives_capture",
+      "path": "logs/MPE_simple_tag_v3/mappo_objectives_capture_MPE_simple_tag_v3_pred_actor_seed0_vmap2.safetensors",
+      "seed": 2,
+      "sha256": "7577162722a9733ad8786b3f133d624dcd054fd1581a24cb04729a1b2316cc89",
+      "team": "pred"
+    },
+    {
+      "alg": "mappo_objectives_capture",
+      "path": "logs/MPE_simple_tag_v3/mappo_objectives_capture_MPE_simple_tag_v3_prey_actor_seed0_vmap2.safetensors",
+      "seed": 2,
+      "sha256": "a4b081383cdc4ee796c7b437b36a83e39809abe95396a24823418b13d84c1d38",
+      "team": "prey"
+    },
+    {
+      "alg": "mappo_objectives_risk",
+      "path": "logs/MPE_simple_tag_v3/mappo_objectives_risk_MPE_simple_tag_v3_pred_actor_seed0_vmap0.safetensors",
+      "seed": 0,
+      "sha256": "e49332800fd6b9e5c9564ac2461b36a196fcb0fd9de2135f994d7564b57ff9e6",
+      "team": "pred"
+    },
+    {
+      "alg": "mappo_objectives_risk",
+      "path": "logs/MPE_simple_tag_v3/mappo_objectives_risk_MPE_simple_tag_v3_prey_actor_seed0_vmap0.safetensors",
+      "seed": 0,
+      "sha256": "1f384160886ffcbb56a38c2a0910161388fa973bc62494cbc5519c9254861162",
+      "team": "prey"
+    },
+    {
+      "alg": "mappo_objectives_risk",
+      "path": "logs/MPE_simple_tag_v3/mappo_objectives_risk_MPE_simple_tag_v3_pred_actor_seed0_vmap1.safetensors",
+      "seed": 1,
+      "sha256": "8ce504b73c4064d06d3e80baab152dd158a9aef9dc789fd0b60ba56d6f2ecd5a",
+      "team": "pred"
+    },
+    {
+      "alg": "mappo_objectives_risk",
+      "path": "logs/MPE_simple_tag_v3/mappo_objectives_risk_MPE_simple_tag_v3_prey_actor_seed0_vmap1.safetensors",
+      "seed": 1,
+      "sha256": "f5bdc05b445a1becc673f0ef95e96a9d70e0fd40c45b2de7b09cc40930233dad",
+      "team": "prey"
+    },
+    {
+      "alg": "mappo_objectives_risk",
+      "path": "logs/MPE_simple_tag_v3/mappo_objectives_risk_MPE_simple_tag_v3_pred_actor_seed0_vmap2.safetensors",
+      "seed": 2,
+      "sha256": "3929a16e3658ff4ca337e92f0e90dbe3d009ef0e8f499a84bfd1605a94f00bc6",
+      "team": "pred"
+    },
+    {
+      "alg": "mappo_objectives_risk",
+      "path": "logs/MPE_simple_tag_v3/mappo_objectives_risk_MPE_simple_tag_v3_prey_actor_seed0_vmap2.safetensors",
+      "seed": 2,
+      "sha256": "96405a0728d6175424aa064e430f3b5359d371a459df26ec23a1fd7c8711ae8e",
+      "team": "prey"
+    },
+    {
+      "alg": "mappo_objectives_curious",
+      "path": "logs/MPE_simple_tag_v3/mappo_objectives_curious_MPE_simple_tag_v3_pred_actor_seed0_vmap0.safetensors",
+      "seed": 0,
+      "sha256": "9113b0c37b76bb8e5746a4e86831b7d56335de98133eef39d3e3f78e8bcc7411",
+      "team": "pred"
+    },
+    {
+      "alg": "mappo_objectives_curious",
+      "path": "logs/MPE_simple_tag_v3/mappo_objectives_curious_MPE_simple_tag_v3_prey_actor_seed0_vmap0.safetensors",
+      "seed": 0,
+      "sha256": "a7c20f5ac6e8decaa2af0817205ff3174760b851d524afd0412ddba987388a42",
+      "team": "prey"
+    },
+    {
+      "alg": "mappo_objectives_curious",
+      "path": "logs/MPE_simple_tag_v3/mappo_objectives_curious_MPE_simple_tag_v3_pred_actor_seed0_vmap1.safetensors",
+      "seed": 1,
+      "sha256": "28860d6779633eca623c13b63dad0dc2065fcdc6aa5512a9820416d9bf3534f4",
+      "team": "pred"
+    },
+    {
+      "alg": "mappo_objectives_curious",
+      "path": "logs/MPE_simple_tag_v3/mappo_objectives_curious_MPE_simple_tag_v3_prey_actor_seed0_vmap1.safetensors",
+      "seed": 1,
+      "sha256": "15457ffbdb7c53fb140038f26e7905c57f1658e714995a8b3491351a8d49ae98",
+      "team": "prey"
+    },
+    {
+      "alg": "mappo_objectives_curious",
+      "path": "logs/MPE_simple_tag_v3/mappo_objectives_curious_MPE_simple_tag_v3_pred_actor_seed0_vmap2.safetensors",
+      "seed": 2,
+      "sha256": "e593bfe461cfb2433d934028c52ec792c5030f115e72d25cc4c72a33ff5b7872",
+      "team": "pred"
+    },
+    {
+      "alg": "mappo_objectives_curious",
+      "path": "logs/MPE_simple_tag_v3/mappo_objectives_curious_MPE_simple_tag_v3_prey_actor_seed0_vmap2.safetensors",
+      "seed": 2,
+      "sha256": "c0f7f22b38a2e45e18cd7adc0fe94e1c4a6e91dbd38526c6912660b84c77e153",
+      "team": "prey"
+    }
+  ],
+  "config": {
+    "ckpt_seeds": [
+      0,
+      1,
+      2
+    ],
+    "greedy_actions": true,
+    "logdir": "logs/MPE_simple_tag_v3",
+    "n_eps_per_checkpoint": 200,
+    "num_steps": 100,
+    "rng0": 0
+  },
+  "created_by": "scripts/collect_trajectories.py",
+  "dependency_pins": {
+    "flax": "0.10.4",
+    "jax": "0.4.38",
+    "numpy": "1.26.4",
+    "opponent-modeling": "0.1.0",
+    "optax": "0.2.5",
+    "scikit-learn": "1.9.0"
+  },
+  "env_config": {
+    "arena": 2.0,
+    "base_lava_penalty": 0.0,
+    "capture_bonus": 10.0,
+    "collect_radius": 0.15,
+    "collect_reward": 5.0,
+    "dense_chase_coef": 0.0,
+    "frac_resources_near_lava": 0.5,
+    "grid_size": 16,
+    "lava_penalty": 100.0,
+    "lava_radius_max": 0.6,
+    "lava_radius_min": 0.35,
+    "m_nearest_resources": 10,
+    "max_steps": 100,
+    "min_start_dist": 2.2,
+    "n_nearest_lava": 3,
+    "name": "SimpleTagObjectivesMPE",
+    "novelty_bonus": 0.5,
+    "num_adversaries": 1,
+    "num_agents": 2,
+    "num_lava": 3,
+    "num_resources": 16,
+    "prey_lava_penalty": 0.0
+  },
+  "git_sha": "d6864c97b80a76ec15faec1faff5f22e5a95aa79",
+  "label_map": {
+    "0": "capture",
+    "1": "risk",
+    "2": "curious"
+  },
+  "per_objective": {
+    "capture": {
+      "capture_rate": 0.9633333333333334,
+      "label": 0,
+      "mean_pred_coverage": 14.640000343322754,
+      "mean_pred_lava_steps": 8.928333282470703,
+      "mean_resources_collected": 2.8350000381469727,
+      "mean_survival_time": 38.75,
+      "n_episodes": 600,
+      "pred_action_freq": [
+        0.0,
+        0.25083870967741934,
+        0.2366451612903226,
+        0.2558279569892473,
+        0.25668817204301075
+      ]
+    },
+    "curious": {
+      "capture_rate": 0.09333333333333334,
+      "label": 2,
+      "mean_pred_coverage": 41.518333435058594,
+      "mean_pred_lava_steps": 12.553333282470703,
+      "mean_resources_collected": 5.983333110809326,
+      "mean_survival_time": 95.15333557128906,
+      "n_episodes": 600,
+      "pred_action_freq": [
+        0.0,
+        0.233728017935963,
+        0.24276606179499755,
+        0.25679604848315,
+        0.26670987178588945
+      ]
+    },
+    "risk": {
+      "capture_rate": 0.03833333333333333,
+      "label": 1,
+      "mean_pred_coverage": 7.361666679382324,
+      "mean_pred_lava_steps": 0.15166667103767395,
+      "mean_resources_collected": 6.375,
+      "mean_survival_time": 98.4800033569336,
+      "n_episodes": 600,
+      "pred_action_freq": [
+        0.47018007040346604,
+        0.11748578391551584,
+        0.15432913620362848,
+        0.1060621445978879,
+        0.15194286487950176
+      ]
+    }
+  },
+  "totals": {
+    "n_episodes": 1800,
+    "n_valid_transitions": 139430
+  }
+}

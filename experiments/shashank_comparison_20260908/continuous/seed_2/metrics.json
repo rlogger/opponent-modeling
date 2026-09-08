@@ -1,0 +1,215 @@
+{
+  "episode_probe": {
+    "accuracy": 0.9283333333333333,
+    "balanced_accuracy": 0.9283333333333333,
+    "n_train": 1200,
+    "n_heldout": 600
+  },
+  "window_probe": {
+    "accuracy": 0.84,
+    "balanced_accuracy": 0.6664485775464879,
+    "n_train": 11412,
+    "n_heldout": 5775
+  },
+  "gmm_ari": 0.4284575874253771,
+  "length_only_probe": {
+    "accuracy": 0.6483333333333333,
+    "balanced_accuracy": 0.6483333333333333,
+    "n_train": 1200,
+    "n_heldout": 600
+  },
+  "prefix8_probe": {
+    "accuracy": 0.6733333333333333,
+    "balanced_accuracy": 0.6733333333333333,
+    "n_train": 1200,
+    "n_heldout": 600
+  },
+  "posthoc_reconstruction": {
+    "macro_episode_mse": 0.32730116118400815,
+    "per_type": {
+      "capture": 0.39915797560488353,
+      "risk": 0.51013471584687,
+      "curious": 0.07261079210027095
+    }
+  },
+  "action_prediction": {
+    "causal_history": {
+      "macro_episode_mse": 0.4938286271129377,
+      "per_type": {
+        "capture": 0.7065604032527628,
+        "risk": 0.6276726667287361,
+        "curious": 0.147252811357314
+      }
+    },
+    "zero": {
+      "macro_episode_mse": 0.49639212413338174,
+      "per_type": {
+        "capture": 0.657342274901518,
+        "risk": 0.6690919637010603,
+        "curious": 0.16274213379756688
+      }
+    },
+    "correct_prototype": {
+      "macro_episode_mse": 0.4797713417229567,
+      "per_type": {
+        "capture": 0.654940747508025,
+        "risk": 0.6453126058011054,
+        "curious": 0.13906067185973947
+      }
+    },
+    "wrong_prototype_1": {
+      "macro_episode_mse": 0.5141362607060898,
+      "per_type": {
+        "capture": 0.6627500387873486,
+        "risk": 0.734735515759933,
+        "curious": 0.14492322757098786
+      }
+    },
+    "wrong_prototype_2": {
+      "macro_episode_mse": 0.5165607494232086,
+      "per_type": {
+        "capture": 0.6564147599812449,
+        "risk": 0.7079070872089313,
+        "curious": 0.1853604010794497
+      }
+    }
+  },
+  "matched_state_specialists": {
+    "n_states": 2400,
+    "row_prototypes": [
+      "capture",
+      "risk",
+      "curious"
+    ],
+    "column_specialists": [
+      "capture",
+      "risk",
+      "curious"
+    ],
+    "prototype_vs_specialist_mse": [
+      [
+        2.1637964248657227,
+        1.8325722217559814,
+        1.2561233043670654
+      ],
+      [
+        2.1424832344055176,
+        1.6800341606140137,
+        1.2309904098510742
+      ],
+      [
+        2.167614221572876,
+        1.8775628805160522,
+        1.2627698183059692
+      ]
+    ],
+    "diagonal_mse": 1.7022000948588054,
+    "off_diagonal_mse": 1.751224398612976,
+    "off_diagonal_minus_diagonal": 0.04902430375417066,
+    "best_prototype_per_specialist": [
+      "risk",
+      "risk",
+      "risk"
+    ],
+    "correct_best_prototypes": 1,
+    "checkpoints": [
+      {
+        "type": "capture",
+        "path": "/Users/rajdeepsingh/Documents/Playground/opponent-modeling/logs/MPE_simple_tag_v3_continuous/mappo_continuous_capture_MPE_simple_tag_v3_continuous_pred_actor_seed0_vmap2.safetensors",
+        "sha256": "bd17f86b36448bcb885e2eed04240892729883e0129c0b13b66706703c026940"
+      },
+      {
+        "type": "risk",
+        "path": "/Users/rajdeepsingh/Documents/Playground/opponent-modeling/logs/MPE_simple_tag_v3_continuous/mappo_continuous_risk_MPE_simple_tag_v3_continuous_pred_actor_seed0_vmap2.safetensors",
+        "sha256": "b895d4d645cb06d689f2feb862b8a1079063415cc471b7e887bc0a0bbdfb4b08"
+      },
+      {
+        "type": "curious",
+        "path": "/Users/rajdeepsingh/Documents/Playground/opponent-modeling/logs/MPE_simple_tag_v3_continuous/mappo_continuous_curious_MPE_simple_tag_v3_continuous_pred_actor_seed0_vmap2.safetensors",
+        "sha256": "07b9439945cfa656156fa62b767e0cd8068fe2c8b110803f0b61ec3e8372efba"
+      }
+    ],
+    "sampling": "up to four seeded valid steps per held-out episode; same states for every type"
+  },
+  "physics_recorded_joint_actions": {
+    "train": {
+      "horizons": [
+        1,
+        3,
+        10
+      ],
+      "per_horizon": {
+        "1": {
+          "n_starts": 4096,
+          "model_mse": 0.006322210654616356,
+          "persistence_mse": 0.010388274677097797,
+          "model_beats_persistence": true,
+          "ratio_model_over_persistence": 0.6085910201072693,
+          "position_rmse_model": 0.014588788151741028,
+          "position_rmse_persistence": 0.08016122877597809
+        },
+        "3": {
+          "n_starts": 4096,
+          "model_mse": 0.019003726541996002,
+          "persistence_mse": 0.04830193147063255,
+          "model_beats_persistence": true,
+          "ratio_model_over_persistence": 0.39343616366386414,
+          "position_rmse_model": 0.04015922546386719,
+          "position_rmse_persistence": 0.2377188503742218
+        },
+        "10": {
+          "n_starts": 4096,
+          "model_mse": 0.05969882756471634,
+          "persistence_mse": 0.2005292922258377,
+          "model_beats_persistence": true,
+          "ratio_model_over_persistence": 0.29770627617836,
+          "position_rmse_model": 0.11722919344902039,
+          "position_rmse_persistence": 0.6893845796585083
+        }
+      }
+    },
+    "heldout": {
+      "horizons": [
+        1,
+        3,
+        10
+      ],
+      "per_horizon": {
+        "1": {
+          "n_starts": 4096,
+          "model_mse": 0.005699380300939083,
+          "persistence_mse": 0.00956370122730732,
+          "model_beats_persistence": true,
+          "ratio_model_over_persistence": 0.5959387421607971,
+          "position_rmse_model": 0.01595182530581951,
+          "position_rmse_persistence": 0.08042959123849869
+        },
+        "3": {
+          "n_starts": 4096,
+          "model_mse": 0.020075704902410507,
+          "persistence_mse": 0.04774576798081398,
+          "model_beats_persistence": true,
+          "ratio_model_over_persistence": 0.42047086358070374,
+          "position_rmse_model": 0.04481687769293785,
+          "position_rmse_persistence": 0.23873533308506012
+        },
+        "10": {
+          "n_starts": 4096,
+          "model_mse": 0.0626486986875534,
+          "persistence_mse": 0.1912326067686081,
+          "model_beats_persistence": true,
+          "ratio_model_over_persistence": 0.3276046812534332,
+          "position_rmse_model": 0.1340370625257492,
+          "position_rmse_persistence": 0.6967517137527466
+        }
+      }
+    }
+  },
+  "latent_swap": {
+    "episode": 1000,
+    "horizon": 30,
+    "simulator_ground_truth": false,
+    "max_absolute_position": 1.8437116146087646,
+    "mean_pairwise_red_position_distance": 0.281661719083786
+  }
+}

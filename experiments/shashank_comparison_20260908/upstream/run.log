@@ -1,0 +1,35 @@
+1800 episodes, horizon 100, checkpoint holdout seed=2 (1200 train / 600 val episodes)
+obs dim 17, state dim 8
+survival-time control probe: 0.617 (chance 0.333)
+
+[ 0] sa_seq_action_decoder_vae        probe 0.640  ari 0.231  rank 1.8   62.9s  decoder_action_accuracy=0.754
+     -> /Users/rajdeepsingh/Documents/Playground/opponent-modeling/experiments/shashank_comparison_20260908/upstream/images/0_sa_seq_action_decoder_vae.png
+[0s] sa_short_seq_action_decoder_vae  probe 0.755  ari 0.538  rank 2.5    8.0s  decoder_action_accuracy=0.789
+     -> /Users/rajdeepsingh/Documents/Playground/opponent-modeling/experiments/shashank_comparison_20260908/upstream/images/0s_sa_short_seq_action_decoder_vae.png
+[ 1] obs_vae                          probe 0.463  ari 0.436  rank 5.4    2.5s  
+     -> /Users/rajdeepsingh/Documents/Playground/opponent-modeling/experiments/shashank_comparison_20260908/upstream/images/1_obs_vae.png
+[ 2] obs_seq_vae                      probe 0.607  ari 0.206  rank 4.8  116.9s  
+     -> /Users/rajdeepsingh/Documents/Playground/opponent-modeling/experiments/shashank_comparison_20260908/upstream/images/2_obs_seq_vae.png
+[2s] obs_short_seq_vae                probe 0.373  ari 0.337  rank 5.1   12.0s  
+     -> /Users/rajdeepsingh/Documents/Playground/opponent-modeling/experiments/shashank_comparison_20260908/upstream/images/2s_obs_short_seq_vae.png
+[ 3] obs_jepa                         probe 0.688  ari 0.335  rank 2.4    3.1s  
+     -> /Users/rajdeepsingh/Documents/Playground/opponent-modeling/experiments/shashank_comparison_20260908/upstream/images/3_obs_jepa.png
+[ 4] obs_seq_jepa                     probe 0.632  ari 0.111  rank 4.8   82.1s  
+     -> /Users/rajdeepsingh/Documents/Playground/opponent-modeling/experiments/shashank_comparison_20260908/upstream/images/4_obs_seq_jepa.png
+[4s] obs_short_seq_jepa               probe 0.487  ari 0.002  rank 5.2    8.6s  
+     -> /Users/rajdeepsingh/Documents/Playground/opponent-modeling/experiments/shashank_comparison_20260908/upstream/images/4s_obs_short_seq_jepa.png
+[ 5] state_seq_pca                    probe 0.313  ari 0.702  rank 7.0    0.9s  
+     -> /Users/rajdeepsingh/Documents/Playground/opponent-modeling/experiments/shashank_comparison_20260908/upstream/images/5_state_seq_pca.png
+[5s] state_short_seq_pca              probe 0.328  ari 0.369  rank 5.1    0.5s  
+     -> /Users/rajdeepsingh/Documents/Playground/opponent-modeling/experiments/shashank_comparison_20260908/upstream/images/5s_state_short_seq_pca.png
+[ 6] sa_vae                           probe 0.347  ari 0.344  rank 5.4    1.8s  
+     -> /Users/rajdeepsingh/Documents/Playground/opponent-modeling/experiments/shashank_comparison_20260908/upstream/images/6_sa_vae.png
+[ 7] sa_seq_vae                       probe 0.558  ari 0.039  rank 4.5  117.6s  
+     -> /Users/rajdeepsingh/Documents/Playground/opponent-modeling/experiments/shashank_comparison_20260908/upstream/images/7_sa_seq_vae.png
+[7s] sa_short_seq_vae                 probe 0.372  ari 0.348  rank 5.3   12.2s  
+     -> /Users/rajdeepsingh/Documents/Playground/opponent-modeling/experiments/shashank_comparison_20260908/upstream/images/7s_sa_short_seq_vae.png
+
+/Users/rajdeepsingh/Documents/Playground/opponent-modeling/experiments/shashank_comparison_20260908/upstream/images/trajectories.png
+/Users/rajdeepsingh/Documents/Playground/opponent-modeling/experiments/shashank_comparison_20260908/upstream/images/summary.png
+/Users/rajdeepsingh/Documents/Playground/opponent-modeling/experiments/shashank_comparison_20260908/upstream/results.json
+/Users/rajdeepsingh/Documents/Playground/opponent-modeling/experiments/shashank_comparison_20260908/upstream/latents.npz

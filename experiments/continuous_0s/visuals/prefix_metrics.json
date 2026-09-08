@@ -1,0 +1,33 @@
+{
+  "completed_steps": [
+    0,
+    1,
+    2,
+    3,
+    4,
+    5,
+    6,
+    7,
+    8,
+    9,
+    10
+  ],
+  "heldout_accuracy": [
+    0.3333333333333333,
+    0.5,
+    0.5516666666666666,
+    0.5766666666666667,
+    0.6,
+    0.6133333333333333,
+    0.6483333333333333,
+    0.6433333333333333,
+    0.655,
+    0.7033333333333334,
+    0.725
+  ],
+  "n_train": 1200,
+  "n_heldout": 600,
+  "same_cohort": true,
+  "encoder_retrained": false,
+  "diagnostic_probe": "train-only StandardScaler + LogisticRegression at each prefix"
+}

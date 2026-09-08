@@ -72,6 +72,21 @@ tdmpc2:
 # reduced widths; the planner defaults are unchanged. ``opponent_mode`` and
 # ``encoder.type`` are set per run by scripts/run_tdmpc.py.
 profiles:
+  # Equation 1 development baseline. Input scaling also applies when explicitly
+  # selecting --encoder mlp; the upstream reference and smoke profiles stay raw.
+  equation1:
+    opponent_mode: implicit
+    context_dim: 0
+    encoder:
+      encoder_dim: 128
+      normalize_inputs: true
+    world_model:
+      latent_dim: 128
+      hidden_dim: 128
+      predict_continues: true
+    tdmpc2:
+      batch_size: 128
+      continue_loss_scale: 1.0
   smoke:
     encoder:
       encoder_dim: 32

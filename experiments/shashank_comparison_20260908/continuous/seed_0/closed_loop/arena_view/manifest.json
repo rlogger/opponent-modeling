@@ -1,0 +1,27 @@
+{
+  "environment_unchanged": {
+    "src/tag_objectives/objectives.py": "94024e322a5009d04f496f6aacf44b6f8bb51d6c4d65a7abf32c6c82c9560a99",
+    "src/tag_objectives/resources.py": "72910059f63c01613b4ad3803236497723724e3c16525d9b21ca51b920b0d4d4",
+    "src/tag_objectives/actions.py": "8b14d4d9e6eaca11d303e4de07be47a912fc1599f221934d96858089532e1cb7"
+  },
+  "input_traces_unchanged": {
+    "capture__tdmpc__online.npz": "d540bd65cdcbe2bd0a6b284443e118eadcfdb9934234b5f5a1e65243384a458a",
+    "evaluation_per_episode.npz": "75eec850133d473f56068108bbdbb6b2fca7335dddbbf10843f278884b69237f",
+    "curious__tdmpc__online.npz": "882f4ac1a8cbbbf7274d696b5e99b458823b58a3f466757a0e56080541ae354d",
+    "risk__tdmpc__online.npz": "69189339a7233a3fae646293e5ddda383a24cc6cb75bea1d26ec2206f4f50a2b"
+  },
+  "renderer_sha256": "2be88dd403b2d5b4cc8d6416344823bf05f3b041cb085ae4c8f58bdf265eddd7",
+  "camera": "arena",
+  "halfwidth": 2.5,
+  "outputs": {
+    "capture__tdmpc__online.gif": "9dd7c4fd2259127f4708ceff14a4e4a01085f37c347429087e11922507fee0cd",
+    "capture__tdmpc__online.png": "2455196965dcf6e04829eca72914a92dffbe3da74312bc51d2507db9283ddef8",
+    "initial.png": "0525da3ac105e05f8ca8a258ac395b0b930c0f5cde132d89124645059acad5cb",
+    "risk__tdmpc__online.gif": "d43bf2a9582b5a644da80672ad78bb3792a53efe694bd19f0e381762b0404b1d",
+    "risk__tdmpc__online.png": "db3f36e3ed7114e9be0b21125c279972ceb6935be2cc0e68fc71301e437ed7e1",
+    "curious__tdmpc__online.gif": "5ee31ebee7ba337482cbc945fa8a847b12461710b1d6558d35c1805c92ba76d0",
+    "curious__tdmpc__online.png": "e638c607de7b60ebaeafcebb1e25eaca5d6722aa9ada958de0f7c601b51d6754"
+  },
+  "scope": "Presentation-only rerender of existing real-environment traces; no new simulation or training.",
+  "offscreen": "Pointers mark true coordinates of agents outside the fixed viewport; positions are never clamped."
+}

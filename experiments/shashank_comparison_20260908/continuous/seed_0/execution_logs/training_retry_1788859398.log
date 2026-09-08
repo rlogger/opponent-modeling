@@ -1,0 +1,24 @@
+Fit shared continuous 0s: 1200 train / 600 held-out episodes
+Held-out episode probe 0.970; ARI 0.455
+Physics 1/2000: consistency=0.0193
+Physics 100/2000: consistency=0.0105
+Physics 200/2000: consistency=0.0075
+Physics 300/2000: consistency=0.0120
+Physics 400/2000: consistency=0.0092
+Physics 500/2000: consistency=0.0108
+Physics 600/2000: consistency=0.0127
+Physics 700/2000: consistency=0.0102
+Physics 800/2000: consistency=0.0172
+Physics 900/2000: consistency=0.0109
+Physics 1000/2000: consistency=0.0082
+Physics 1100/2000: consistency=0.0126
+Physics 1200/2000: consistency=0.0136
+Physics 1300/2000: consistency=0.0119
+Physics 1400/2000: consistency=0.0121
+Physics 1500/2000: consistency=0.0139
+Physics 1600/2000: consistency=0.0127
+Physics 1700/2000: consistency=0.0093
+Physics 1800/2000: consistency=0.0063
+Physics 1900/2000: consistency=0.0074
+Physics 2000/2000: consistency=0.0125
+Report: /Users/rajdeepsingh/Documents/Playground/opponent-modeling/experiments/shashank_comparison_20260908/continuous/seed_0/REPORT.md

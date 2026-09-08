@@ -1,0 +1,32 @@
+{
+  "command": [
+    "/private/tmp/tdmpc-equation1-verify.D0J4C8/venv/bin/python3",
+    "/Users/rajdeepsingh/Documents/Playground/opponent-modeling/scripts/run_0s_world_model.py",
+    "--dataset",
+    "/private/tmp/continuous-0s-fresh.58bNDz/dataset.npz",
+    "--out",
+    "/Users/rajdeepsingh/Documents/Playground/opponent-modeling/experiments/shashank_comparison_20260908/continuous/seed_1",
+    "--encoder-steps",
+    "1500",
+    "--updates",
+    "2000",
+    "--seed",
+    "1",
+    "--heldout",
+    "2"
+  ],
+  "shell_command": "/private/tmp/tdmpc-equation1-verify.D0J4C8/venv/bin/python3 /Users/rajdeepsingh/Documents/Playground/opponent-modeling/scripts/run_0s_world_model.py --dataset /private/tmp/continuous-0s-fresh.58bNDz/dataset.npz --out /Users/rajdeepsingh/Documents/Playground/opponent-modeling/experiments/shashank_comparison_20260908/continuous/seed_1 --encoder-steps 1500 --updates 2000 --seed 1 --heldout 2",
+  "started_at": "2026-09-08T09:24:23.140371+00:00",
+  "wall_seconds": 45.97978049993981,
+  "exit_code": 0,
+  "log": "/Users/rajdeepsingh/Documents/Playground/opponent-modeling/experiments/shashank_comparison_20260908/continuous/seed_1/execution_logs/training.log",
+  "log_sha256": "df0f72a8f4baddf3e71f912f757a86134e62183a19d91739e590db3c37b091cd",
+  "driver_sha256": "a3bda47c113c0932d1dd0f590503641dab8892b708cdcf0e69c619c9509560c5",
+  "dataset_sha256": "928181027a9e5e86b106190b1487cda90c09e2cc5df08b569f7b93ba8350b5f5",
+  "encoder_seed": 1,
+  "world_model_seed": 1,
+  "specialist_checkpoints": "fixed existing continuous specialists",
+  "training_reused": false,
+  "original_dataset_path": "/Users/rajdeepsingh/Documents/Playground/opponent-modeling/experiments/shashank_comparison_20260908/continuous_data/dataset.npz",
+  "runtime_dataset_path": "/private/tmp/continuous-0s-fresh.58bNDz/dataset.npz"
+}

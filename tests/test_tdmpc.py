@@ -18,6 +18,7 @@ pytest.importorskip("distrax")
 
 import jax  # noqa: E402
 import jax.numpy as jnp  # noqa: E402
+from flax import serialization  # noqa: E402
 
 from mopa.tdmpc import OPPONENT_MODES, create_agent, load_config  # noqa: E402
 from mopa.tdmpc_data import (  # noqa: E402
@@ -258,6 +259,69 @@ def test_identity_encoder_is_the_normalized_state_and_trains():
     cfg = _config("implicit", encoder="identity")
     with pytest.raises(ValueError, match="obs_mean"):
         create_agent(cfg, OBS_DIM, key=jax.random.PRNGKey(0))
+
+
+@pytest.mark.parametrize("end_flag", ["terminated", "truncated"])
+def test_implicit_all_finished_windows_have_finite_loss_and_gradients(end_flag):
+    cfg = load_config(profile="smoke")
+    agent = create_agent(cfg, OBS_DIM, key=jax.random.PRNGKey(0))
+    batch = _batch(agent, jax.random.PRNGKey(13))
+    batch.pop("red_actions")
+    batch.pop("context")
+    batch.pop("next_context")
+    batch["terminated"] = jnp.zeros_like(batch["terminated"])
+    batch["truncated"] = jnp.zeros_like(batch["truncated"])
+    batch[end_flag] = batch[end_flag].at[0].set(True)
+    updated, info = agent.update(**batch, key=jax.random.PRNGKey(14))
+    for name in ("consistency_loss", "total_loss", "policy_loss"):
+        assert np.isfinite(float(info[name])), name
+    assert all(np.isfinite(np.asarray(p)).all() for p in _leaves(updated))
+    assert any(
+        not np.array_equal(np.asarray(a), np.asarray(b))
+        for a, b in zip(_leaves(agent), _leaves(updated))
+    )
+    # Padded targets cannot affect either losses or the resulting parameters.
+    perturbed = dict(batch)
+    for name in ("actions", "observations", "next_observations", "rewards"):
+        perturbed[name] = batch[name].at[1:].add(10.0)
+    other, other_info = agent.update(**perturbed, key=jax.random.PRNGKey(14))
+    assert float(info["total_loss"]) == pytest.approx(float(other_info["total_loss"]))
+    for a, b in zip(_leaves(updated), _leaves(other)):
+        np.testing.assert_allclose(np.asarray(a), np.asarray(b), atol=1e-6)
+
+
+def test_implicit_normalized_mlp_uses_train_statistics_and_roundtrips():
+    cfg = load_config(profile="smoke")
+    cfg["encoder"]["normalize_inputs"] = True
+    key = jax.random.PRNGKey(16)
+    mean = np.arange(OBS_DIM, dtype=np.float32)
+    std = np.linspace(0.5, 3.0, OBS_DIM, dtype=np.float32)
+    agent = create_agent(cfg, OBS_DIM, key=key, obs_mean=mean, obs_std=std)
+    normalized_agent = create_agent(
+        cfg, OBS_DIM, key=key,
+        obs_mean=np.zeros_like(mean), obs_std=np.ones_like(std),
+    )
+    obs = jax.random.normal(key, (2, OBS_DIM))
+    np.testing.assert_allclose(
+        np.asarray(agent.model.encode(obs, agent.model.encoder.params, key)),
+        np.asarray(normalized_agent.model.encode(
+            (obs - mean) / std, normalized_agent.model.encoder.params, key,
+        )),
+        rtol=1e-6, atol=1e-6,
+    )
+    batch = _batch(agent, jax.random.PRNGKey(17))
+    batch = {k: v for k, v in batch.items() if k not in {"red_actions", "context", "next_context"}}
+    trained, info = agent.update(**batch, key=key)
+    assert np.isfinite(float(info["total_loss"]))
+    restored = serialization.from_bytes(agent, serialization.to_bytes(trained))
+    actual, _ = restored.act(obs, key=key, deterministic=True)
+    expected, _ = trained.act(obs, key=key, deterministic=True)
+    np.testing.assert_array_equal(np.asarray(actual), np.asarray(expected))
+    assert np.isfinite(np.asarray(actual)).all() and (np.abs(np.asarray(actual)) <= 1).all()
+    with pytest.raises(ValueError, match="obs_mean"):
+        create_agent(cfg, OBS_DIM, key=key)
+    with pytest.raises(ValueError, match="positive obs_std"):
+        create_agent(cfg, OBS_DIM, key=key, obs_mean=mean, obs_std=np.zeros_like(std))
 
 
 def _fake_dataset(n=6, horizon=12, state_dim=OBS_DIM, seed=0):

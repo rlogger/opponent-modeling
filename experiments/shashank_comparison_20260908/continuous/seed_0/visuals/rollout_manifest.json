@@ -1,0 +1,33 @@
+{
+  "original_manifest_sha256": "c8970800e025cbcae0c2c23164a4778d8dc267875baf4ad4d4fcea870ce77bfc",
+  "verified_inputs": {
+    "/Users/rajdeepsingh/Documents/Playground/opponent-modeling/experiments/shashank_comparison_20260908/continuous/seed_0/agent.msgpack": "fffb690faa63cdcaf39bef7fa1e3ba41272f88f134d641c1512f98e0079cb45a",
+    "/Users/rajdeepsingh/Documents/Playground/opponent-modeling/experiments/shashank_comparison_20260908/continuous/seed_0/opponent.msgpack": "048233bf8c1f8165556db1e089b6e85e9110fbf2d67d8638031a9dcd206e0271",
+    "/Users/rajdeepsingh/Documents/Playground/opponent-modeling/experiments/shashank_comparison_20260908/continuous/seed_0/config.json": "d759122e7f6f9777ec42da5de7e013d195801fae2066fef11188d3873c287818",
+    "/Users/rajdeepsingh/Documents/Playground/opponent-modeling/experiments/shashank_comparison_20260908/continuous/seed_0/state_stats.npz": "49246c7fd646630d30308284dd49fa3d3df1fea7693a6dae26ce4eb6fbca46b4",
+    "/Users/rajdeepsingh/Documents/Playground/opponent-modeling/experiments/shashank_comparison_20260908/continuous/seed_0/latent_swap_rollouts.npz": "e9d6854ed72ac355e76f4c3c4c153f80954068b6d94469c5fbc0ea516a73d31a",
+    "/Users/rajdeepsingh/Documents/Playground/opponent-modeling/src/mopa/action_decoder.py": "47df75708cdf4be8a8cc789b46d8d8382177e39b8335c2b4cfa55cc28070b8e2",
+    "/Users/rajdeepsingh/Documents/Playground/opponent-modeling/src/mopa/zero_s.py": "45b9ac10470dcc2fbff0b9e82c7e116663bc0cd0c8973874ea5a94875127e050",
+    "/Users/rajdeepsingh/Documents/Playground/opponent-modeling/src/mopa/tdmpc.py": "21629e5826b32a0caf960b4ba09b3a444d8dc539f8a655bc1e6edcf7418cc9d4",
+    "/Users/rajdeepsingh/Documents/Playground/opponent-modeling/src/mopa/mppi.py": "f40ffd192b11979a070f0d9b00bdf4cbeeb126c75d87a8af189a27434e38da79",
+    "/private/tmp/continuous-0s-fresh.58bNDz/dataset.npz": "928181027a9e5e86b106190b1487cda90c09e2cc5df08b569f7b93ba8350b5f5"
+  },
+  "visualization_source": {
+    "/Users/rajdeepsingh/Documents/Playground/opponent-modeling/scripts/visualize_0s_rollouts.py": "3c4fa3a102bdb38128067fe03566183c0070668d62ff68685ee8fe0cec84f229"
+  },
+  "episodes": [
+    1000,
+    1100,
+    1199
+  ],
+  "horizon": 30,
+  "training_updates": 0,
+  "selection": "first, middle, last held-out risk episodes",
+  "outputs": {
+    "latent_swap_animation.gif": "491dad252bb12c016b2a6e384268fb37975dafeefebf3888e367c537ce151db8",
+    "latent_swap_animation_final.png": "83af47c0982751132f3d0847bccad082f9233283f0cd4836c435733dff4558d6",
+    "additional_scenes.png": "5e6942e8891c2eeec03cf71066837bf01ccd37a19e53f800b1d3326fc7e50c04",
+    "additional_rollouts.npz": "8c22a3b8fcd4a95939ffddc0f3b188d1aadcf6e4b07f1ed43e914f2688b8800a"
+  },
+  "limitations": "Frozen learned fixed-horizon rollouts; no simulator ground truth; states past capture are extrapolations."
+}

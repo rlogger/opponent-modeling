@@ -1,0 +1,427 @@
+{
+  "config": {
+    "hid": 64,
+    "holdout_seed": 2,
+    "lat": 8,
+    "n_train_episodes": 1200,
+    "n_val_episodes": 600,
+    "npz": "/Users/rajdeepsingh/Documents/Playground/opponent-modeling/experiments/shashank_comparison_20260908/discrete/dataset.npz",
+    "seed": 0,
+    "steps_point": 3000,
+    "steps_seq": 1500,
+    "window": 8
+  },
+  "controls": {
+    "chance": 0.3333333333333333,
+    "survival_time_probe": 0.6166666666666667
+  },
+  "strategies": {
+    "obs_jepa": {
+      "extra": {},
+      "inputs": "feature-masked observation predicts the EMA target embedding",
+      "metrics": {
+        "effective_rank": 2.3577378852345774,
+        "fit_seconds": 3.1,
+        "heldout_ari": 0.3352620265144077,
+        "heldout_knn_probe": 0.7816666666666666,
+        "heldout_probe": 0.6883333333333334,
+        "heldout_silhouette": 0.028441721573472023,
+        "latent_dim": 8,
+        "per_dim_std_mean": 0.1996009349822998,
+        "train_cv_probe": 0.5691666666666666,
+        "unit_probe": 0.5689
+      },
+      "note": "No reconstruction: half the observation features are masked and the predictor matches the momentum encoder's embedding of the full observation, on the unit sphere.",
+      "order": 3,
+      "prefix_curve": [],
+      "short": false,
+      "tag": "3",
+      "title": "V-JEPA on the observations",
+      "unit": "timestep"
+    },
+    "obs_seq_jepa": {
+      "extra": {},
+      "inputs": "visible prefix predicts the EMA embedding of a later prefix",
+      "metrics": {
+        "effective_rank": 4.810068530480912,
+        "fit_seconds": 82.1,
+        "heldout_ari": 0.11126618771820333,
+        "heldout_knn_probe": 0.6216666666666667,
+        "heldout_probe": 0.6316666666666667,
+        "heldout_silhouette": -0.00823576282709837,
+        "latent_dim": 8,
+        "per_dim_std_mean": 0.18246641755104065,
+        "train_cv_probe": 0.6174999999999999
+      },
+      "note": "Temporal masking: the GRU embedding of steps [0, k) must predict the momentum encoder's embedding of a longer prefix.",
+      "order": 4,
+      "prefix_curve": [
+        {
+          "heldout_probe": 0.355,
+          "k": 2
+        },
+        {
+          "heldout_probe": 0.4116666666666667,
+          "k": 5
+        },
+        {
+          "heldout_probe": 0.4483333333333333,
+          "k": 10
+        },
+        {
+          "heldout_probe": 0.57,
+          "k": 20
+        },
+        {
+          "heldout_probe": 0.6216666666666667,
+          "k": 40
+        },
+        {
+          "heldout_probe": 0.645,
+          "k": 70
+        },
+        {
+          "heldout_probe": 0.6316666666666667,
+          "k": 100
+        }
+      ],
+      "short": false,
+      "tag": "4",
+      "title": "V-JEPA on the sequence of observations",
+      "unit": "timestep"
+    },
+    "obs_seq_vae": {
+      "extra": {},
+      "inputs": "full observation sequence, reconstructed by a GRU decoder",
+      "metrics": {
+        "effective_rank": 4.796429126360422,
+        "fit_seconds": 116.9,
+        "heldout_ari": 0.20587669083486954,
+        "heldout_knn_probe": 0.6733333333333333,
+        "heldout_probe": 0.6066666666666667,
+        "heldout_silhouette": -0.03243831545114517,
+        "latent_dim": 8,
+        "per_dim_std_mean": 0.5966223478317261,
+        "train_cv_probe": 0.5900000000000001
+      },
+      "note": "GRU posterior over the whole episode; one latent per episode.",
+      "order": 2,
+      "prefix_curve": [
+        {
+          "heldout_probe": 0.35333333333333333,
+          "k": 2
+        },
+        {
+          "heldout_probe": 0.385,
+          "k": 5
+        },
+        {
+          "heldout_probe": 0.4,
+          "k": 10
+        },
+        {
+          "heldout_probe": 0.49333333333333335,
+          "k": 20
+        },
+        {
+          "heldout_probe": 0.525,
+          "k": 40
+        },
+        {
+          "heldout_probe": 0.59,
+          "k": 70
+        },
+        {
+          "heldout_probe": 0.6066666666666667,
+          "k": 100
+        }
+      ],
+      "short": false,
+      "tag": "2",
+      "title": "VAE on the sequence of observations",
+      "unit": "timestep"
+    },
+    "obs_short_seq_jepa": {
+      "extra": {},
+      "inputs": "visible prefix of the window predicts a later prefix's EMA embedding",
+      "metrics": {
+        "effective_rank": 5.185360176918738,
+        "fit_seconds": 8.6,
+        "heldout_ari": 0.0024336812747900284,
+        "heldout_knn_probe": 0.6733333333333333,
+        "heldout_probe": 0.4866666666666667,
+        "heldout_silhouette": -0.012983306311070919,
+        "latent_dim": 8,
+        "per_dim_std_mean": 0.13006463646888733,
+        "train_cv_probe": 0.47333333333333333,
+        "unit_probe": 0.5020712510356256
+      },
+      "note": "Same encoder on non-overlapping 8-step windows instead of the full episode; window latents are mean-pooled per episode. Prediction horizon shrinks with the window.",
+      "order": 4,
+      "prefix_curve": [],
+      "short": true,
+      "tag": "4s",
+      "title": "V-JEPA on a 8-step observation sequence",
+      "unit": "8-step window"
+    },
+    "obs_short_seq_vae": {
+      "extra": {},
+      "inputs": "8-step observation window, reconstructed by a GRU decoder",
+      "metrics": {
+        "effective_rank": 5.116676767782278,
+        "fit_seconds": 12.0,
+        "heldout_ari": 0.336838696411991,
+        "heldout_knn_probe": 0.7433333333333333,
+        "heldout_probe": 0.37333333333333335,
+        "heldout_silhouette": -0.016739489510655403,
+        "latent_dim": 8,
+        "per_dim_std_mean": 0.48240864276885986,
+        "train_cv_probe": 0.34249999999999997,
+        "unit_probe": 0.384092792046396
+      },
+      "note": "Same encoder on non-overlapping 8-step windows instead of the full episode; window latents are mean-pooled per episode.",
+      "order": 2,
+      "prefix_curve": [],
+      "short": true,
+      "tag": "2s",
+      "title": "VAE on a 8-step observation sequence",
+      "unit": "8-step window"
+    },
+    "obs_vae": {
+      "extra": {},
+      "inputs": "single predator observation (17-d), reconstructed",
+      "metrics": {
+        "effective_rank": 5.397922243347216,
+        "fit_seconds": 2.5,
+        "heldout_ari": 0.43573151718326597,
+        "heldout_knn_probe": 0.6983333333333334,
+        "heldout_probe": 0.4633333333333333,
+        "heldout_silhouette": -0.011467043310403824,
+        "latent_dim": 8,
+        "per_dim_std_mean": 0.49664363265037537,
+        "train_cv_probe": 0.3716666666666667,
+        "unit_probe": 0.462125
+      },
+      "note": "One latent per timestep; the episode latent is the mean over valid steps.",
+      "order": 1,
+      "prefix_curve": [],
+      "short": false,
+      "tag": "1",
+      "title": "VAE on the observation space",
+      "unit": "timestep"
+    },
+    "sa_seq_action_decoder_vae": {
+      "extra": {
+        "decoder_action_accuracy": 0.753990617147671
+      },
+      "inputs": "encode [state_t, a_t] sequence; decode a_t from (z, state_t)",
+      "metrics": {
+        "effective_rank": 1.7935624157457721,
+        "fit_seconds": 62.9,
+        "heldout_ari": 0.23101126454906645,
+        "heldout_knn_probe": 0.7533333333333333,
+        "heldout_probe": 0.64,
+        "heldout_silhouette": 0.0054747071117162704,
+        "latent_dim": 8,
+        "per_dim_std_mean": 0.4289853572845459,
+        "train_cv_probe": 0.7233333333333334
+      },
+      "note": "Decoder sees one state at a time with the time axis folded into the batch, trained with MSE on the one-hot action, so z must carry the policy rather than the trajectory's shape.",
+      "order": 0,
+      "prefix_curve": [],
+      "short": false,
+      "tag": "0",
+      "title": "VAE: (state, action) sequence encoder, action decoder",
+      "unit": "timestep"
+    },
+    "sa_seq_vae": {
+      "extra": {},
+      "inputs": "full [state, one-hot action] sequence, reconstructed",
+      "metrics": {
+        "effective_rank": 4.538672975332764,
+        "fit_seconds": 117.6,
+        "heldout_ari": 0.03860621211302136,
+        "heldout_knn_probe": 0.6283333333333333,
+        "heldout_probe": 0.5583333333333333,
+        "heldout_silhouette": -0.023627011105418205,
+        "latent_dim": 8,
+        "per_dim_std_mean": 0.5401239395141602,
+        "train_cv_probe": 0.5391666666666667
+      },
+      "note": "Same encoder as strategy 0 but the decoder rebuilds the whole sequence instead of predicting actions from states.",
+      "order": 7,
+      "prefix_curve": [
+        {
+          "heldout_probe": 0.4216666666666667,
+          "k": 2
+        },
+        {
+          "heldout_probe": 0.38166666666666665,
+          "k": 5
+        },
+        {
+          "heldout_probe": 0.4083333333333333,
+          "k": 10
+        },
+        {
+          "heldout_probe": 0.42333333333333334,
+          "k": 20
+        },
+        {
+          "heldout_probe": 0.5083333333333333,
+          "k": 40
+        },
+        {
+          "heldout_probe": 0.5783333333333334,
+          "k": 70
+        },
+        {
+          "heldout_probe": 0.5583333333333333,
+          "k": 100
+        }
+      ],
+      "short": false,
+      "tag": "7",
+      "title": "VAE on the sequence of (state, action) pairs",
+      "unit": "timestep"
+    },
+    "sa_short_seq_action_decoder_vae": {
+      "extra": {
+        "decoder_action_accuracy": 0.789336083312757
+      },
+      "inputs": "encode a 8-step [state, action] window; decode a_t from (z, state_t)",
+      "metrics": {
+        "effective_rank": 2.4886622844800894,
+        "fit_seconds": 8.0,
+        "heldout_ari": 0.5384042590105123,
+        "heldout_knn_probe": 0.8316666666666667,
+        "heldout_probe": 0.755,
+        "heldout_silhouette": 0.05969849228858948,
+        "latent_dim": 8,
+        "per_dim_std_mean": 0.290249228477478,
+        "train_cv_probe": 0.7175,
+        "unit_probe": 0.5660314830157415
+      },
+      "note": "Same encoder on non-overlapping 8-step windows instead of the full episode; window latents are mean-pooled per episode.",
+      "order": 0,
+      "prefix_curve": [],
+      "short": true,
+      "tag": "0s",
+      "title": "VAE: (8-step state, action) encoder, action decoder",
+      "unit": "8-step window"
+    },
+    "sa_short_seq_vae": {
+      "extra": {},
+      "inputs": "8-step [state, one-hot action] window, reconstructed",
+      "metrics": {
+        "effective_rank": 5.296714481814543,
+        "fit_seconds": 12.2,
+        "heldout_ari": 0.3476566213499516,
+        "heldout_knn_probe": 0.8066666666666666,
+        "heldout_probe": 0.37166666666666665,
+        "heldout_silhouette": -0.0013086764374747872,
+        "latent_dim": 8,
+        "per_dim_std_mean": 0.3941062092781067,
+        "train_cv_probe": 0.43499999999999994,
+        "unit_probe": 0.37067108533554266
+      },
+      "note": "Same encoder on non-overlapping 8-step windows instead of the full episode; window latents are mean-pooled per episode.",
+      "order": 7,
+      "prefix_curve": [],
+      "short": true,
+      "tag": "7s",
+      "title": "VAE on a 8-step (state, action) sequence",
+      "unit": "8-step window"
+    },
+    "sa_vae": {
+      "extra": {},
+      "inputs": "single [state_t, one-hot a_t] vector, reconstructed",
+      "metrics": {
+        "effective_rank": 5.442699352071805,
+        "fit_seconds": 1.8,
+        "heldout_ari": 0.3443501175902269,
+        "heldout_knn_probe": 0.76,
+        "heldout_probe": 0.3466666666666667,
+        "heldout_silhouette": -0.025443000718951225,
+        "latent_dim": 8,
+        "per_dim_std_mean": 0.4159455895423889,
+        "train_cv_probe": 0.35,
+        "unit_probe": 0.42875
+      },
+      "note": "One latent per timestep; the episode latent is the mean over valid steps.",
+      "order": 6,
+      "prefix_curve": [],
+      "short": false,
+      "tag": "6",
+      "title": "VAE on (state, action) pairs",
+      "unit": "timestep"
+    },
+    "state_seq_pca": {
+      "extra": {
+        "explained_variance_ratio": [
+          0.11520678550004959,
+          0.11172918975353241,
+          0.0822799876332283,
+          0.07001122087240219,
+          0.0610116571187973,
+          0.05957396328449249,
+          0.0428631454706192,
+          0.0326661542057991
+        ]
+      },
+      "inputs": "flattened state sequence (T x 8), linear projection",
+      "metrics": {
+        "effective_rank": 6.953674645619261,
+        "fit_seconds": 0.9,
+        "heldout_ari": 0.7018812045705375,
+        "heldout_knn_probe": 0.87,
+        "heldout_probe": 0.31333333333333335,
+        "heldout_silhouette": -0.022937487810850143,
+        "latent_dim": 8,
+        "per_dim_std_mean": 6.496362686157227,
+        "train_cv_probe": 0.3508333333333334
+      },
+      "note": "Linear baseline: no training, components fit on the training fold only.",
+      "order": 5,
+      "prefix_curve": [],
+      "short": false,
+      "tag": "5",
+      "title": "PCA on the sequence of states",
+      "unit": "timestep"
+    },
+    "state_short_seq_pca": {
+      "extra": {
+        "explained_variance_ratio": [
+          0.17565704882144928,
+          0.1502397358417511,
+          0.11814595013856888,
+          0.10623868554830551,
+          0.10106397420167923,
+          0.09567471593618393,
+          0.0807269960641861,
+          0.06431851536035538
+        ]
+      },
+      "inputs": "flattened 8-step state window, linear projection",
+      "metrics": {
+        "effective_rank": 5.122130964672116,
+        "fit_seconds": 0.5,
+        "heldout_ari": 0.3686803634610699,
+        "heldout_knn_probe": 0.7483333333333333,
+        "heldout_probe": 0.3283333333333333,
+        "heldout_silhouette": -0.019876480102539062,
+        "latent_dim": 8,
+        "per_dim_std_mean": 1.4807639122009277,
+        "train_cv_probe": 0.3125,
+        "unit_probe": 0.4299917149958575
+      },
+      "note": "Same encoder on non-overlapping 8-step windows instead of the full episode; window latents are mean-pooled per episode. No training; components fit on training-fold windows.",
+      "order": 5,
+      "prefix_curve": [],
+      "short": true,
+      "tag": "5s",
+      "title": "PCA on a 8-step state sequence",
+      "unit": "8-step window"
+    }
+  }
+}

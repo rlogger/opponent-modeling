@@ -1,5 +1,8 @@
 #!/usr/bin/env python3
-"""Gate 4/5 driver: train, evaluate, and compare TD-MPC opponent modes.
+"""Train and evaluate Equation 1 first: ``x_next = dynamics(x, blue_action)``.
+
+The default implicit baseline requires continuous data and specialist policies,
+but no opponent BC or context-encoder artifacts. Other modes remain explicit.
 
 Subcommands
 -----------
@@ -66,6 +69,7 @@ from mopa.tdmpc_data import (  # noqa: E402
     termination_calibration,
     world_model_observation,
 )
+from mopa.zero_s import ZeroSOpponent  # noqa: E402
 from tag_objectives import make_env  # noqa: E402
 
 METRICS = ("blue_return", "captured", "survival_time", "resources_collected", "prey_lava_steps")
@@ -94,6 +98,8 @@ def _parse_ints(value: str) -> tuple[int, ...]:
 # --------------------------------------------------------------------------- #
 def load_context(ds, bc_artifacts: Path, heldout: int, bc_seed: int, source: str):  # noqa: ANN001
     data = ds.as_dict()
+    if source == "zero":
+        return None, None, attach_context(data, None, source="zero")
     enc_path = bc_artifacts / f"fold_{heldout}" / f"seed_{bc_seed}" / "context_encoder.npz"
     encoder = CausalContextEncoder.load(enc_path)
     causal = encoder.causal_context(ds.prey_pos, ds.pred_pos, ds.valid_length)
@@ -115,6 +121,18 @@ def load_agent(template, path: Path):  # noqa: ANN001
 
 def build_template(run: Path):  # noqa: ANN001
     manifest = json.loads((run / "manifest.json").read_text())
+    opponent = None
+    if "source_0s_commit" in manifest:
+        # The 0s runner stores a separate config and a frozen decoder whose
+        # static apply_fn/optimizer must exist BEFORE Flax restores weights.
+        for name in ("config.json", "state_stats.npz", "opponent.msgpack", "agent.msgpack"):
+            if file_sha256(run / name) != manifest["artifacts"][name]:
+                raise ValueError(f"0s artifact does not match training manifest: {name}")
+        cfg = json.loads((run / "config.json").read_text())["world_model"]
+        opponent = ZeroSOpponent.load(run / "opponent.msgpack")
+        manifest = {**manifest, "config": cfg, "state_dim": 66,
+                    "mode": cfg["opponent_mode"], "encoder": cfg["encoder"]["type"],
+                    "features": "markov", "context_source": "zero_s"}
     cfg = manifest["config"]
     stats = np.load(run / "state_stats.npz")
     agent = create_agent(
@@ -124,6 +142,8 @@ def build_template(run: Path):  # noqa: ANN001
         obs_mean=stats["mean"],
         obs_std=stats["std"],
     )
+    if opponent is not None:
+        agent = opponent.attach(agent, stats["mean"], stats["std"])
     return load_agent(agent, run / "agent.msgpack"), manifest, stats
 
 
@@ -134,12 +154,18 @@ def cmd_train(args: argparse.Namespace) -> int:
     cfg = load_config(profile=args.profile)
     cfg["opponent_mode"] = args.mode
     cfg["encoder"]["type"] = args.encoder
-    # The frozen context encoder always produces CONTEXT_DIM columns.
-    cfg["context_dim"] = 0 if (args.mode == "implicit" and args.context_source == "none") else CONTEXT_DIM
+    # Equation 1 has no context input or context-checkpoint dependency.
+    args.context_source = "none" if args.mode == "implicit" else (args.context_source or "causal")
+    cfg["context_dim"] = 0 if args.mode == "implicit" else CONTEXT_DIM
     ds = load_continuous_dataset(args.dataset)
     data = ds.as_dict()
     source = "zero" if args.context_source == "none" else args.context_source
-    encoder, enc_path, context = load_context(ds, args.bc_artifacts, args.heldout, args.bc_seed, source)
+    # Preserve existing context-checkpoint provenance for explicit nonimplicit
+    # ablations; only Equation 1 is independent of that artifact.
+    load_source = "causal" if args.mode != "implicit" and source == "zero" else source
+    encoder, enc_path, context = load_context(ds, args.bc_artifacts, args.heldout, args.bc_seed, load_source)
+    if source == "zero":
+        context = np.zeros_like(context)
     if args.mode == "implicit":
         context = np.zeros_like(context)[..., : cfg["context_dim"]]
     train_eps = np.flatnonzero(ds.checkpoint_seed != args.heldout)
@@ -247,7 +273,10 @@ def cmd_train(args: argparse.Namespace) -> int:
         "final_replay_episodes": replay.n_episodes,
         "state_dim": state_dim,
         "dataset": {"path": str(args.dataset), "sha256": file_sha256(args.dataset)},
-        "context_encoder": {"path": str(enc_path), "sha256": file_sha256(enc_path), "frozen": True},
+        "context_encoder": (
+            {"path": str(enc_path), "sha256": file_sha256(enc_path), "frozen": True}
+            if enc_path is not None else None
+        ),
         "world_encoder_trained": args.encoder == "mlp",
         "train_episodes": int(len(train_eps)),
         "heldout_episodes": int(len(eval_eps)),
@@ -300,7 +329,7 @@ def collect_online_round(
     agent,  # noqa: ANN001
     ds,  # noqa: ANN001
     replay: SequenceReplay,
-    encoder: CausalContextEncoder,
+    encoder: CausalContextEncoder | None,
     *,
     heldout: int,
     features: str,
@@ -330,7 +359,8 @@ def collect_online_round(
             step_seed = np.asarray(jax.random.split(jax.random.PRNGKey(base + 1), episodes_per_group), np.uint32)
             out = run_matched_episodes(
                 env, red_params, controller, reset_keys, step_seed, horizon=horizon,
-                context_mode="online", label=label, encoder=encoder,
+                context_mode="zero" if mode == "implicit" else "online",
+                label=label, encoder=encoder,
                 shuffle_seed=base, record_transitions=True,
             )
             tr = out["transitions"]
@@ -399,30 +429,64 @@ def factored_invariance_checks(agent, ds, eval_eps, context, seed: int, features
 
 
 def cmd_evaluate(args: argparse.Namespace) -> int:
+    if args.n_eps < 1:
+        raise ValueError("n-eps must be positive")
     agent, manifest, stats = build_template(args.run)
     mode = manifest["mode"]
     heldout = int(manifest["heldout_checkpoint"])
+    zero_s = ZeroSOpponent.load(args.run / "opponent.msgpack") if manifest.get("context_source") == "zero_s" else None
     ds = load_continuous_dataset(args.dataset)
-    encoder, enc_path, context = load_context(ds, args.bc_artifacts, heldout, args.bc_seed, "causal")
-    if file_sha256(enc_path) != manifest["context_encoder"]["sha256"]:
-        raise ValueError("context encoder does not match the training manifest")
+    if zero_s is not None:
+        if file_sha256(args.dataset) != manifest["dataset"]["sha256"]:
+            raise ValueError("0s evaluation dataset does not match the training manifest")
+        encoder, context = None, None
+    else:
+        source = "zero" if mode == "implicit" else "causal"
+        encoder, enc_path, context = load_context(ds, args.bc_artifacts, heldout, args.bc_seed, source)
+        if mode != "implicit" and file_sha256(enc_path) != manifest["context_encoder"]["sha256"]:
+            raise ValueError("context encoder does not match the training manifest")
     eval_eps = np.flatnonzero(ds.checkpoint_seed == heldout)
     env = make_env("capture", continuous=True)
     prey_name = env.good_agents[0]
     obs_width = max(env.observation_space(a).shape[0] for a in env.agents)
     horizon = int(ds.blue_action.shape[1])
     context_modes = ["online", "zero", "shuffled", "wrong_oracle", "oracle"] if mode != "implicit" else ["zero"]
+    if zero_s is not None:
+        context_modes = ["online"]
     if args.context_modes:
         context_modes = args.context_modes.split(",")
+    if mode == "implicit" and context_modes != ["zero"]:
+        raise ValueError("Equation 1 has no context input; use --context-modes zero")
     features = manifest.get("features", "markov")
     blue = tdmpc_controller(agent, env, features)
-    prey_params = load_continuous_actor_params(continuous_checkpoint_path(args.logdir, "capture", "prey", heldout))
+    prey_path = continuous_checkpoint_path(args.logdir, "capture", "prey", heldout)
+    prey_params = load_continuous_actor_params(prey_path) if args.controls else None
+    output_dir = args.out or (args.run / "closed_loop" if zero_s is not None else args.run)
+    output_dir.mkdir(parents=True, exist_ok=True)
+    groups = [np.flatnonzero((ds.checkpoint_seed == heldout) & (ds.objective_label == label))[:args.n_eps]
+              for label in range(len(OBJECTIVE_TYPES))]
+    if any(len(rows) != args.n_eps for rows in groups):
+        raise ValueError("n-eps exceeds available held-out episodes for an opponent")
+    if "shuffled" in context_modes and args.n_eps < 2:
+        raise ValueError("shuffled context requires n-eps >= 2")
+    if zero_s is not None:
+        for rows in groups[1:]:
+            if not np.array_equal(ds.environment_seed[rows], ds.environment_seed[groups[0]]):
+                raise ValueError("0s evaluation requires matched reset keys across opponents")
     runs = []
+    checkpoints = []
     per_episode: dict[str, np.ndarray] = {}
     for label, pred_type in enumerate(OBJECTIVE_TYPES):
-        rows = np.flatnonzero((ds.checkpoint_seed == heldout) & (ds.objective_label == label))[: args.n_eps]
+        rows = groups[label]
         reset_keys, step_seed = ds.environment_seed[rows], ds.step_seed[rows]
-        red_params = load_continuous_actor_params(continuous_checkpoint_path(args.logdir, pred_type, "pred", heldout))
+        red_path = continuous_checkpoint_path(args.logdir, pred_type, "pred", heldout)
+        if zero_s is not None:
+            digest = file_sha256(red_path)
+            expected = next(item["sha256"] for item in manifest["specialist_checkpoints"] if item["type"] == pred_type)
+            if digest != expected:
+                raise ValueError(f"specialist checkpoint does not match 0s manifest: {pred_type}")
+            checkpoints.append({"type": pred_type, "path": str(red_path), "sha256": digest})
+        red_params = load_continuous_actor_params(red_path)
         specs = [("tdmpc", blue, cm, encoder if cm in {"online", "shuffled"} else None) for cm in context_modes]
         if args.controls:
             specs += [
@@ -434,6 +498,7 @@ def cmd_evaluate(args: argparse.Namespace) -> int:
             out = run_matched_episodes(
                 env, red_params, ctrl, reset_keys, step_seed, horizon=horizon,
                 context_mode=cm, label=label, encoder=enc, shuffle_seed=1000 * heldout + label,
+                zero_s=zero_s if name == "tdmpc" else None, record_transitions=args.record,
             )
             dt = time.time() - t0
             key = f"{pred_type}__{name}__{cm}"
@@ -449,6 +514,27 @@ def cmd_evaluate(args: argparse.Namespace) -> int:
                 "blue_action_abs_max": out["blue_action_abs_max"],
                 **{mtr: {"mean": float(np.mean(out[mtr])), "std": float(np.std(out[mtr]))} for mtr in METRICS},
             }
+            if "controller_seconds_per_batch" in out:
+                seconds = out["controller_seconds_per_batch"]
+                row["controller_timing"] = {
+                    "first_two_calls_seconds": seconds[:2].tolist(),
+                    "steady_median_seconds_per_batch": float(np.median(seconds[2:])) if len(seconds) > 2 else None,
+                    "batch_size": len(rows),
+                    "scope": "synchronized action calls; first two may compile; excludes context inference and environment stepping",
+                }
+            if args.record:
+                from tag_objectives.rendering import save_episode_replay
+
+                trace_path = output_dir / f"{key}.npz"
+                np.savez_compressed(trace_path, **out["transitions"], environment_seed=reset_keys,
+                                    step_seed=step_seed, dataset_episode=rows,
+                                    objective_label=np.full(len(rows), label), checkpoint_seed=np.full(len(rows), heldout))
+                # First matched episode, never selected for a favorable outcome.
+                replay = save_episode_replay(out["transitions"], env, output_dir / key,
+                                            title=f"Real environment · {pred_type} opponent · {name} / {cm}",
+                                            camera=args.replay_camera)
+                row["recordings"] = {"transitions": trace_path.name, **{k: v.name for k, v in replay.items()},
+                                     "rendered_dataset_episode": int(rows[0]), "camera": args.replay_camera}
             runs.append(row)
             print(
                 f"{pred_type:8s} {name:10s} ctx={cm:12s} return {row['blue_return']['mean']:8.2f} "
@@ -470,11 +556,28 @@ def cmd_evaluate(args: argparse.Namespace) -> int:
         "n_eps_per_opponent": args.n_eps,
         "planner": {k: manifest["config"]["tdmpc2"][k] for k in ("horizon", "population_size", "policy_prior_samples", "num_elites", "mppi_iterations")},
         "runs": runs,
-        "factored_invariance": factored_invariance_checks(agent, ds, eval_eps, context, int(manifest["seed"]), features),
+        "factored_invariance": (None if zero_s is not None else
+                                factored_invariance_checks(agent, ds, eval_eps, context, int(manifest["seed"]), features)),
     }
-    (args.run / "evaluation.json").write_text(json.dumps(_jsonable(result), indent=2, sort_keys=True) + "\n")
-    np.savez_compressed(args.run / "evaluation_per_episode.npz", **per_episode)
-    print(f"Wrote {args.run / 'evaluation.json'}")
+    if zero_s is not None:
+        result.update(
+            opponent_model="frozen_zero_s", context_dim=zero_s.encoder.config.lat,
+            context_protocol="At decision t, only observed (state_s, red_action_s), s < t; frozen within each imagined horizon. Oracle modes use train-only class prototypes, not specialist actions.",
+            scope="Saved identity-state Equation 3 controller, no training or parameter updates; small runs verify execution, not performance gains.",
+            dataset={"path": str(args.dataset), "sha256": file_sha256(args.dataset)},
+            specialist_checkpoints=checkpoints,
+            checkpoint_artifacts={name: file_sha256(args.run / name) for name in
+                                  ("agent.msgpack", "opponent.msgpack", "config.json", "state_stats.npz")},
+            code={str(p.relative_to(_ROOT)): file_sha256(p) for p in
+                  [Path(__file__).resolve(), _ROOT / "src/mopa/evaluation.py", _ROOT / "src/mopa/zero_s.py",
+                   _ROOT / "src/mopa/tdmpc.py", _ROOT / "src/mopa/mppi.py",
+                   *sorted((_ROOT / "src/tag_objectives").glob("*.py"))]},
+        )
+        if args.controls:
+            result["prey_control_checkpoint"] = {"path": str(prey_path), "sha256": file_sha256(prey_path)}
+    (output_dir / "evaluation.json").write_text(json.dumps(_jsonable(result), indent=2, sort_keys=True, allow_nan=False) + "\n")
+    np.savez_compressed(output_dir / "evaluation_per_episode.npz", **per_episode)
+    print(f"Wrote {output_dir / 'evaluation.json'}")
     return 0
 
 
@@ -698,11 +801,12 @@ def build_parser() -> argparse.ArgumentParser:
     tr.add_argument("--bc-artifacts", type=Path, default=Path("artifacts/bc_continuous"))
     tr.add_argument("--bc-seed", type=int, default=0)
     tr.add_argument("--out", type=Path, default=Path("artifacts/tdmpc"))
-    tr.add_argument("--profile", default="gate4")
-    tr.add_argument("--mode", choices=("implicit", "conditioned", "factored"), required=True)
+    tr.add_argument("--profile", default="equation1")
+    tr.add_argument("--mode", choices=("implicit", "conditioned", "factored"), default="implicit")
     tr.add_argument("--encoder", choices=("identity", "mlp"), default="identity")
-    tr.add_argument("--context-source", choices=("causal", "oracle", "zero", "none"), default="causal")
-    tr.add_argument("--features", choices=FEATURE_MAPS, default="markov")
+    tr.add_argument("--context-source", choices=("causal", "oracle", "zero", "none"), default=None,
+                    help="defaults to none for implicit, causal for other modes")
+    tr.add_argument("--features", choices=FEATURE_MAPS, default="relative")
     tr.add_argument("--heldout", type=int, default=2)
     tr.add_argument("--seed", type=int, default=0)
     tr.add_argument("--updates", type=int, default=10000)
@@ -721,6 +825,10 @@ def build_parser() -> argparse.ArgumentParser:
     ev.add_argument("--n-eps", type=int, default=48)
     ev.add_argument("--context-modes", default="")
     ev.add_argument("--controls", action="store_true")
+    ev.add_argument("--out", type=Path, help="evaluation output directory; defaults to RUN/closed_loop for 0s")
+    ev.add_argument("--record", action="store_true", help="save real transitions and first matched episode GIF/PNG per evaluation arm")
+    ev.add_argument("--replay-camera", choices=("arena", "full"), default="arena",
+                    help="fixed arena-scale replay (default), or full-trajectory diagnostic view")
     ev.set_defaults(func=cmd_evaluate)
     cp = sub.add_parser("compare")
     cp.add_argument("--root", type=Path, default=Path("artifacts/tdmpc"))

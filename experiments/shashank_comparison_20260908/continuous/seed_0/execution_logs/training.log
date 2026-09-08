@@ -1,0 +1,12 @@
+Traceback (most recent call last):
+  File "/Users/rajdeepsingh/Documents/Playground/opponent-modeling/scripts/run_0s_world_model.py", line 374, in <module>
+    main()
+  File "/Users/rajdeepsingh/Documents/Playground/opponent-modeling/scripts/run_0s_world_model.py", line 248, in main
+    ds = load_continuous_dataset(args.dataset)
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/rajdeepsingh/Documents/Playground/opponent-modeling/src/mopa/continuous_data.py", line 83, in load_continuous_dataset
+    with np.load(Path(path), allow_pickle=False) as raw:
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/private/tmp/tdmpc-equation1-verify.D0J4C8/venv/lib/python3.11/site-packages/numpy/lib/npyio.py", line 436, in load
+    raise EOFError("No data left in file")
+EOFError: No data left in file

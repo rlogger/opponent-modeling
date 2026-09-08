@@ -1,0 +1,40 @@
+{
+  "visualize_0s.py": {
+    "command": [
+      "/private/tmp/tdmpc-equation1-verify.D0J4C8/venv/bin/python3",
+      "/Users/rajdeepsingh/Documents/Playground/opponent-modeling/scripts/visualize_0s.py",
+      "--run",
+      "/Users/rajdeepsingh/Documents/Playground/opponent-modeling/experiments/shashank_comparison_20260908/continuous/seed_0",
+      "--dataset",
+      "/private/tmp/continuous-0s-fresh.58bNDz/dataset.npz",
+      "--out",
+      "/Users/rajdeepsingh/Documents/Playground/opponent-modeling/experiments/shashank_comparison_20260908/continuous/seed_0/visuals"
+    ],
+    "shell_command": "/private/tmp/tdmpc-equation1-verify.D0J4C8/venv/bin/python3 /Users/rajdeepsingh/Documents/Playground/opponent-modeling/scripts/visualize_0s.py --run /Users/rajdeepsingh/Documents/Playground/opponent-modeling/experiments/shashank_comparison_20260908/continuous/seed_0 --dataset /private/tmp/continuous-0s-fresh.58bNDz/dataset.npz --out /Users/rajdeepsingh/Documents/Playground/opponent-modeling/experiments/shashank_comparison_20260908/continuous/seed_0/visuals",
+    "started_at": "2026-09-08T09:25:54.948848+00:00",
+    "wall_seconds": 2.4998382920166478,
+    "exit_code": 0,
+    "log": "/Users/rajdeepsingh/Documents/Playground/opponent-modeling/experiments/shashank_comparison_20260908/continuous/seed_0/execution_logs/visualize_0s.py.log",
+    "log_sha256": "7d6632dd7af6eb0b5052769e4f8fcde7956af2f4eba0f186dc4b4b78338fd579",
+    "driver_sha256": "a3bda47c113c0932d1dd0f590503641dab8892b708cdcf0e69c619c9509560c5"
+  },
+  "visualize_0s_rollouts.py": {
+    "command": [
+      "/private/tmp/tdmpc-equation1-verify.D0J4C8/venv/bin/python3",
+      "/Users/rajdeepsingh/Documents/Playground/opponent-modeling/scripts/visualize_0s_rollouts.py",
+      "--run",
+      "/Users/rajdeepsingh/Documents/Playground/opponent-modeling/experiments/shashank_comparison_20260908/continuous/seed_0",
+      "--dataset",
+      "/private/tmp/continuous-0s-fresh.58bNDz/dataset.npz",
+      "--out",
+      "/Users/rajdeepsingh/Documents/Playground/opponent-modeling/experiments/shashank_comparison_20260908/continuous/seed_0/visuals"
+    ],
+    "shell_command": "/private/tmp/tdmpc-equation1-verify.D0J4C8/venv/bin/python3 /Users/rajdeepsingh/Documents/Playground/opponent-modeling/scripts/visualize_0s_rollouts.py --run /Users/rajdeepsingh/Documents/Playground/opponent-modeling/experiments/shashank_comparison_20260908/continuous/seed_0 --dataset /private/tmp/continuous-0s-fresh.58bNDz/dataset.npz --out /Users/rajdeepsingh/Documents/Playground/opponent-modeling/experiments/shashank_comparison_20260908/continuous/seed_0/visuals",
+    "started_at": "2026-09-08T09:25:57.449176+00:00",
+    "wall_seconds": 9.44750725000631,
+    "exit_code": 0,
+    "log": "/Users/rajdeepsingh/Documents/Playground/opponent-modeling/experiments/shashank_comparison_20260908/continuous/seed_0/execution_logs/visualize_0s_rollouts.py.log",
+    "log_sha256": "4594aee3c51e8c2c4a1718331e2efdf1da37bfab62958619e46af2d1603e9b96",
+    "driver_sha256": "a3bda47c113c0932d1dd0f590503641dab8892b708cdcf0e69c619c9509560c5"
+  }
+}

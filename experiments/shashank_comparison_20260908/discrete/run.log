@@ -1,0 +1,11 @@
+Fitting pinned source 0s: 1500 updates, key1000
+SOURCE_COMPLETE {"heldout_probe": 0.755, "heldout_knn_probe": 0.8316666666666667, "train_cv_probe": 0.7175, "heldout_ari": 0.5384042590105123, "heldout_silhouette": 0.05969849228858948, "effective_rank": 2.4886622844800894, "latent_dim": 8, "per_dim_std_mean": 0.290249228477478, "unit_probe": 0.5660314830157415, "decoder_action_accuracy": 0.789336083312757, "decoder_accuracy_scope": "all valid windows including train and held-out, same as source", "seconds": 9.468353083007969}
+Fitting integrated_legacy_forward: 1500 updates, key1000
+FIT_COMPLETE integrated_legacy_forward probe=0.7550 ari=0.5384 unit=0.5660 accuracy=0.7893 seconds=6.9
+Fitting integrated_causal_seed0: 1500 updates, key1000
+FIT_COMPLETE integrated_causal_seed0 probe=0.7967 ari=0.5271 unit=0.6167 accuracy=0.7648 seconds=6.7
+Fitting integrated_causal_seed1: 1500 updates, key1001
+FIT_COMPLETE integrated_causal_seed1 probe=0.7150 ari=0.5442 unit=0.5405 accuracy=0.7622 seconds=6.7
+Fitting integrated_causal_seed2: 1500 updates, key1002
+FIT_COMPLETE integrated_causal_seed2 probe=0.6900 ari=0.5031 unit=0.5851 accuracy=0.7631 seconds=6.7
+DONE /Users/rajdeepsingh/Documents/Playground/opponent-modeling/experiments/shashank_comparison_20260908/discrete/metrics.json
