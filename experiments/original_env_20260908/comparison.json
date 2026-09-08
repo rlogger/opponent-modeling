@@ -1,0 +1,198 @@
+{
+  "scope": "One controller seed; 24 matched held-out resets per opponent. Not a SOTA claim.",
+  "metrics": [
+    {
+      "arm": "Offline TD-MPC",
+      "opponent": "capture",
+      "n": 24,
+      "return_mean": -598.3526611328125,
+      "return_std": 370.67315673828125,
+      "capture_rate": 0.0416666679084301,
+      "resources_mean": 0.6666666865348816,
+      "outside_transition_fraction": 0.7737348389795065
+    },
+    {
+      "arm": "Offline TD-MPC",
+      "opponent": "risk",
+      "n": 24,
+      "return_mean": -597.0548095703125,
+      "return_std": 365.0406799316406,
+      "capture_rate": 0.0,
+      "resources_mean": 0.75,
+      "outside_transition_fraction": 0.7166666666666667
+    },
+    {
+      "arm": "Offline TD-MPC",
+      "opponent": "curious",
+      "n": 24,
+      "return_mean": -569.25048828125,
+      "return_std": 411.3052978515625,
+      "capture_rate": 0.0,
+      "resources_mean": 0.9583333134651184,
+      "outside_transition_fraction": 0.6983333333333334
+    },
+    {
+      "arm": "Adapted TD-MPC",
+      "opponent": "capture",
+      "n": 24,
+      "return_mean": -2.4324464797973633,
+      "return_std": 8.051417350769043,
+      "capture_rate": 0.7916666865348816,
+      "resources_mean": 1.1666666269302368,
+      "outside_transition_fraction": 0.0
+    },
+    {
+      "arm": "Adapted TD-MPC",
+      "opponent": "risk",
+      "n": 24,
+      "return_mean": 8.700116157531738,
+      "return_std": 16.490312576293945,
+      "capture_rate": 0.0,
+      "resources_mean": 2.5,
+      "outside_transition_fraction": 0.0125
+    },
+    {
+      "arm": "Adapted TD-MPC",
+      "opponent": "curious",
+      "n": 24,
+      "return_mean": 6.040811061859131,
+      "return_std": 11.82748794555664,
+      "capture_rate": 0.2083333283662796,
+      "resources_mean": 2.5833332538604736,
+      "outside_transition_fraction": 0.030430711610486893
+    },
+    {
+      "arm": "MAPPO prey",
+      "opponent": "capture",
+      "n": 24,
+      "return_mean": -0.6073148846626282,
+      "return_std": 6.978291988372803,
+      "capture_rate": 1.0,
+      "resources_mean": 1.9166666269302368,
+      "outside_transition_fraction": 0.0
+    },
+    {
+      "arm": "MAPPO prey",
+      "opponent": "risk",
+      "n": 24,
+      "return_mean": 26.573989868164062,
+      "return_std": 13.709742546081543,
+      "capture_rate": 0.0,
+      "resources_mean": 6.0,
+      "outside_transition_fraction": 0.014583333333333334
+    },
+    {
+      "arm": "MAPPO prey",
+      "opponent": "curious",
+      "n": 24,
+      "return_mean": 25.84977149963379,
+      "return_std": 16.374040603637695,
+      "capture_rate": 0.2083333283662796,
+      "resources_mean": 5.666666507720947,
+      "outside_transition_fraction": 0.0
+    },
+    {
+      "arm": "Random",
+      "opponent": "capture",
+      "n": 24,
+      "return_mean": -10.578954696655273,
+      "return_std": 20.663284301757812,
+      "capture_rate": 0.375,
+      "resources_mean": 0.4166666567325592,
+      "outside_transition_fraction": 0.06862231534834992
+    },
+    {
+      "arm": "Random",
+      "opponent": "risk",
+      "n": 24,
+      "return_mean": -13.82728099822998,
+      "return_std": 39.27431869506836,
+      "capture_rate": 0.0416666679084301,
+      "resources_mean": 0.8333333134651184,
+      "outside_transition_fraction": 0.11049723756906077
+    },
+    {
+      "arm": "Random",
+      "opponent": "curious",
+      "n": 24,
+      "return_mean": -8.520255088806152,
+      "return_std": 16.073827743530273,
+      "capture_rate": 0.2083333283662796,
+      "resources_mean": 0.4166666567325592,
+      "outside_transition_fraction": 0.05462962962962963
+    }
+  ],
+  "training_collection": [
+    {
+      "round": 0,
+      "updates_before_collection": 0,
+      "return_mean": -567.1566492716471
+    },
+    {
+      "round": 1,
+      "updates_before_collection": 1000,
+      "return_mean": -45.128028869628906
+    },
+    {
+      "round": 2,
+      "updates_before_collection": 2000,
+      "return_mean": -14.517073154449463
+    },
+    {
+      "round": 3,
+      "updates_before_collection": 3000,
+      "return_mean": -15.610968271891275
+    },
+    {
+      "round": 4,
+      "updates_before_collection": 4000,
+      "return_mean": -2.5363200902938843
+    },
+    {
+      "round": 5,
+      "updates_before_collection": 5000,
+      "return_mean": -1.5985805193583171
+    }
+  ],
+  "overall_returns": {
+    "Offline TD-MPC": {
+      "mean": -588.2193603515625,
+      "reset_bootstrap_95ci": [
+        -717.8736129760742,
+        -458.18299865722656
+      ]
+    },
+    "Adapted TD-MPC": {
+      "mean": 4.102827072143555,
+      "reset_bootstrap_95ci": [
+        0.36654567867517485,
+        7.70662556886673
+      ]
+    },
+    "MAPPO prey": {
+      "mean": 17.27214813232422,
+      "reset_bootstrap_95ci": [
+        13.435422778129578,
+        20.812719297409057
+      ]
+    },
+    "Random": {
+      "mean": -10.975496292114258,
+      "reset_bootstrap_95ci": [
+        -17.47185959815979,
+        -5.25010690689087
+      ]
+    }
+  },
+  "paired_improvement": {
+    "mean": 592.3221435546875,
+    "reset_bootstrap_95ci": [
+      461.50637969970705,
+      723.2049255371094
+    ],
+    "fraction_positive": 0.9583333333333334
+  },
+  "online_transitions": 24703,
+  "updates_added": 6000,
+  "outside_protocol": "Fraction of valid transitions whose next blue position has max absolute coordinate > 2."
+}

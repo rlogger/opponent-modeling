@@ -225,3 +225,112 @@ def test_0s_cli_defaults_to_online_without_legacy_bc(driver, tiny, saved_run, mo
     assert result["opponent_model"] == "frozen_zero_s" and result["context_dim"] == 8
     assert len(result["runs"]) == n and calls == list(range(n))
     assert not missing_bc.exists()
+
+
+def _training_dataset(tiny):
+    states = np.concatenate([tiny.states, tiny.states[:3]], axis=0)
+    n, t = len(states), states.shape[1] - 1
+    data = {"state": states, "blue_action": np.zeros((n, t, 2), np.float32),
+            "red_action": np.tanh(states[:, :-1, :2]), "blue_reward": np.ones((n, t), np.float32),
+            "valid_length": np.full(n, t, np.int32), "valid_mask": np.ones((n, t), bool),
+            "terminated_capture": np.zeros((n, t), bool), "truncated_timeout": np.zeros((n, t), bool),
+            "checkpoint_seed": np.repeat([0, 1, 2], 3), "objective_label": np.tile([0, 1, 2], 3)}
+    data["truncated_timeout"][:, -1] = True
+    return SimpleNamespace(**data, as_dict=lambda: data)
+
+
+def test_0s_online_collector_uses_only_training_specialists_and_records_causal_replay(driver, tiny, monkeypatch, tmp_path):
+    ds = _training_dataset(tiny)
+    context = tiny.opponent.context(ds.state, ds.red_action, ds.valid_length)
+    replay = driver.SequenceReplay.from_dataset(ds.as_dict(), np.arange(6), 3, context)
+    before = replay.n_episodes
+    env = make_env("capture", continuous=True, max_steps=4)
+    params = _specialist(env)
+    loaded = []
+
+    def checkpoint_path(logdir, pred_type, team, ckpt):
+        assert team == "pred" and ckpt in {0, 1}
+        loaded.append((pred_type, ckpt))
+        path = tmp_path / f"{pred_type}_{ckpt}.checkpoint"
+        path.write_bytes(b"synthetic specialist")
+        return path
+
+    def controller(*args, **kwargs):
+        assert kwargs["explore"]
+        return lambda state, obs, ctx, carry, key, t: (jnp.zeros((len(ctx), 2)), carry)
+
+    monkeypatch.setattr(driver, "make_env", lambda *args, **kwargs: env)
+    monkeypatch.setattr(driver, "TDMPCController", controller)
+    monkeypatch.setattr(driver, "continuous_checkpoint_path", checkpoint_path)
+    monkeypatch.setattr(driver, "load_continuous_actor_params", lambda path: params)
+    result = driver.collect_online_round(
+        tiny.agent, ds, replay, None, heldout=2, features="markov", context_source="zero_s",
+        mode="factored", episodes_per_group=1, logdir=tmp_path, rng=np.random.default_rng(23),
+        horizon=6, zero_s=tiny.opponent, record_dir=tmp_path / "recordings",
+    )
+    assert set(loaded) == {(name, ckpt) for name in driver.OBJECTIVE_TYPES for ckpt in (0, 1)}
+    assert replay.n_episodes == before + 6 and result["n_episodes"] == 6
+    for i, group in enumerate(result["groups"]):
+        recording = group["transitions"]
+        assert driver.file_sha256(Path(recording["path"])) == recording["sha256"]
+        with np.load(recording["path"]) as trace:
+            assert trace["checkpoint_seed"][0] in {0, 1}
+            assert trace["environment_seed"].shape == trace["step_seed"].shape == (1, 2)
+            assert trace["replay_context"].shape == (1, 7, 8)
+            np.testing.assert_allclose(trace["context"], trace["replay_context"][:, :-1], atol=2e-6)
+            np.testing.assert_array_equal(replay.context[before + i], trace["replay_context"][0])
+
+
+def test_0s_adaptation_updates_controller_not_opponent_and_resumes_replay(driver, tiny, saved_run, monkeypatch, tmp_path):
+    ds = _training_dataset(tiny)
+    dataset = tmp_path / "dataset.npz"
+    dataset.write_bytes(b"synthetic dataset")
+    parent = json.loads((saved_run / "manifest.json").read_text())
+    parent["dataset"] = {"sha256": driver.file_sha256(dataset)}
+    (saved_run / "manifest.json").write_text(json.dumps(parent))
+    parent_hashes = {name: driver.file_sha256(saved_run / name) for name in parent["artifacts"]}
+    # Held-out observations must never enter even the context computation.
+    ds.state[ds.checkpoint_seed == 2] = np.nan
+    monkeypatch.setattr(driver, "load_continuous_dataset", lambda path: ds)
+    lengths_before_collection = []
+
+    def collect(agent, data, replay, encoder, **kwargs):
+        assert encoder is None and kwargs["heldout"] == 2 and kwargs["zero_s"] is not None
+        lengths_before_collection.append(replay.n_episodes)
+        trace = {k: v[:1] for k, v in data.as_dict().items()}
+        context = kwargs["zero_s"].context(trace["state"], trace["red_action"], trace["valid_length"])
+        assert np.isfinite(replay.context).all()
+        replay.append(trace, context)
+        directory = kwargs["record_dir"]
+        directory.mkdir()
+        path = directory / "training.npz"
+        np.savez_compressed(path, **trace, replay_context=context)
+        return {"n_transitions": 6, "n_episodes": 1,
+                "groups": [{"blue_return_mean": 6.0, "checkpoint": 0,
+                            "transitions": {"path": str(path), "sha256": driver.file_sha256(path)}}]}
+
+    monkeypatch.setattr(driver, "collect_online_round", collect)
+    first, second = tmp_path / "adapted", tmp_path / "resumed"
+    for source, out in ((saved_run, first), (first, second)):
+        assert driver.main(["adapt-0s", str(source), "--dataset", str(dataset), "--out", str(out),
+                            "--rounds", "1", "--episodes-per-group", "1", "--updates-per-round", "1"]) == 0
+    assert lengths_before_collection == [6, 7]
+    restored, manifest, stats = driver.build_template(second)
+    for name in ("config.json", "state_stats.npz", "opponent.msgpack"):
+        assert driver.file_sha256(second / name) == parent_hashes[name]
+    assert driver.file_sha256(second / "agent.msgpack") != parent_hashes["agent.msgpack"]
+    for old, new in zip(jax.tree.leaves(tiny.agent.model.red_model.params),
+                        jax.tree.leaves(restored.model.red_model.params), strict=True):
+        np.testing.assert_array_equal(old, new)
+    online = manifest["online_adaptation"]
+    assert online["updates_completed"] == 2 and len(online["rounds"]) == 2
+    assert online["online_transitions"] == 12 and online["online_fraction"] == 0.25
+    assert online["training_checkpoints"] == [0, 1]
+    assert manifest["parent_run"]["agent_sha256"] == driver.file_sha256(first / "agent.msgpack")
+    assert {name: driver.file_sha256(saved_run / name) for name in parent["artifacts"]} == parent_hashes
+    with pytest.raises(ValueError, match="new or empty"):
+        driver.main(["adapt-0s", str(saved_run), "--dataset", str(dataset), "--out", str(first)])
+    dataset.write_bytes(b"changed dataset")
+    with pytest.raises(ValueError, match="dataset does not match"):
+        driver.main(["adapt-0s", str(saved_run), "--dataset", str(dataset), "--out", str(tmp_path / "bad")])
+    stats.close()

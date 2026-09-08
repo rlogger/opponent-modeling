@@ -1,0 +1,146 @@
+{
+  "scope": "Forward-only diagnostic on the OLD saved six-episode smoke traces. Not a restored-environment rerun, new held-out performance test, or training result.",
+  "regions": "Inside/outside means max(abs(blue position)) <= 2 or > 2 at transition start. These are geometric counts, not a statistical training-support test; no wall is implied.",
+  "reward_protocol": "One-step reward head at the recorded pre-step state and actual blue action. Compare actual recorded red action with frozen 0s prediction using recorded causal context.",
+  "q_protocol": "Mean of all five online Q heads at recorded state, blue action and causal context; dropout key 1. Positive Q is a model estimate, not a measured future return.",
+  "reproduce": "uv run --locked --extra train --extra plot --extra dev python experiments/original_env_20260908/reward_diagnostic.py --run /Users/rajdeepsingh/Documents/Playground/opponent-modeling/experiments/shashank_comparison_20260908/continuous/seed_0 --out /Users/rajdeepsingh/Documents/Playground/opponent-modeling/experiments/original_env_20260908/reward_diagnostic.json",
+  "run": "experiments/shashank_comparison_20260908/continuous/seed_0",
+  "evaluation_only": true,
+  "artifacts_sha256": {
+    "agent.msgpack": "fffb690faa63cdcaf39bef7fa1e3ba41272f88f134d641c1512f98e0079cb45a",
+    "opponent.msgpack": "048233bf8c1f8165556db1e089b6e85e9110fbf2d67d8638031a9dcd206e0271",
+    "state_stats.npz": "49246c7fd646630d30308284dd49fa3d3df1fea7693a6dae26ce4eb6fbca46b4",
+    "config.json": "d759122e7f6f9777ec42da5de7e013d195801fae2066fef11188d3873c287818",
+    "manifest.json": "c8970800e025cbcae0c2c23164a4778d8dc267875baf4ad4d4fcea870ce77bfc"
+  },
+  "source_sha256": {
+    "src/mopa/tdmpc.py": "21629e5826b32a0caf960b4ba09b3a444d8dc539f8a655bc1e6edcf7418cc9d4",
+    "src/mopa/mppi.py": "f40ffd192b11979a070f0d9b00bdf4cbeeb126c75d87a8af189a27434e38da79",
+    "src/mopa/zero_s.py": "af9ee4b11bed3c21f38c3ffcf55edfca3604e32f7474cfd81830a4abd9d79e82",
+    "scripts/run_tdmpc.py": "41e9a056b4fe1c6b1d1dddd2f95b1dffb16f64d40737fbd51216031c0b654309",
+    "experiments/original_env_20260908/reward_diagnostic.py": "b5302cb951e0369478c23198ff2b2d7c6e8e64a5037049fc1853bec997501210"
+  },
+  "horizon": 3,
+  "value_scale": [
+    1.0029393434524536
+  ],
+  "position_mean": [
+    -0.0835031047463417,
+    0.20261532068252563,
+    -0.05199600011110306,
+    0.02022181823849678
+  ],
+  "position_std": [
+    1.8004872798919678,
+    1.8365010023117065,
+    0.9312357306480408,
+    0.945015549659729
+  ],
+  "opponents": {
+    "capture": {
+      "replay_path": "experiments/shashank_comparison_20260908/continuous/seed_0/closed_loop/capture__tdmpc__online.npz",
+      "replay_sha256": "d540bd65cdcbe2bd0a6b284443e118eadcfdb9934234b5f5a1e65243384a458a",
+      "n_episodes": 2,
+      "all": {
+        "n_transitions": 200,
+        "actual_reward_mean": -7.557563304901123,
+        "predicted_reward_actual_red_mean": -0.10560770332813263,
+        "predicted_reward_generated_red_mean": -0.09688451886177063,
+        "reward_actual_red_mae": 7.500438213348389,
+        "q_mean": 1.754481554031372,
+        "q_min": 0.4690762460231781,
+        "q_max": 2.247591018676758
+      },
+      "inside_abs2": {
+        "n_transitions": 48,
+        "actual_reward_mean": -0.15716734528541565,
+        "predicted_reward_actual_red_mean": 0.3547487258911133,
+        "predicted_reward_generated_red_mean": 0.3552192449569702,
+        "reward_actual_red_mae": 0.7139256596565247,
+        "q_mean": 2.1595284938812256,
+        "q_min": 1.9773095846176147,
+        "q_max": 2.247591018676758
+      },
+      "outside_abs2": {
+        "n_transitions": 152,
+        "actual_reward_mean": -9.89453125,
+        "predicted_reward_actual_red_mean": -0.25098341703414917,
+        "predicted_reward_generated_red_mean": -0.23965410888195038,
+        "reward_actual_red_mae": 9.643547058105469,
+        "q_mean": 1.6265718936920166,
+        "q_min": 0.4690762460231781,
+        "q_max": 2.173245668411255
+      }
+    },
+    "risk": {
+      "replay_path": "experiments/shashank_comparison_20260908/continuous/seed_0/closed_loop/risk__tdmpc__online.npz",
+      "replay_sha256": "69189339a7233a3fae646293e5ddda383a24cc6cb75bea1d26ec2206f4f50a2b",
+      "n_episodes": 2,
+      "all": {
+        "n_transitions": 200,
+        "actual_reward_mean": -6.255403995513916,
+        "predicted_reward_actual_red_mean": -0.1205572783946991,
+        "predicted_reward_generated_red_mean": -0.11864235997200012,
+        "reward_actual_red_mae": 6.183403968811035,
+        "q_mean": 1.8050018548965454,
+        "q_min": 0.6963685750961304,
+        "q_max": 2.1639466285705566
+      },
+      "inside_abs2": {
+        "n_transitions": 47,
+        "actual_reward_mean": -0.03756417706608772,
+        "predicted_reward_actual_red_mean": 0.3493923544883728,
+        "predicted_reward_generated_red_mean": 0.35411834716796875,
+        "reward_actual_red_mae": 0.5935861468315125,
+        "q_mean": 2.063011407852173,
+        "q_min": 1.5675854682922363,
+        "q_max": 2.156630516052246
+      },
+      "outside_abs2": {
+        "n_transitions": 153,
+        "actual_reward_mean": -8.165458679199219,
+        "predicted_reward_actual_red_mean": -0.2649208903312683,
+        "predicted_reward_generated_red_mean": -0.2638695240020752,
+        "reward_actual_red_mae": 7.900537490844727,
+        "q_mean": 1.7257438898086548,
+        "q_min": 0.6963685750961304,
+        "q_max": 2.1639466285705566
+      }
+    },
+    "curious": {
+      "replay_path": "experiments/shashank_comparison_20260908/continuous/seed_0/closed_loop/curious__tdmpc__online.npz",
+      "replay_sha256": "882f4ac1a8cbbbf7274d696b5e99b458823b58a3f466757a0e56080541ae354d",
+      "n_episodes": 2,
+      "all": {
+        "n_transitions": 200,
+        "actual_reward_mean": -7.163210391998291,
+        "predicted_reward_actual_red_mean": -0.1937023103237152,
+        "predicted_reward_generated_red_mean": -0.19501352310180664,
+        "reward_actual_red_mae": 7.018044471740723,
+        "q_mean": 1.7642875909805298,
+        "q_min": 0.3322039246559143,
+        "q_max": 2.1942081451416016
+      },
+      "inside_abs2": {
+        "n_transitions": 33,
+        "actual_reward_mean": -0.1343281865119934,
+        "predicted_reward_actual_red_mean": 0.33670732378959656,
+        "predicted_reward_generated_red_mean": 0.3318081498146057,
+        "reward_actual_red_mae": 0.765197217464447,
+        "q_mean": 2.09466552734375,
+        "q_min": 1.968226671218872,
+        "q_max": 2.1942081451416016
+      },
+      "outside_abs2": {
+        "n_transitions": 167,
+        "actual_reward_mean": -8.55215072631836,
+        "predicted_reward_actual_red_mean": -0.298513799905777,
+        "predicted_reward_generated_red_mean": -0.2991160452365875,
+        "reward_actual_red_mae": 8.253637313842773,
+        "q_mean": 1.6990033388137817,
+        "q_min": 0.3322039246559143,
+        "q_max": 2.1839499473571777
+      }
+    }
+  }
+}

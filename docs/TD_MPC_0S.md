@@ -1,4 +1,4 @@
-# Evaluate a saved `0s` controller
+# Run a saved `0s` controller
 
 Run the frozen continuous `0s` + factored Equation 3 checkpoint in the real
 environment. No retraining or planner changes are needed.
@@ -44,3 +44,25 @@ excludes the first two calls (which may compile), context inference, and simulat
 stepping, and measures a whole episode batch. Two episodes per opponent are an
 execution smoke test, not evidence of performance improvement. This remains the
 identity-state Equation 3 variant, not standard learned-latent TD-MPC2 validation.
+
+## Continue controller training
+
+```bash
+uv run --locked --extra train --extra plot python scripts/run_tdmpc.py adapt-0s \
+  experiments/shashank_comparison_20260908/continuous/seed_0 \
+  --dataset experiments/original_env_20260908/data/dataset.npz \
+  --out artifacts/tdmpc_0s_online \
+  --rounds 6 --episodes-per-group 8 --updates-per-round 1000
+```
+
+This resumes the controller and optimizer, collecting fresh planner experience
+against training specialists 0/1 only; checkpoint 2 stays held out. `0s`, state
+normalization, planner settings and environment rewards remain frozen. Training
+samples uniformly from the original plus new replay. Each completed round saves
+the latest controller, raw transitions, causal contexts, random keys and hashes.
+An adapted run can itself be resumed into another new output directory; replay
+and RNG state continue with it. Nonempty output directories are rejected.
+
+See the [original-environment rerun protocol](../experiments/original_env_20260908/PROTOCOL.md)
+for the fixed-budget comparison. The pre-restoration version is preserved on
+`archive/pre-original-env-20260908` at `6721cf0`.

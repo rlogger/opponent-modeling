@@ -13,6 +13,8 @@ train      Fit one world model (``--mode`` implicit | conditioned | factored,
 evaluate   Run the trained controller in the real environment against the
            held-out specialists on matched resets with opponent-context
            controls, plus the factored invariance checks.
+adapt-0s   Resume a saved Equation 3 controller with fresh training-specialist
+           experience, without changing its frozen 0s encoder or decoder.
 compare    Aggregate matched runs (modes x seeds) into one results file with
            the Gate 5 claim gates.
 
@@ -23,6 +25,7 @@ from __future__ import annotations
 
 import argparse
 import json
+import shutil
 import sys
 import time
 from pathlib import Path
@@ -339,6 +342,8 @@ def collect_online_round(
     logdir: Path,
     rng: np.random.Generator,
     horizon: int,
+    zero_s: ZeroSOpponent | None = None,
+    record_dir: Path | None = None,
 ) -> dict[str, Any]:
     """Collect episodes with the current planner against the *training* specialists.
 
@@ -348,12 +353,15 @@ def collect_online_round(
     env = make_env("capture", continuous=True)
     controller = TDMPCController(agent, env, features, explore=True)
     train_ckpts = sorted(int(c) for c in set(ds.checkpoint_seed.tolist()) - {heldout})
+    if zero_s is not None and (mode != "factored" or context_source != "zero_s" or encoder is not None):
+        raise ValueError("0s collection requires factored mode and its own causal context")
+    if record_dir is not None:
+        record_dir.mkdir(parents=True, exist_ok=False)
     summary: dict[str, Any] = {"groups": [], "n_episodes": 0, "n_transitions": 0}
     for ckpt in train_ckpts:
         for label, pred_type in enumerate(OBJECTIVE_TYPES):
-            red_params = load_continuous_actor_params(
-                continuous_checkpoint_path(logdir, pred_type, "pred", ckpt)
-            )
+            red_path = continuous_checkpoint_path(logdir, pred_type, "pred", ckpt)
+            red_params = load_continuous_actor_params(red_path)
             base = int(rng.integers(0, 2**31 - 1))
             reset_keys = np.asarray(jax.random.split(jax.random.PRNGKey(base), episodes_per_group), np.uint32)
             step_seed = np.asarray(jax.random.split(jax.random.PRNGKey(base + 1), episodes_per_group), np.uint32)
@@ -361,10 +369,15 @@ def collect_online_round(
                 env, red_params, controller, reset_keys, step_seed, horizon=horizon,
                 context_mode="zero" if mode == "implicit" else "online",
                 label=label, encoder=encoder,
+                zero_s=zero_s,
                 shuffle_seed=base, record_transitions=True,
             )
             tr = out["transitions"]
-            if context_source == "oracle":
+            if zero_s is not None:
+                ctx = zero_s.context(tr["state"], tr["red_action"], tr["valid_length"])
+                np.testing.assert_allclose(ctx[:, :-1], tr["context"], atol=2e-5, rtol=2e-5,
+                                           err_msg="replay contexts differ from actual causal decisions")
+            elif context_source == "oracle":
                 ctx = np.repeat(np.eye(CONTEXT_DIM, dtype=np.float32)[label][None, None], horizon + 1, axis=1)
                 ctx = np.repeat(ctx, episodes_per_group, axis=0)
             elif context_source in {"zero", "none"}:
@@ -374,8 +387,18 @@ def collect_online_round(
             if mode == "implicit":
                 ctx = ctx[..., : replay.context.shape[-1]] * 0.0
             replay.append(tr, ctx, feature_map=features)
+            recording = {}
+            if record_dir is not None:
+                path = record_dir / f"{pred_type}__checkpoint_{ckpt}.npz"
+                np.savez_compressed(path, **tr, replay_context=ctx,
+                                    environment_seed=reset_keys, step_seed=step_seed,
+                                    checkpoint_seed=np.full(episodes_per_group, ckpt),
+                                    objective_label=np.full(episodes_per_group, label))
+                recording = {"transitions": {"path": str(path.resolve()), "sha256": file_sha256(path)},
+                             "specialist": {"path": str(red_path.resolve()), "sha256": file_sha256(red_path)}}
             summary["groups"].append(
                 {
+                    **recording,
                     "checkpoint": ckpt,
                     "opponent": pred_type,
                     "n_episodes": int(episodes_per_group),
@@ -387,6 +410,119 @@ def collect_online_round(
             summary["n_episodes"] += int(episodes_per_group)
             summary["n_transitions"] += int(tr["valid_length"].sum())
     return summary
+
+
+def cmd_adapt_zero_s(args: argparse.Namespace) -> int:
+    """Continue one saved controller; all data collection excludes checkpoint 2."""
+    if min(args.rounds, args.episodes_per_group, args.updates_per_round, args.log_every) < 1:
+        raise ValueError("rounds, episodes, updates and log-every must be positive")
+    if args.out.exists() and (not args.out.is_dir() or any(args.out.iterdir())):
+        raise ValueError("adapt-0s requires a new or empty output directory")
+    agent, manifest, stats = build_template(args.run)
+    if manifest.get("context_source") != "zero_s" or int(manifest["heldout_checkpoint"]) != 2:
+        raise ValueError("adapt-0s requires a saved 0s Equation 3 run with checkpoint 2 held out")
+    if file_sha256(args.dataset) != manifest["dataset"]["sha256"]:
+        raise ValueError("0s adaptation dataset does not match the training manifest")
+    opponent = ZeroSOpponent.load(args.run / "opponent.msgpack")
+    ds = load_continuous_dataset(args.dataset)
+    if set(np.unique(ds.checkpoint_seed)) != {0, 1, 2}:
+        raise ValueError("adapt-0s requires checkpoint 0/1 training and checkpoint 2 held out")
+    train = np.flatnonzero(ds.checkpoint_seed != 2)
+    # Even context computation is restricted to the training episodes.
+    context = np.zeros(ds.state.shape[:2] + (opponent.encoder.config.lat,), np.float32)
+    context[train] = opponent.context(ds.state[train], ds.red_action[train], ds.valid_length[train])
+    replay = SequenceReplay.from_dataset(ds.as_dict(), train, agent.horizon, context, feature_map="markov")
+    offline_transitions = replay.n_transitions
+    previous = manifest.get("online_adaptation", {})
+    online_data = list(previous.get("data", []))
+    for recording in online_data:
+        path = Path(recording["path"])
+        if file_sha256(path) != recording["sha256"]:
+            raise ValueError(f"previous online replay does not match its manifest: {path}")
+        with np.load(path, allow_pickle=False) as raw:
+            if not np.isin(raw["checkpoint_seed"], [0, 1]).all():
+                raise ValueError("held-out checkpoint must never enter online replay")
+            replay.append(dict(raw), raw["replay_context"], feature_map="markov")
+    seed = args.seed if args.seed is not None else int(previous.get("seed", manifest["seed"]))
+    rng, collect_rng = np.random.default_rng(seed), np.random.default_rng(777 + seed)
+    key = jax.random.PRNGKey(20_000 + seed)
+    if previous and seed == previous["seed"]:
+        rng.bit_generator.state = previous["replay_rng_state"]
+        collect_rng.bit_generator.state = previous["collection_rng_state"]
+        key = jnp.asarray(previous["update_key"], jnp.uint32)
+    rounds = list(previous.get("rounds", []))
+    history = list(previous.get("training_log", []))
+    step = int(previous.get("updates_completed", 0))
+    frozen = [np.asarray(x).copy() for x in jax.tree.leaves(agent.model.red_model.params)]
+    out = args.out
+    out.mkdir(parents=True, exist_ok=True)
+    for name in ("config.json", "state_stats.npz", "opponent.msgpack"):
+        shutil.copyfile(args.run / name, out / name)
+    parent = {"path": str(args.run.resolve()), "manifest_sha256": file_sha256(args.run / "manifest.json"),
+              "agent_sha256": file_sha256(args.run / "agent.msgpack")}
+    code = {str(p.relative_to(_ROOT)): file_sha256(p) for p in
+            [Path(__file__).resolve(), *sorted((_ROOT / "src").rglob("*.py")), _ROOT / "configs/tdmpc2.yaml", _ROOT / "uv.lock"]}
+    t0 = time.time()
+
+    def checkpoint() -> None:
+        for before, after in zip(frozen, jax.tree.leaves(agent.model.red_model.params), strict=True):
+            np.testing.assert_array_equal(before, after, err_msg="0s decoder must remain frozen")
+        # The latest complete round is reloadable even if a later round fails.
+        pending = out / "agent.pending.msgpack"
+        save_agent(agent, pending)
+        pending.replace(out / "agent.msgpack")
+        adapted = {**manifest, "git_sha": git_sha(_ROOT), "git_dirty": git_dirty(_ROOT),
+                   "dependencies": package_versions(), "parent_run": parent, "code": code,
+                   "online_adaptation": {
+                       "seed": seed, "updates_completed": step, "rounds": rounds, "training_log": history,
+                       "data": online_data, "training_checkpoints": [0, 1], "heldout_checkpoint": 2,
+                       "opponent_frozen": True, "config_unchanged": True,
+                       "replay_sampling": "uniform over all valid offline and online transitions",
+                       "offline_transitions": offline_transitions,
+                       "online_transitions": replay.n_transitions - offline_transitions,
+                       "online_fraction": (replay.n_transitions - offline_transitions) / replay.n_transitions,
+                       "replay_rng_state": rng.bit_generator.state,
+                       "collection_rng_state": collect_rng.bit_generator.state, "update_key": key,
+                   },
+                   "artifacts": {name: file_sha256(out / name) for name in
+                                 ("config.json", "state_stats.npz", "opponent.msgpack", "agent.msgpack")}}
+        pending_manifest = out / "manifest.pending.json"
+        pending_manifest.write_text(json.dumps(_jsonable(adapted), indent=2, sort_keys=True, allow_nan=False) + "\n")
+        pending_manifest.replace(out / "manifest.json")
+
+    checkpoint()
+    for _ in range(args.rounds):
+        round_index = len(rounds)
+        print(f"[adapt-0s] collect round {round_index}: training checkpoints 0/1 only", flush=True)
+        summary = collect_online_round(
+            agent, ds, replay, None, heldout=2, features="markov", context_source="zero_s",
+            mode="factored", episodes_per_group=args.episodes_per_group, logdir=args.logdir,
+            rng=collect_rng, horizon=int(ds.blue_action.shape[1]), zero_s=opponent,
+            record_dir=out / f"online_round_{round_index:03d}",
+        )
+        online_data.extend(group["transitions"] for group in summary["groups"])
+        summary.update(round=round_index, seed=seed, updates=args.updates_per_round)
+        print(f"[adapt-0s] collected {summary['n_transitions']} transitions; "
+              f"mean return {np.mean([g['blue_return_mean'] for g in summary['groups']]):.2f}; "
+              f"online replay {(replay.n_transitions - offline_transitions) / replay.n_transitions:.1%}", flush=True)
+        for update in range(args.updates_per_round):
+            key, update_key = jax.random.split(key)
+            agent, info = agent.update(**replay.sample(rng, agent.batch_size), key=update_key)
+            step += 1
+            if step % args.log_every == 0 or update == args.updates_per_round - 1:
+                row = {"step": step, "round": round_index, "seconds": time.time() - t0,
+                       **{k: float(np.asarray(info[k])) for k in
+                          ("total_loss", "consistency_loss", "reward_loss", "value_loss", "continue_loss", "policy_loss")}}
+                if not np.isfinite(list(row.values())).all():
+                    raise RuntimeError(f"nonfinite controller loss at update {step}")
+                history.append(row)
+                print(f"[adapt-0s] update {step}: total {row['total_loss']:.4f} "
+                      f"consistency {row['consistency_loss']:.4f} ({row['seconds']:.0f}s)", flush=True)
+        rounds.append(summary)
+        checkpoint()
+        print(f"[adapt-0s] saved round {round_index}: {out}", flush=True)
+    stats.close()
+    return 0
 
 
 def factored_invariance_checks(agent, ds, eval_eps, context, seed: int, features: str = "markov") -> dict[str, Any] | None:  # noqa: ANN001
@@ -816,6 +952,17 @@ def build_parser() -> argparse.ArgumentParser:
     tr.add_argument("--updates-per-round", type=int, default=2000)
     tr.add_argument("--logdir", type=Path, default=DEFAULT_CONTINUOUS_LOGDIR)
     tr.set_defaults(func=cmd_train)
+    ad = sub.add_parser("adapt-0s", help="resume a saved 0s controller using training-specialist experience")
+    ad.add_argument("run", type=Path)
+    ad.add_argument("--dataset", type=Path, required=True)
+    ad.add_argument("--out", type=Path, required=True)
+    ad.add_argument("--logdir", type=Path, default=DEFAULT_CONTINUOUS_LOGDIR)
+    ad.add_argument("--rounds", type=int, default=4)
+    ad.add_argument("--episodes-per-group", type=int, default=8)
+    ad.add_argument("--updates-per-round", type=int, default=1000)
+    ad.add_argument("--log-every", type=int, default=100)
+    ad.add_argument("--seed", type=int, help="defaults to the saved adaptation or encoder seed")
+    ad.set_defaults(func=cmd_adapt_zero_s)
     ev = sub.add_parser("evaluate")
     ev.add_argument("run", type=Path)
     ev.add_argument("--dataset", type=Path, default=Path("artifacts/continuous/dataset.npz"))

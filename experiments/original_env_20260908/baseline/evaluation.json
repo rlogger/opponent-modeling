@@ -1,0 +1,479 @@
+{
+  "agent_sha256": "fffb690faa63cdcaf39bef7fa1e3ba41272f88f134d641c1512f98e0079cb45a",
+  "checkpoint_artifacts": {
+    "agent.msgpack": "fffb690faa63cdcaf39bef7fa1e3ba41272f88f134d641c1512f98e0079cb45a",
+    "config.json": "d759122e7f6f9777ec42da5de7e013d195801fae2066fef11188d3873c287818",
+    "opponent.msgpack": "048233bf8c1f8165556db1e089b6e85e9110fbf2d67d8638031a9dcd206e0271",
+    "state_stats.npz": "49246c7fd646630d30308284dd49fa3d3df1fea7693a6dae26ce4eb6fbca46b4"
+  },
+  "code": {
+    "scripts/run_tdmpc.py": "41e9a056b4fe1c6b1d1dddd2f95b1dffb16f64d40737fbd51216031c0b654309",
+    "src/mopa/evaluation.py": "2885625858b4f7453fe30b62a5f0721e39332a80cdea5b4321f8e5476a8f7c64",
+    "src/mopa/mppi.py": "f40ffd192b11979a070f0d9b00bdf4cbeeb126c75d87a8af189a27434e38da79",
+    "src/mopa/tdmpc.py": "21629e5826b32a0caf960b4ba09b3a444d8dc539f8a655bc1e6edcf7418cc9d4",
+    "src/mopa/zero_s.py": "af9ee4b11bed3c21f38c3ffcf55edfca3604e32f7474cfd81830a4abd9d79e82",
+    "src/tag_objectives/__init__.py": "a62de0fa0bb3746f86734aef53f0613e377964549aa8f46318434d645ef8ea15",
+    "src/tag_objectives/actions.py": "8b14d4d9e6eaca11d303e4de07be47a912fc1599f221934d96858089532e1cb7",
+    "src/tag_objectives/api.py": "a12ec62f07f48297e74cc5232fff32966d56fe13f459d29aa34f9ee0879040c5",
+    "src/tag_objectives/objectives.py": "5898be2a3f0d8901e974d181dca805bbf169871115f02906c5cf59c5a03c360d",
+    "src/tag_objectives/rendering.py": "2be88dd403b2d5b4cc8d6416344823bf05f3b041cb085ae4c8f58bdf265eddd7",
+    "src/tag_objectives/resources.py": "05ba9780d15bb9dcc5a4c8c6ac22461c794ad693a91476ab404736e57dfb14ee",
+    "src/tag_objectives/teams.py": "7f77b373cd582a68172080a81b14ff602591283e85d74b05700c3cfd0d58cf94",
+    "src/tag_objectives/types.py": "bdf18df9a27bc8a39e7e6b766bd19708164accaeea8209788c07f7e930a4235c"
+  },
+  "context_dim": 8,
+  "context_protocol": "At decision t, only observed (state_s, red_action_s), s < t; frozen within each imagined horizon. Oracle modes use train-only class prototypes, not specialist actions.",
+  "dataset": {
+    "path": "experiments/original_env_20260908/data/dataset.npz",
+    "sha256": "928181027a9e5e86b106190b1487cda90c09e2cc5df08b569f7b93ba8350b5f5"
+  },
+  "encoder": "identity",
+  "factored_invariance": null,
+  "features": "markov",
+  "git_dirty": true,
+  "git_sha": "6721cf023e04ba61c3d5b525301f8e55e62de102",
+  "heldout_checkpoint": 2,
+  "manifest_sha256": "c8970800e025cbcae0c2c23164a4778d8dc267875baf4ad4d4fcea870ce77bfc",
+  "mode": "factored",
+  "n_eps_per_opponent": 24,
+  "opponent_model": "frozen_zero_s",
+  "planner": {
+    "horizon": 3,
+    "mppi_iterations": 6,
+    "num_elites": 64,
+    "policy_prior_samples": 24,
+    "population_size": 512
+  },
+  "prey_control_checkpoint": {
+    "path": "logs/MPE_simple_tag_v3_continuous/mappo_continuous_capture_MPE_simple_tag_v3_continuous_prey_actor_seed0_vmap2.safetensors",
+    "sha256": "e20c31b26e8792b6cbb27a6b90aa39be4a11dc1153f1d14ceae3f033f6b075c7"
+  },
+  "run": "experiments/shashank_comparison_20260908/continuous/seed_0",
+  "runs": [
+    {
+      "blue_action_abs_max": 1.0,
+      "blue_return": {
+        "mean": -598.3526611328125,
+        "std": 370.67315673828125
+      },
+      "captured": {
+        "mean": 0.0416666679084301,
+        "std": 0.19982630014419556
+      },
+      "context_mode": "online",
+      "controller": "tdmpc",
+      "controller_timing": {
+        "batch_size": 24,
+        "first_two_calls_seconds": [
+          3.078882334055379,
+          2.689616792020388
+        ],
+        "scope": "synchronized action calls; first two may compile; excludes context inference and environment stepping",
+        "steady_median_seconds_per_batch": 0.5701944584143348
+      },
+      "n_episodes": 24,
+      "opponent": "capture",
+      "prey_lava_steps": {
+        "mean": 2.25,
+        "std": 4.342138290405273
+      },
+      "recordings": {
+        "camera": "arena",
+        "gif": "capture__tdmpc__online.gif",
+        "png": "capture__tdmpc__online.png",
+        "rendered_dataset_episode": 400,
+        "transitions": "capture__tdmpc__online.npz"
+      },
+      "resources_collected": {
+        "mean": 0.6666666865348816,
+        "std": 0.6236095428466797
+      },
+      "seconds_per_env_step": 0.02667460838953654,
+      "seconds_total": 64.0190601348877,
+      "survival_time": {
+        "mean": 99.625,
+        "std": 1.7984368801116943
+      }
+    },
+    {
+      "blue_action_abs_max": 1.0,
+      "blue_return": {
+        "mean": -0.607314944267273,
+        "std": 6.978291988372803
+      },
+      "captured": {
+        "mean": 1.0,
+        "std": 0.0
+      },
+      "context_mode": "zero",
+      "controller": "mappo_prey",
+      "controller_timing": {
+        "batch_size": 24,
+        "first_two_calls_seconds": [
+          0.032310958951711655,
+          9.716697968542576e-05
+        ],
+        "scope": "synchronized action calls; first two may compile; excludes context inference and environment stepping",
+        "steady_median_seconds_per_batch": 7.687497418373823e-05
+      },
+      "n_episodes": 24,
+      "opponent": "capture",
+      "prey_lava_steps": {
+        "mean": 9.791666984558105,
+        "std": 8.66015338897705
+      },
+      "recordings": {
+        "camera": "arena",
+        "gif": "capture__mappo_prey__zero.gif",
+        "png": "capture__mappo_prey__zero.png",
+        "rendered_dataset_episode": 400,
+        "transitions": "capture__mappo_prey__zero.npz"
+      },
+      "resources_collected": {
+        "mean": 1.9166666269302368,
+        "std": 1.4117562770843506
+      },
+      "seconds_per_env_step": 0.00019602994124094645,
+      "seconds_total": 0.4704718589782715,
+      "survival_time": {
+        "mean": 25.5,
+        "std": 10.404326438903809
+      }
+    },
+    {
+      "blue_action_abs_max": 0.9997878074645996,
+      "blue_return": {
+        "mean": -10.578954696655273,
+        "std": 20.663284301757812
+      },
+      "captured": {
+        "mean": 0.375,
+        "std": 0.4841229319572449
+      },
+      "context_mode": "zero",
+      "controller": "random",
+      "controller_timing": {
+        "batch_size": 24,
+        "first_two_calls_seconds": [
+          0.038648791960440576,
+          8.174998220056295e-05
+        ],
+        "scope": "synchronized action calls; first two may compile; excludes context inference and environment stepping",
+        "steady_median_seconds_per_batch": 7.110449951142073e-05
+      },
+      "n_episodes": 24,
+      "opponent": "capture",
+      "prey_lava_steps": {
+        "mean": 0.0833333358168602,
+        "std": 0.2763853967189789
+      },
+      "recordings": {
+        "camera": "arena",
+        "gif": "capture__random__zero.gif",
+        "png": "capture__random__zero.png",
+        "rendered_dataset_episode": 400,
+        "transitions": "capture__random__zero.npz"
+      },
+      "resources_collected": {
+        "mean": 0.4166666567325592,
+        "std": 0.759202778339386
+      },
+      "seconds_per_env_step": 0.0001973049839337667,
+      "seconds_total": 0.47353196144104004,
+      "survival_time": {
+        "mean": 79.54166412353516,
+        "std": 29.50844383239746
+      }
+    },
+    {
+      "blue_action_abs_max": 1.0,
+      "blue_return": {
+        "mean": -597.0547485351562,
+        "std": 365.0406799316406
+      },
+      "captured": {
+        "mean": 0.0,
+        "std": 0.0
+      },
+      "context_mode": "online",
+      "controller": "tdmpc",
+      "controller_timing": {
+        "batch_size": 24,
+        "first_two_calls_seconds": [
+          0.530017833923921,
+          0.49889287492260337
+        ],
+        "scope": "synchronized action calls; first two may compile; excludes context inference and environment stepping",
+        "steady_median_seconds_per_batch": 0.5238322704681195
+      },
+      "n_episodes": 24,
+      "opponent": "risk",
+      "prey_lava_steps": {
+        "mean": 6.041666507720947,
+        "std": 12.807806968688965
+      },
+      "recordings": {
+        "camera": "arena",
+        "gif": "risk__tdmpc__online.gif",
+        "png": "risk__tdmpc__online.png",
+        "rendered_dataset_episode": 1000,
+        "transitions": "risk__tdmpc__online.npz"
+      },
+      "resources_collected": {
+        "mean": 0.75,
+        "std": 0.9682458639144897
+      },
+      "seconds_per_env_step": 0.5770558554927508,
+      "seconds_total": 1384.934053182602,
+      "survival_time": {
+        "mean": 100.0,
+        "std": 0.0
+      }
+    },
+    {
+      "blue_action_abs_max": 1.0,
+      "blue_return": {
+        "mean": 26.573989868164062,
+        "std": 13.709742546081543
+      },
+      "captured": {
+        "mean": 0.0,
+        "std": 0.0
+      },
+      "context_mode": "zero",
+      "controller": "mappo_prey",
+      "controller_timing": {
+        "batch_size": 24,
+        "first_two_calls_seconds": [
+          0.030885667074471712,
+          0.00011920800898224115
+        ],
+        "scope": "synchronized action calls; first two may compile; excludes context inference and environment stepping",
+        "steady_median_seconds_per_batch": 8.125050226226449e-05
+      },
+      "n_episodes": 24,
+      "opponent": "risk",
+      "prey_lava_steps": {
+        "mean": 38.625,
+        "std": 15.02723217010498
+      },
+      "recordings": {
+        "camera": "arena",
+        "gif": "risk__mappo_prey__zero.gif",
+        "png": "risk__mappo_prey__zero.png",
+        "rendered_dataset_episode": 1000,
+        "transitions": "risk__mappo_prey__zero.npz"
+      },
+      "resources_collected": {
+        "mean": 6.0,
+        "std": 1.9364917278289795
+      },
+      "seconds_per_env_step": 0.00019998411337534587,
+      "seconds_total": 0.4799618721008301,
+      "survival_time": {
+        "mean": 100.0,
+        "std": 0.0
+      }
+    },
+    {
+      "blue_action_abs_max": 0.999988317489624,
+      "blue_return": {
+        "mean": -13.82728099822998,
+        "std": 39.27431869506836
+      },
+      "captured": {
+        "mean": 0.0416666679084301,
+        "std": 0.19982630014419556
+      },
+      "context_mode": "zero",
+      "controller": "random",
+      "controller_timing": {
+        "batch_size": 24,
+        "first_two_calls_seconds": [
+          0.00021950004156678915,
+          0.00010904099326580763
+        ],
+        "scope": "synchronized action calls; first two may compile; excludes context inference and environment stepping",
+        "steady_median_seconds_per_batch": 7.041654316708446e-05
+      },
+      "n_episodes": 24,
+      "opponent": "risk",
+      "prey_lava_steps": {
+        "mean": 6.541666507720947,
+        "std": 17.007299423217773
+      },
+      "recordings": {
+        "camera": "arena",
+        "gif": "risk__random__zero.gif",
+        "png": "risk__random__zero.png",
+        "rendered_dataset_episode": 1000,
+        "transitions": "risk__random__zero.npz"
+      },
+      "resources_collected": {
+        "mean": 0.8333333134651184,
+        "std": 1.0671874284744263
+      },
+      "seconds_per_env_step": 0.00018181989590326946,
+      "seconds_total": 0.4363677501678467,
+      "survival_time": {
+        "mean": 98.04166412353516,
+        "std": 9.391837120056152
+      }
+    },
+    {
+      "blue_action_abs_max": 1.0,
+      "blue_return": {
+        "mean": -569.25048828125,
+        "std": 411.3053283691406
+      },
+      "captured": {
+        "mean": 0.0,
+        "std": 0.0
+      },
+      "context_mode": "online",
+      "controller": "tdmpc",
+      "controller_timing": {
+        "batch_size": 24,
+        "first_two_calls_seconds": [
+          0.5631007920019329,
+          0.5423277079826221
+        ],
+        "scope": "synchronized action calls; first two may compile; excludes context inference and environment stepping",
+        "steady_median_seconds_per_batch": 0.5382880205288529
+      },
+      "n_episodes": 24,
+      "opponent": "curious",
+      "prey_lava_steps": {
+        "mean": 7.5,
+        "std": 15.934762954711914
+      },
+      "recordings": {
+        "camera": "arena",
+        "gif": "curious__tdmpc__online.gif",
+        "png": "curious__tdmpc__online.png",
+        "rendered_dataset_episode": 1600,
+        "transitions": "curious__tdmpc__online.npz"
+      },
+      "resources_collected": {
+        "mean": 0.9583333134651184,
+        "std": 1.059841513633728
+      },
+      "seconds_per_env_step": 0.02308282842238744,
+      "seconds_total": 55.39878821372986,
+      "survival_time": {
+        "mean": 100.0,
+        "std": 0.0
+      }
+    },
+    {
+      "blue_action_abs_max": 1.0,
+      "blue_return": {
+        "mean": 25.84977149963379,
+        "std": 16.374040603637695
+      },
+      "captured": {
+        "mean": 0.2083333283662796,
+        "std": 0.40611645579338074
+      },
+      "context_mode": "zero",
+      "controller": "mappo_prey",
+      "controller_timing": {
+        "batch_size": 24,
+        "first_two_calls_seconds": [
+          0.028045958024449646,
+          0.00022579089272767305
+        ],
+        "scope": "synchronized action calls; first two may compile; excludes context inference and environment stepping",
+        "steady_median_seconds_per_batch": 7.683353032916784e-05
+      },
+      "n_episodes": 24,
+      "opponent": "curious",
+      "prey_lava_steps": {
+        "mean": 34.91666793823242,
+        "std": 17.216552734375
+      },
+      "recordings": {
+        "camera": "arena",
+        "gif": "curious__mappo_prey__zero.gif",
+        "png": "curious__mappo_prey__zero.png",
+        "rendered_dataset_episode": 1600,
+        "transitions": "curious__mappo_prey__zero.npz"
+      },
+      "resources_collected": {
+        "mean": 5.666666507720947,
+        "std": 2.5927250385284424
+      },
+      "seconds_per_env_step": 0.0001897124449412028,
+      "seconds_total": 0.4553098678588867,
+      "survival_time": {
+        "mean": 87.83333587646484,
+        "std": 25.365110397338867
+      }
+    },
+    {
+      "blue_action_abs_max": 0.999544620513916,
+      "blue_return": {
+        "mean": -8.520255088806152,
+        "std": 16.07382583618164
+      },
+      "captured": {
+        "mean": 0.2083333283662796,
+        "std": 0.40611645579338074
+      },
+      "context_mode": "zero",
+      "controller": "random",
+      "controller_timing": {
+        "batch_size": 24,
+        "first_two_calls_seconds": [
+          0.00014124996960163116,
+          7.837498560547829e-05
+        ],
+        "scope": "synchronized action calls; first two may compile; excludes context inference and environment stepping",
+        "steady_median_seconds_per_batch": 6.589601980522275e-05
+      },
+      "n_episodes": 24,
+      "opponent": "curious",
+      "prey_lava_steps": {
+        "mean": 3.75,
+        "std": 9.439499855041504
+      },
+      "recordings": {
+        "camera": "arena",
+        "gif": "curious__random__zero.gif",
+        "png": "curious__random__zero.png",
+        "rendered_dataset_episode": 1600,
+        "transitions": "curious__random__zero.npz"
+      },
+      "resources_collected": {
+        "mean": 0.4166666567325592,
+        "std": 0.5713045597076416
+      },
+      "seconds_per_env_step": 0.00017325202624003091,
+      "seconds_total": 0.4158048629760742,
+      "survival_time": {
+        "mean": 90.0,
+        "std": 21.63523292541504
+      }
+    }
+  ],
+  "schema_version": 1,
+  "scope": "Saved identity-state Equation 3 controller, no training or parameter updates; small runs verify execution, not performance gains.",
+  "seed": 0,
+  "specialist_checkpoints": [
+    {
+      "path": "logs/MPE_simple_tag_v3_continuous/mappo_continuous_capture_MPE_simple_tag_v3_continuous_pred_actor_seed0_vmap2.safetensors",
+      "sha256": "bd17f86b36448bcb885e2eed04240892729883e0129c0b13b66706703c026940",
+      "type": "capture"
+    },
+    {
+      "path": "logs/MPE_simple_tag_v3_continuous/mappo_continuous_risk_MPE_simple_tag_v3_continuous_pred_actor_seed0_vmap2.safetensors",
+      "sha256": "b895d4d645cb06d689f2feb862b8a1079063415cc471b7e887bc0a0bbdfb4b08",
+      "type": "risk"
+    },
+    {
+      "path": "logs/MPE_simple_tag_v3_continuous/mappo_continuous_curious_MPE_simple_tag_v3_continuous_pred_actor_seed0_vmap2.safetensors",
+      "sha256": "07b9439945cfa656156fa62b767e0cd8068fe2c8b110803f0b61ec3e8372efba",
+      "type": "curious"
+    }
+  ]
+}

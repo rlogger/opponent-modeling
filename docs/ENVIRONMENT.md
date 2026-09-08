@@ -4,6 +4,10 @@
 a predator's hidden objective shapes its behaviour, a prey must infer and
 exploit it, and terrain (lava plus resources) makes the objectives observable.
 
+The environment source is restored from `rlogger/marl-opp-aware@aecbab5`;
+[provenance and parity tests](../third_party/marl-opp-aware/UPSTREAM.md) document
+the package/API adaptations. Continuous actions remain supported.
+
 ## Task summary
 
 P predators (default 1) vs 1 prey with a nominal `[-2, 2]^2` arena (soft bounds shaping, not walls). 16 resources (half
