@@ -1,0 +1,1967 @@
+{
+  "kind": "tiny_training_set_reconstruction_diagnostic",
+  "config": {
+    "lat": 8,
+    "hid": 64,
+    "window": 8,
+    "steps": 1500,
+    "batch": 16,
+    "n_actions": 5,
+    "learning_rate": 0.001,
+    "beta_max": 1.0,
+    "free_bits": 0.2,
+    "action_type": "continuous",
+    "action_dim": 2
+  },
+  "seed": 0,
+  "selection": {
+    "capture": {
+      "episode": [
+        58,
+        118,
+        95,
+        7,
+        145,
+        120,
+        193,
+        178,
+        157,
+        14,
+        198,
+        50,
+        99,
+        3,
+        33,
+        126
+      ],
+      "start": [
+        0,
+        0,
+        0,
+        0,
+        0,
+        16,
+        0,
+        32,
+        0,
+        0,
+        0,
+        8,
+        0,
+        0,
+        0,
+        0
+      ],
+      "checkpoint": [
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0
+      ]
+    },
+    "risk": {
+      "episode": [
+        658,
+        718,
+        695,
+        607,
+        745,
+        720,
+        793,
+        778,
+        757,
+        614,
+        798,
+        650,
+        699,
+        603,
+        633,
+        726
+      ],
+      "start": [
+        16,
+        8,
+        80,
+        0,
+        48,
+        0,
+        24,
+        40,
+        40,
+        32,
+        0,
+        0,
+        8,
+        0,
+        64,
+        48
+      ],
+      "checkpoint": [
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0
+      ]
+    },
+    "curious": {
+      "episode": [
+        1258,
+        1318,
+        1295,
+        1207,
+        1345,
+        1320,
+        1393,
+        1378,
+        1357,
+        1214,
+        1398,
+        1250,
+        1299,
+        1203,
+        1233,
+        1326
+      ],
+      "start": [
+        0,
+        0,
+        80,
+        0,
+        48,
+        0,
+        24,
+        8,
+        40,
+        32,
+        0,
+        0,
+        8,
+        0,
+        64,
+        48
+      ],
+      "checkpoint": [
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0
+      ]
+    }
+  },
+  "dataset": {
+    "path": "/private/tmp/zero-s-diagnostic.ISLpmX/dataset.npz",
+    "sha256": "928181027a9e5e86b106190b1487cda90c09e2cc5df08b569f7b93ba8350b5f5"
+  },
+  "git_sha": "97d7a118d8fd2dd0c883dff10abd04c662b23092",
+  "git_dirty": true,
+  "dependencies": {
+    "numpy": "1.26.4",
+    "jax": "0.4.38",
+    "jaxlib": "0.4.38",
+    "flax": "0.10.4",
+    "optax": "0.2.5",
+    "scikit-learn": "1.9.0",
+    "jaxmarl": "unknown",
+    "distrax": "unknown",
+    "opponent-modeling": "0.2.0"
+  },
+  "source_sha256": {
+    "scripts/diagnose_0s_reconstruction.py": "10c378f5a9b98da7b2a0e144f9f0ff6537bfc0b84d50c5dd47e6dc4c1037097d",
+    "src/mopa/action_decoder.py": "47df75708cdf4be8a8cc789b46d8d8382177e39b8335c2b4cfa55cc28070b8e2",
+    "src/mopa/zero_s.py": "af9ee4b11bed3c21f38c3ffcf55edfca3604e32f7474cfd81830a4abd9d79e82"
+  },
+  "protocol": [
+    "One complete 8-step window per selected checkpoint-0 episode; checkpoint 2 excluded.",
+    "Each behavior fitted separately; labels select data but are not model inputs.",
+    "Identical full batches, train-only normalization, optimizer, step count, decoder width, and state features.",
+    "AE/VAE share exact initial parameters; BC copies decoder state rows and all remaining weights, dropping latent inputs.",
+    "BC is a plain two-layer ReLU/tanh MLP with the VAE head initialization, not the production BC default initializer.",
+    "BC lacks the GRU and target-action history: equal examples/updates are not equal parameter count or compute.",
+    "VAE beta ramps from 0 to 1 over half the run with 0.2 free bits per latent dimension.",
+    "No-KL controls remove the penalty; deterministic control also removes latent sampling.",
+    "MSE sums over both action coordinates then averages all 128 valid transitions; posterior-mean evaluation after updates.",
+    "Full-batch tiny-set training differs from production window sampling and full-dataset normalization.",
+    "No held-out evaluation, causal inference, controller training, environment rollouts, or checkpoint replacement."
+  ],
+  "results": {
+    "capture": {
+      "constant_mean_action_mse": 1.7557342052459717,
+      "vae": {
+        "initial_mse": 2.3519251346588135,
+        "final_mse": 0.005150799173861742,
+        "max_vector_squared_error": 0.15874190628528595,
+        "parameter_count": 32146,
+        "training_loop_seconds_including_update_compile": 1.3923085411079228,
+        "history": [
+          {
+            "step": 0,
+            "mean_latent_mse": 2.3519251346588135
+          },
+          {
+            "step": 50,
+            "mean_latent_mse": 0.18722809851169586
+          },
+          {
+            "step": 100,
+            "mean_latent_mse": 0.09755970537662506
+          },
+          {
+            "step": 150,
+            "mean_latent_mse": 0.0538191944360733
+          },
+          {
+            "step": 200,
+            "mean_latent_mse": 0.031313564628362656
+          },
+          {
+            "step": 250,
+            "mean_latent_mse": 0.02229558490216732
+          },
+          {
+            "step": 300,
+            "mean_latent_mse": 0.019102057442069054
+          },
+          {
+            "step": 350,
+            "mean_latent_mse": 0.017054196447134018
+          },
+          {
+            "step": 400,
+            "mean_latent_mse": 0.014716011472046375
+          },
+          {
+            "step": 450,
+            "mean_latent_mse": 0.012996728532016277
+          },
+          {
+            "step": 500,
+            "mean_latent_mse": 0.012540100142359734
+          },
+          {
+            "step": 550,
+            "mean_latent_mse": 0.011567372828722
+          },
+          {
+            "step": 600,
+            "mean_latent_mse": 0.011514418758451939
+          },
+          {
+            "step": 650,
+            "mean_latent_mse": 0.010059022344648838
+          },
+          {
+            "step": 700,
+            "mean_latent_mse": 0.009378076530992985
+          },
+          {
+            "step": 750,
+            "mean_latent_mse": 0.009530970826745033
+          },
+          {
+            "step": 800,
+            "mean_latent_mse": 0.009477161802351475
+          },
+          {
+            "step": 850,
+            "mean_latent_mse": 0.008520773611962795
+          },
+          {
+            "step": 900,
+            "mean_latent_mse": 0.009173956699669361
+          },
+          {
+            "step": 950,
+            "mean_latent_mse": 0.008606215938925743
+          },
+          {
+            "step": 1000,
+            "mean_latent_mse": 0.008546033874154091
+          },
+          {
+            "step": 1050,
+            "mean_latent_mse": 0.008187727071344852
+          },
+          {
+            "step": 1100,
+            "mean_latent_mse": 0.007832067087292671
+          },
+          {
+            "step": 1150,
+            "mean_latent_mse": 0.006780531257390976
+          },
+          {
+            "step": 1200,
+            "mean_latent_mse": 0.006562621798366308
+          },
+          {
+            "step": 1250,
+            "mean_latent_mse": 0.007047606166452169
+          },
+          {
+            "step": 1300,
+            "mean_latent_mse": 0.005405954085290432
+          },
+          {
+            "step": 1350,
+            "mean_latent_mse": 0.005226996261626482
+          },
+          {
+            "step": 1400,
+            "mean_latent_mse": 0.00537858484312892
+          },
+          {
+            "step": 1450,
+            "mean_latent_mse": 0.005616569425910711
+          },
+          {
+            "step": 1500,
+            "mean_latent_mse": 0.005150799173861742
+          }
+        ],
+        "zero_latent_mse": 0.005163919180631638,
+        "shifted_window_latent_mse": 0.005575112998485565,
+        "posterior_mean_variance_per_dim": [
+          0.08401766419410706,
+          0.056959327310323715,
+          0.0473097525537014,
+          0.12558594346046448,
+          0.0744275376200676,
+          0.04903345927596092,
+          0.03954052925109863,
+          0.0536034069955349
+        ],
+        "sampled_mse_32_draws": 0.007380859926342964,
+        "sampled_mse_draw_std": 0.0023475189227610826,
+        "raw_kl": 0.8681929707527161,
+        "floored_kl": 1.600000023841858,
+        "mean_posterior_std": 0.8638226985931396
+      },
+      "stochastic_no_kl": {
+        "initial_mse": 2.3519251346588135,
+        "final_mse": 0.0020293761044740677,
+        "max_vector_squared_error": 0.11686617881059647,
+        "parameter_count": 32146,
+        "training_loop_seconds_including_update_compile": 1.2943278749007732,
+        "history": [
+          {
+            "step": 0,
+            "mean_latent_mse": 2.3519251346588135
+          },
+          {
+            "step": 50,
+            "mean_latent_mse": 0.17298297584056854
+          },
+          {
+            "step": 100,
+            "mean_latent_mse": 0.08528319746255875
+          },
+          {
+            "step": 150,
+            "mean_latent_mse": 0.04759076237678528
+          },
+          {
+            "step": 200,
+            "mean_latent_mse": 0.03029962256550789
+          },
+          {
+            "step": 250,
+            "mean_latent_mse": 0.021366771310567856
+          },
+          {
+            "step": 300,
+            "mean_latent_mse": 0.01749597303569317
+          },
+          {
+            "step": 350,
+            "mean_latent_mse": 0.014306250028312206
+          },
+          {
+            "step": 400,
+            "mean_latent_mse": 0.01232131291180849
+          },
+          {
+            "step": 450,
+            "mean_latent_mse": 0.010515679605305195
+          },
+          {
+            "step": 500,
+            "mean_latent_mse": 0.009808926843106747
+          },
+          {
+            "step": 550,
+            "mean_latent_mse": 0.008388840593397617
+          },
+          {
+            "step": 600,
+            "mean_latent_mse": 0.007372747641056776
+          },
+          {
+            "step": 650,
+            "mean_latent_mse": 0.006720379926264286
+          },
+          {
+            "step": 700,
+            "mean_latent_mse": 0.006241586524993181
+          },
+          {
+            "step": 750,
+            "mean_latent_mse": 0.005875737406313419
+          },
+          {
+            "step": 800,
+            "mean_latent_mse": 0.005277235526591539
+          },
+          {
+            "step": 850,
+            "mean_latent_mse": 0.004886353854089975
+          },
+          {
+            "step": 900,
+            "mean_latent_mse": 0.004480965435504913
+          },
+          {
+            "step": 950,
+            "mean_latent_mse": 0.004080306272953749
+          },
+          {
+            "step": 1000,
+            "mean_latent_mse": 0.003932037390768528
+          },
+          {
+            "step": 1050,
+            "mean_latent_mse": 0.003726931754499674
+          },
+          {
+            "step": 1100,
+            "mean_latent_mse": 0.003614144865423441
+          },
+          {
+            "step": 1150,
+            "mean_latent_mse": 0.003241392318159342
+          },
+          {
+            "step": 1200,
+            "mean_latent_mse": 0.003228766145184636
+          },
+          {
+            "step": 1250,
+            "mean_latent_mse": 0.0028105962555855513
+          },
+          {
+            "step": 1300,
+            "mean_latent_mse": 0.002768533769994974
+          },
+          {
+            "step": 1350,
+            "mean_latent_mse": 0.0024164929054677486
+          },
+          {
+            "step": 1400,
+            "mean_latent_mse": 0.0025297193787992
+          },
+          {
+            "step": 1450,
+            "mean_latent_mse": 0.002332560485228896
+          },
+          {
+            "step": 1500,
+            "mean_latent_mse": 0.0020293761044740677
+          }
+        ],
+        "zero_latent_mse": 0.3980310559272766,
+        "shifted_window_latent_mse": 1.666419267654419,
+        "posterior_mean_variance_per_dim": [
+          4.1380720138549805,
+          2.3375656604766846,
+          3.467545747756958,
+          3.187227249145508,
+          4.345604419708252,
+          2.4437670707702637,
+          1.2410486936569214,
+          1.0045212507247925
+        ],
+        "sampled_mse_32_draws": 0.0022640905808657408,
+        "sampled_mse_draw_std": 0.0001428768300684169,
+        "raw_kl": 25.72128677368164,
+        "floored_kl": 25.72128677368164,
+        "mean_posterior_std": 0.16770631074905396
+      },
+      "deterministic_no_kl": {
+        "initial_mse": 2.3519251346588135,
+        "final_mse": 0.0005145930335856974,
+        "max_vector_squared_error": 0.010007843375205994,
+        "parameter_count": 32146,
+        "training_loop_seconds_including_update_compile": 1.237128417007625,
+        "history": [
+          {
+            "step": 0,
+            "mean_latent_mse": 2.3519251346588135
+          },
+          {
+            "step": 50,
+            "mean_latent_mse": 0.12266746163368225
+          },
+          {
+            "step": 100,
+            "mean_latent_mse": 0.054591335356235504
+          },
+          {
+            "step": 150,
+            "mean_latent_mse": 0.03169184923171997
+          },
+          {
+            "step": 200,
+            "mean_latent_mse": 0.02115313895046711
+          },
+          {
+            "step": 250,
+            "mean_latent_mse": 0.015998221933841705
+          },
+          {
+            "step": 300,
+            "mean_latent_mse": 0.012695792131125927
+          },
+          {
+            "step": 350,
+            "mean_latent_mse": 0.01022255141288042
+          },
+          {
+            "step": 400,
+            "mean_latent_mse": 0.008599395863711834
+          },
+          {
+            "step": 450,
+            "mean_latent_mse": 0.007463991641998291
+          },
+          {
+            "step": 500,
+            "mean_latent_mse": 0.006548800505697727
+          },
+          {
+            "step": 550,
+            "mean_latent_mse": 0.00584575766697526
+          },
+          {
+            "step": 600,
+            "mean_latent_mse": 0.005228134803473949
+          },
+          {
+            "step": 650,
+            "mean_latent_mse": 0.004692266695201397
+          },
+          {
+            "step": 700,
+            "mean_latent_mse": 0.00421338714659214
+          },
+          {
+            "step": 750,
+            "mean_latent_mse": 0.003790043294429779
+          },
+          {
+            "step": 800,
+            "mean_latent_mse": 0.0034038929734379053
+          },
+          {
+            "step": 850,
+            "mean_latent_mse": 0.003042664611712098
+          },
+          {
+            "step": 900,
+            "mean_latent_mse": 0.0026984710711985826
+          },
+          {
+            "step": 950,
+            "mean_latent_mse": 0.0023784367367625237
+          },
+          {
+            "step": 1000,
+            "mean_latent_mse": 0.0020744241774082184
+          },
+          {
+            "step": 1050,
+            "mean_latent_mse": 0.0017996765673160553
+          },
+          {
+            "step": 1100,
+            "mean_latent_mse": 0.0015511870151385665
+          },
+          {
+            "step": 1150,
+            "mean_latent_mse": 0.0013180270325392485
+          },
+          {
+            "step": 1200,
+            "mean_latent_mse": 0.0011245625792071223
+          },
+          {
+            "step": 1250,
+            "mean_latent_mse": 0.0009658007766120136
+          },
+          {
+            "step": 1300,
+            "mean_latent_mse": 0.0008327692630700767
+          },
+          {
+            "step": 1350,
+            "mean_latent_mse": 0.0007247888133861125
+          },
+          {
+            "step": 1400,
+            "mean_latent_mse": 0.0006576909217983484
+          },
+          {
+            "step": 1450,
+            "mean_latent_mse": 0.0005797910853289068
+          },
+          {
+            "step": 1500,
+            "mean_latent_mse": 0.0005145930335856974
+          }
+        ],
+        "zero_latent_mse": 1.2168080806732178,
+        "shifted_window_latent_mse": 2.158195972442627,
+        "posterior_mean_variance_per_dim": [
+          2.9380016326904297,
+          3.75742244720459,
+          5.070937633514404,
+          3.4983747005462646,
+          3.439936637878418,
+          3.313274621963501,
+          0.6140307784080505,
+          0.8859015703201294
+        ]
+      },
+      "bc": {
+        "initial_mse": 2.106360912322998,
+        "final_mse": 0.0006045823683962226,
+        "max_vector_squared_error": 0.011219026520848274,
+        "parameter_count": 4866,
+        "training_loop_seconds_including_update_compile": 0.20163295813836157,
+        "history": [
+          {
+            "step": 0,
+            "mean_latent_mse": 2.106360912322998
+          },
+          {
+            "step": 50,
+            "mean_latent_mse": 0.14716969430446625
+          },
+          {
+            "step": 100,
+            "mean_latent_mse": 0.04814806580543518
+          },
+          {
+            "step": 150,
+            "mean_latent_mse": 0.026103217154741287
+          },
+          {
+            "step": 200,
+            "mean_latent_mse": 0.017736364156007767
+          },
+          {
+            "step": 250,
+            "mean_latent_mse": 0.013709574937820435
+          },
+          {
+            "step": 300,
+            "mean_latent_mse": 0.011336039751768112
+          },
+          {
+            "step": 350,
+            "mean_latent_mse": 0.00925055705010891
+          },
+          {
+            "step": 400,
+            "mean_latent_mse": 0.007792713586241007
+          },
+          {
+            "step": 450,
+            "mean_latent_mse": 0.006712853442877531
+          },
+          {
+            "step": 500,
+            "mean_latent_mse": 0.005858543328940868
+          },
+          {
+            "step": 550,
+            "mean_latent_mse": 0.0051807533018291
+          },
+          {
+            "step": 600,
+            "mean_latent_mse": 0.0046602943912148476
+          },
+          {
+            "step": 650,
+            "mean_latent_mse": 0.004232096951454878
+          },
+          {
+            "step": 700,
+            "mean_latent_mse": 0.0038063896354287863
+          },
+          {
+            "step": 750,
+            "mean_latent_mse": 0.003486599773168564
+          },
+          {
+            "step": 800,
+            "mean_latent_mse": 0.003187584225088358
+          },
+          {
+            "step": 850,
+            "mean_latent_mse": 0.0029222930315881968
+          },
+          {
+            "step": 900,
+            "mean_latent_mse": 0.0027007414028048515
+          },
+          {
+            "step": 950,
+            "mean_latent_mse": 0.002478445414453745
+          },
+          {
+            "step": 1000,
+            "mean_latent_mse": 0.002295723417773843
+          },
+          {
+            "step": 1050,
+            "mean_latent_mse": 0.002122845035046339
+          },
+          {
+            "step": 1100,
+            "mean_latent_mse": 0.001967589370906353
+          },
+          {
+            "step": 1150,
+            "mean_latent_mse": 0.001800541882403195
+          },
+          {
+            "step": 1200,
+            "mean_latent_mse": 0.0016723113367334008
+          },
+          {
+            "step": 1250,
+            "mean_latent_mse": 0.0015544540947303176
+          },
+          {
+            "step": 1300,
+            "mean_latent_mse": 0.0014465346466749907
+          },
+          {
+            "step": 1350,
+            "mean_latent_mse": 0.0013537731720134616
+          },
+          {
+            "step": 1400,
+            "mean_latent_mse": 0.001249434077180922
+          },
+          {
+            "step": 1450,
+            "mean_latent_mse": 0.0011006183922290802
+          },
+          {
+            "step": 1500,
+            "mean_latent_mse": 0.0006045823683962226
+          }
+        ]
+      }
+    },
+    "risk": {
+      "constant_mean_action_mse": 0.790460467338562,
+      "vae": {
+        "initial_mse": 0.9683699011802673,
+        "final_mse": 0.01353519968688488,
+        "max_vector_squared_error": 0.28586795926094055,
+        "parameter_count": 32146,
+        "training_loop_seconds_including_update_compile": 1.299075833056122,
+        "history": [
+          {
+            "step": 0,
+            "mean_latent_mse": 0.9683699011802673
+          },
+          {
+            "step": 50,
+            "mean_latent_mse": 0.3081350028514862
+          },
+          {
+            "step": 100,
+            "mean_latent_mse": 0.2560420334339142
+          },
+          {
+            "step": 150,
+            "mean_latent_mse": 0.2133042812347412
+          },
+          {
+            "step": 200,
+            "mean_latent_mse": 0.19108548760414124
+          },
+          {
+            "step": 250,
+            "mean_latent_mse": 0.16780440509319305
+          },
+          {
+            "step": 300,
+            "mean_latent_mse": 0.15245886147022247
+          },
+          {
+            "step": 350,
+            "mean_latent_mse": 0.1331690400838852
+          },
+          {
+            "step": 400,
+            "mean_latent_mse": 0.11718704551458359
+          },
+          {
+            "step": 450,
+            "mean_latent_mse": 0.10702069103717804
+          },
+          {
+            "step": 500,
+            "mean_latent_mse": 0.09347516298294067
+          },
+          {
+            "step": 550,
+            "mean_latent_mse": 0.0825377032160759
+          },
+          {
+            "step": 600,
+            "mean_latent_mse": 0.07136888056993484
+          },
+          {
+            "step": 650,
+            "mean_latent_mse": 0.06727306544780731
+          },
+          {
+            "step": 700,
+            "mean_latent_mse": 0.05577246844768524
+          },
+          {
+            "step": 750,
+            "mean_latent_mse": 0.051511500030756
+          },
+          {
+            "step": 800,
+            "mean_latent_mse": 0.0460067093372345
+          },
+          {
+            "step": 850,
+            "mean_latent_mse": 0.040315765887498856
+          },
+          {
+            "step": 900,
+            "mean_latent_mse": 0.038641657680273056
+          },
+          {
+            "step": 950,
+            "mean_latent_mse": 0.035049695521593094
+          },
+          {
+            "step": 1000,
+            "mean_latent_mse": 0.032535895705223083
+          },
+          {
+            "step": 1050,
+            "mean_latent_mse": 0.02824052982032299
+          },
+          {
+            "step": 1100,
+            "mean_latent_mse": 0.026894956827163696
+          },
+          {
+            "step": 1150,
+            "mean_latent_mse": 0.024118853732943535
+          },
+          {
+            "step": 1200,
+            "mean_latent_mse": 0.021308835595846176
+          },
+          {
+            "step": 1250,
+            "mean_latent_mse": 0.020794332027435303
+          },
+          {
+            "step": 1300,
+            "mean_latent_mse": 0.018145721405744553
+          },
+          {
+            "step": 1350,
+            "mean_latent_mse": 0.016254810616374016
+          },
+          {
+            "step": 1400,
+            "mean_latent_mse": 0.014711691997945309
+          },
+          {
+            "step": 1450,
+            "mean_latent_mse": 0.014231524430215359
+          },
+          {
+            "step": 1500,
+            "mean_latent_mse": 0.01353519968688488
+          }
+        ],
+        "zero_latent_mse": 0.03046361729502678,
+        "shifted_window_latent_mse": 0.040466468781232834,
+        "posterior_mean_variance_per_dim": [
+          0.17665964365005493,
+          0.12098339945077896,
+          0.1508723795413971,
+          0.1482883244752884,
+          0.12923917174339294,
+          0.19051529467105865,
+          0.12392889708280563,
+          0.11377470195293427
+        ],
+        "sampled_mse_32_draws": 0.01963183656334877,
+        "sampled_mse_draw_std": 0.002437751041725278,
+        "raw_kl": 1.038905382156372,
+        "floored_kl": 1.600000023841858,
+        "mean_posterior_std": 0.8320002555847168
+      },
+      "stochastic_no_kl": {
+        "initial_mse": 0.9683699011802673,
+        "final_mse": 0.003105951938778162,
+        "max_vector_squared_error": 0.0755610466003418,
+        "parameter_count": 32146,
+        "training_loop_seconds_including_update_compile": 1.581462875008583,
+        "history": [
+          {
+            "step": 0,
+            "mean_latent_mse": 0.9683699011802673
+          },
+          {
+            "step": 50,
+            "mean_latent_mse": 0.2730819284915924
+          },
+          {
+            "step": 100,
+            "mean_latent_mse": 0.2078208029270172
+          },
+          {
+            "step": 150,
+            "mean_latent_mse": 0.1671285629272461
+          },
+          {
+            "step": 200,
+            "mean_latent_mse": 0.13418099284172058
+          },
+          {
+            "step": 250,
+            "mean_latent_mse": 0.10715611279010773
+          },
+          {
+            "step": 300,
+            "mean_latent_mse": 0.08474010229110718
+          },
+          {
+            "step": 350,
+            "mean_latent_mse": 0.06704242527484894
+          },
+          {
+            "step": 400,
+            "mean_latent_mse": 0.054952360689640045
+          },
+          {
+            "step": 450,
+            "mean_latent_mse": 0.04574277251958847
+          },
+          {
+            "step": 500,
+            "mean_latent_mse": 0.0394291952252388
+          },
+          {
+            "step": 550,
+            "mean_latent_mse": 0.03526366874575615
+          },
+          {
+            "step": 600,
+            "mean_latent_mse": 0.029487747699022293
+          },
+          {
+            "step": 650,
+            "mean_latent_mse": 0.02604248933494091
+          },
+          {
+            "step": 700,
+            "mean_latent_mse": 0.022144854068756104
+          },
+          {
+            "step": 750,
+            "mean_latent_mse": 0.020062681287527084
+          },
+          {
+            "step": 800,
+            "mean_latent_mse": 0.01695125177502632
+          },
+          {
+            "step": 850,
+            "mean_latent_mse": 0.015965668484568596
+          },
+          {
+            "step": 900,
+            "mean_latent_mse": 0.012758027762174606
+          },
+          {
+            "step": 950,
+            "mean_latent_mse": 0.01159101352095604
+          },
+          {
+            "step": 1000,
+            "mean_latent_mse": 0.00961355771869421
+          },
+          {
+            "step": 1050,
+            "mean_latent_mse": 0.008634243160486221
+          },
+          {
+            "step": 1100,
+            "mean_latent_mse": 0.007553516887128353
+          },
+          {
+            "step": 1150,
+            "mean_latent_mse": 0.006522796116769314
+          },
+          {
+            "step": 1200,
+            "mean_latent_mse": 0.005719021428376436
+          },
+          {
+            "step": 1250,
+            "mean_latent_mse": 0.00513061648234725
+          },
+          {
+            "step": 1300,
+            "mean_latent_mse": 0.004674751777201891
+          },
+          {
+            "step": 1350,
+            "mean_latent_mse": 0.004473522305488586
+          },
+          {
+            "step": 1400,
+            "mean_latent_mse": 0.004041648004204035
+          },
+          {
+            "step": 1450,
+            "mean_latent_mse": 0.003510278183966875
+          },
+          {
+            "step": 1500,
+            "mean_latent_mse": 0.003105951938778162
+          }
+        ],
+        "zero_latent_mse": 1.5226811170578003,
+        "shifted_window_latent_mse": 1.973677396774292,
+        "posterior_mean_variance_per_dim": [
+          2.173170804977417,
+          2.6937742233276367,
+          5.75887393951416,
+          2.190988063812256,
+          3.64778733253479,
+          2.9660897254943848,
+          1.8291501998901367,
+          0.9407619833946228
+        ],
+        "sampled_mse_32_draws": 0.003248675260692835,
+        "sampled_mse_draw_std": 0.00010599236702546477,
+        "raw_kl": 38.952667236328125,
+        "floored_kl": 38.952667236328125,
+        "mean_posterior_std": 0.02797812409698963
+      },
+      "deterministic_no_kl": {
+        "initial_mse": 0.9683699011802673,
+        "final_mse": 0.0014713251730427146,
+        "max_vector_squared_error": 0.02375982329249382,
+        "parameter_count": 32146,
+        "training_loop_seconds_including_update_compile": 1.7260466248262674,
+        "history": [
+          {
+            "step": 0,
+            "mean_latent_mse": 0.9683699011802673
+          },
+          {
+            "step": 50,
+            "mean_latent_mse": 0.20069746673107147
+          },
+          {
+            "step": 100,
+            "mean_latent_mse": 0.14204970002174377
+          },
+          {
+            "step": 150,
+            "mean_latent_mse": 0.09826698899269104
+          },
+          {
+            "step": 200,
+            "mean_latent_mse": 0.06754454970359802
+          },
+          {
+            "step": 250,
+            "mean_latent_mse": 0.04997127130627632
+          },
+          {
+            "step": 300,
+            "mean_latent_mse": 0.03913230448961258
+          },
+          {
+            "step": 350,
+            "mean_latent_mse": 0.031828373670578
+          },
+          {
+            "step": 400,
+            "mean_latent_mse": 0.02577640861272812
+          },
+          {
+            "step": 450,
+            "mean_latent_mse": 0.021225258708000183
+          },
+          {
+            "step": 500,
+            "mean_latent_mse": 0.017229897901415825
+          },
+          {
+            "step": 550,
+            "mean_latent_mse": 0.01539756078273058
+          },
+          {
+            "step": 600,
+            "mean_latent_mse": 0.011720487847924232
+          },
+          {
+            "step": 650,
+            "mean_latent_mse": 0.009438888169825077
+          },
+          {
+            "step": 700,
+            "mean_latent_mse": 0.007731523364782333
+          },
+          {
+            "step": 750,
+            "mean_latent_mse": 0.006463676691055298
+          },
+          {
+            "step": 800,
+            "mean_latent_mse": 0.005316813476383686
+          },
+          {
+            "step": 850,
+            "mean_latent_mse": 0.004481324926018715
+          },
+          {
+            "step": 900,
+            "mean_latent_mse": 0.0038308261428028345
+          },
+          {
+            "step": 950,
+            "mean_latent_mse": 0.0035126570146530867
+          },
+          {
+            "step": 1000,
+            "mean_latent_mse": 0.0034491948317736387
+          },
+          {
+            "step": 1050,
+            "mean_latent_mse": 0.00294858287088573
+          },
+          {
+            "step": 1100,
+            "mean_latent_mse": 0.002637674566358328
+          },
+          {
+            "step": 1150,
+            "mean_latent_mse": 0.0021941629238426685
+          },
+          {
+            "step": 1200,
+            "mean_latent_mse": 0.0021498564165085554
+          },
+          {
+            "step": 1250,
+            "mean_latent_mse": 0.002020676853135228
+          },
+          {
+            "step": 1300,
+            "mean_latent_mse": 0.001813551178202033
+          },
+          {
+            "step": 1350,
+            "mean_latent_mse": 0.0018256057519465685
+          },
+          {
+            "step": 1400,
+            "mean_latent_mse": 0.0016834973357617855
+          },
+          {
+            "step": 1450,
+            "mean_latent_mse": 0.0019548211712390184
+          },
+          {
+            "step": 1500,
+            "mean_latent_mse": 0.0014713251730427146
+          }
+        ],
+        "zero_latent_mse": 1.9621658325195312,
+        "shifted_window_latent_mse": 2.295041799545288,
+        "posterior_mean_variance_per_dim": [
+          3.3234426975250244,
+          2.3627569675445557,
+          4.5045061111450195,
+          2.2608590126037598,
+          3.8351047039031982,
+          2.230562448501587,
+          3.3300750255584717,
+          1.8831307888031006
+        ]
+      },
+      "bc": {
+        "initial_mse": 0.8853620886802673,
+        "final_mse": 0.0011220996966585517,
+        "max_vector_squared_error": 0.01588808000087738,
+        "parameter_count": 4866,
+        "training_loop_seconds_including_update_compile": 0.2053708340972662,
+        "history": [
+          {
+            "step": 0,
+            "mean_latent_mse": 0.8853620886802673
+          },
+          {
+            "step": 50,
+            "mean_latent_mse": 0.2777756452560425
+          },
+          {
+            "step": 100,
+            "mean_latent_mse": 0.19105881452560425
+          },
+          {
+            "step": 150,
+            "mean_latent_mse": 0.13431449234485626
+          },
+          {
+            "step": 200,
+            "mean_latent_mse": 0.09341118484735489
+          },
+          {
+            "step": 250,
+            "mean_latent_mse": 0.06586632132530212
+          },
+          {
+            "step": 300,
+            "mean_latent_mse": 0.048175692558288574
+          },
+          {
+            "step": 350,
+            "mean_latent_mse": 0.03691326826810837
+          },
+          {
+            "step": 400,
+            "mean_latent_mse": 0.029315568506717682
+          },
+          {
+            "step": 450,
+            "mean_latent_mse": 0.02350633591413498
+          },
+          {
+            "step": 500,
+            "mean_latent_mse": 0.018884731456637383
+          },
+          {
+            "step": 550,
+            "mean_latent_mse": 0.015245664864778519
+          },
+          {
+            "step": 600,
+            "mean_latent_mse": 0.012146329507231712
+          },
+          {
+            "step": 650,
+            "mean_latent_mse": 0.00980974268168211
+          },
+          {
+            "step": 700,
+            "mean_latent_mse": 0.00798641238361597
+          },
+          {
+            "step": 750,
+            "mean_latent_mse": 0.0065749045461416245
+          },
+          {
+            "step": 800,
+            "mean_latent_mse": 0.005443180911242962
+          },
+          {
+            "step": 850,
+            "mean_latent_mse": 0.004545268602669239
+          },
+          {
+            "step": 900,
+            "mean_latent_mse": 0.0038727722130715847
+          },
+          {
+            "step": 950,
+            "mean_latent_mse": 0.003355811582878232
+          },
+          {
+            "step": 1000,
+            "mean_latent_mse": 0.002916770288720727
+          },
+          {
+            "step": 1050,
+            "mean_latent_mse": 0.002511628670617938
+          },
+          {
+            "step": 1100,
+            "mean_latent_mse": 0.002214255044236779
+          },
+          {
+            "step": 1150,
+            "mean_latent_mse": 0.0020017412025481462
+          },
+          {
+            "step": 1200,
+            "mean_latent_mse": 0.001804106985218823
+          },
+          {
+            "step": 1250,
+            "mean_latent_mse": 0.0015828240429982543
+          },
+          {
+            "step": 1300,
+            "mean_latent_mse": 0.0014660093002021313
+          },
+          {
+            "step": 1350,
+            "mean_latent_mse": 0.0014097392559051514
+          },
+          {
+            "step": 1400,
+            "mean_latent_mse": 0.0013716242974624038
+          },
+          {
+            "step": 1450,
+            "mean_latent_mse": 0.001176132820546627
+          },
+          {
+            "step": 1500,
+            "mean_latent_mse": 0.0011220996966585517
+          }
+        ]
+      }
+    },
+    "curious": {
+      "constant_mean_action_mse": 1.530539870262146,
+      "vae": {
+        "initial_mse": 2.319345712661743,
+        "final_mse": 0.0013520235661417246,
+        "max_vector_squared_error": 0.042465727776288986,
+        "parameter_count": 32146,
+        "training_loop_seconds_including_update_compile": 1.4430793749634176,
+        "history": [
+          {
+            "step": 0,
+            "mean_latent_mse": 2.319345712661743
+          },
+          {
+            "step": 50,
+            "mean_latent_mse": 0.05813140794634819
+          },
+          {
+            "step": 100,
+            "mean_latent_mse": 0.027258306741714478
+          },
+          {
+            "step": 150,
+            "mean_latent_mse": 0.008208071812987328
+          },
+          {
+            "step": 200,
+            "mean_latent_mse": 0.00780185591429472
+          },
+          {
+            "step": 250,
+            "mean_latent_mse": 0.004424208775162697
+          },
+          {
+            "step": 300,
+            "mean_latent_mse": 0.002792765386402607
+          },
+          {
+            "step": 350,
+            "mean_latent_mse": 0.0031506710220128298
+          },
+          {
+            "step": 400,
+            "mean_latent_mse": 0.0031998446211218834
+          },
+          {
+            "step": 450,
+            "mean_latent_mse": 0.0038685500621795654
+          },
+          {
+            "step": 500,
+            "mean_latent_mse": 0.0027802768163383007
+          },
+          {
+            "step": 550,
+            "mean_latent_mse": 0.0026457717176526785
+          },
+          {
+            "step": 600,
+            "mean_latent_mse": 0.0025529535487294197
+          },
+          {
+            "step": 650,
+            "mean_latent_mse": 0.003896901849657297
+          },
+          {
+            "step": 700,
+            "mean_latent_mse": 0.003987702541053295
+          },
+          {
+            "step": 750,
+            "mean_latent_mse": 0.0034670880995690823
+          },
+          {
+            "step": 800,
+            "mean_latent_mse": 0.003166990354657173
+          },
+          {
+            "step": 850,
+            "mean_latent_mse": 0.004003928974270821
+          },
+          {
+            "step": 900,
+            "mean_latent_mse": 0.0032154356595128775
+          },
+          {
+            "step": 950,
+            "mean_latent_mse": 0.0025407939683645964
+          },
+          {
+            "step": 1000,
+            "mean_latent_mse": 0.0026042424142360687
+          },
+          {
+            "step": 1050,
+            "mean_latent_mse": 0.001920497976243496
+          },
+          {
+            "step": 1100,
+            "mean_latent_mse": 0.0016002921620383859
+          },
+          {
+            "step": 1150,
+            "mean_latent_mse": 0.0018201624043285847
+          },
+          {
+            "step": 1200,
+            "mean_latent_mse": 0.0015395150985568762
+          },
+          {
+            "step": 1250,
+            "mean_latent_mse": 0.0022288344334810972
+          },
+          {
+            "step": 1300,
+            "mean_latent_mse": 0.0022567978594452143
+          },
+          {
+            "step": 1350,
+            "mean_latent_mse": 0.0019418374868109822
+          },
+          {
+            "step": 1400,
+            "mean_latent_mse": 0.0013197187799960375
+          },
+          {
+            "step": 1450,
+            "mean_latent_mse": 0.0012295551132410765
+          },
+          {
+            "step": 1500,
+            "mean_latent_mse": 0.0013520235661417246
+          }
+        ],
+        "zero_latent_mse": 0.0012414423981681466,
+        "shifted_window_latent_mse": 0.0018936037085950375,
+        "posterior_mean_variance_per_dim": [
+          0.09037162363529205,
+          0.01352943480014801,
+          0.033286914229393005,
+          0.016761934384703636,
+          0.032341424375772476,
+          0.06810882687568665,
+          0.14335159957408905,
+          0.045722488313913345
+        ],
+        "sampled_mse_32_draws": 0.001847810810431838,
+        "sampled_mse_draw_std": 0.000594972399994731,
+        "raw_kl": 1.1960375308990479,
+        "floored_kl": 1.600000023841858,
+        "mean_posterior_std": 0.9024319648742676
+      },
+      "stochastic_no_kl": {
+        "initial_mse": 2.319345712661743,
+        "final_mse": 0.0003483420587144792,
+        "max_vector_squared_error": 0.003199808532372117,
+        "parameter_count": 32146,
+        "training_loop_seconds_including_update_compile": 1.5477229170501232,
+        "history": [
+          {
+            "step": 0,
+            "mean_latent_mse": 2.319345712661743
+          },
+          {
+            "step": 50,
+            "mean_latent_mse": 0.03651123866438866
+          },
+          {
+            "step": 100,
+            "mean_latent_mse": 0.013536729849874973
+          },
+          {
+            "step": 150,
+            "mean_latent_mse": 0.0067445747554302216
+          },
+          {
+            "step": 200,
+            "mean_latent_mse": 0.004345200955867767
+          },
+          {
+            "step": 250,
+            "mean_latent_mse": 0.003370916238054633
+          },
+          {
+            "step": 300,
+            "mean_latent_mse": 0.002997623523697257
+          },
+          {
+            "step": 350,
+            "mean_latent_mse": 0.002023909240961075
+          },
+          {
+            "step": 400,
+            "mean_latent_mse": 0.0020746535155922174
+          },
+          {
+            "step": 450,
+            "mean_latent_mse": 0.001800684491172433
+          },
+          {
+            "step": 500,
+            "mean_latent_mse": 0.0017193708335980773
+          },
+          {
+            "step": 550,
+            "mean_latent_mse": 0.0015154480934143066
+          },
+          {
+            "step": 600,
+            "mean_latent_mse": 0.0015265402616932988
+          },
+          {
+            "step": 650,
+            "mean_latent_mse": 0.001586921513080597
+          },
+          {
+            "step": 700,
+            "mean_latent_mse": 0.0010937819024547935
+          },
+          {
+            "step": 750,
+            "mean_latent_mse": 0.0010257859248667955
+          },
+          {
+            "step": 800,
+            "mean_latent_mse": 0.000989985652267933
+          },
+          {
+            "step": 850,
+            "mean_latent_mse": 0.0008965039742179215
+          },
+          {
+            "step": 900,
+            "mean_latent_mse": 0.0008078593527898192
+          },
+          {
+            "step": 950,
+            "mean_latent_mse": 0.0007692007347941399
+          },
+          {
+            "step": 1000,
+            "mean_latent_mse": 0.0006845732568763196
+          },
+          {
+            "step": 1050,
+            "mean_latent_mse": 0.0006829149788245559
+          },
+          {
+            "step": 1100,
+            "mean_latent_mse": 0.0006081553874537349
+          },
+          {
+            "step": 1150,
+            "mean_latent_mse": 0.0006307019502855837
+          },
+          {
+            "step": 1200,
+            "mean_latent_mse": 0.0005943630822002888
+          },
+          {
+            "step": 1250,
+            "mean_latent_mse": 0.00044465099927037954
+          },
+          {
+            "step": 1300,
+            "mean_latent_mse": 0.0004575501079671085
+          },
+          {
+            "step": 1350,
+            "mean_latent_mse": 0.00040009344229474664
+          },
+          {
+            "step": 1400,
+            "mean_latent_mse": 0.00043175011523999274
+          },
+          {
+            "step": 1450,
+            "mean_latent_mse": 0.0004742838500533253
+          },
+          {
+            "step": 1500,
+            "mean_latent_mse": 0.0003483420587144792
+          }
+        ],
+        "zero_latent_mse": 0.48035499453544617,
+        "shifted_window_latent_mse": 2.203579902648926,
+        "posterior_mean_variance_per_dim": [
+          1.1341183185577393,
+          1.0094623565673828,
+          5.264176845550537,
+          1.83027184009552,
+          11.926017761230469,
+          2.365429162979126,
+          0.39453041553497314,
+          0.8969689607620239
+        ],
+        "sampled_mse_32_draws": 0.0005358821945264935,
+        "sampled_mse_draw_std": 9.313399641541764e-05,
+        "raw_kl": 23.305837631225586,
+        "floored_kl": 23.305837631225586,
+        "mean_posterior_std": 0.3814796805381775
+      },
+      "deterministic_no_kl": {
+        "initial_mse": 2.319345712661743,
+        "final_mse": 3.122167254332453e-05,
+        "max_vector_squared_error": 0.0003777402744162828,
+        "parameter_count": 32146,
+        "training_loop_seconds_including_update_compile": 1.2456472909543663,
+        "history": [
+          {
+            "step": 0,
+            "mean_latent_mse": 2.319345712661743
+          },
+          {
+            "step": 50,
+            "mean_latent_mse": 0.016743887215852737
+          },
+          {
+            "step": 100,
+            "mean_latent_mse": 0.005661963950842619
+          },
+          {
+            "step": 150,
+            "mean_latent_mse": 0.0027908480260521173
+          },
+          {
+            "step": 200,
+            "mean_latent_mse": 0.0017131241038441658
+          },
+          {
+            "step": 250,
+            "mean_latent_mse": 0.0012492239475250244
+          },
+          {
+            "step": 300,
+            "mean_latent_mse": 0.0009566316148266196
+          },
+          {
+            "step": 350,
+            "mean_latent_mse": 0.0007312482339330018
+          },
+          {
+            "step": 400,
+            "mean_latent_mse": 0.0005691544502042234
+          },
+          {
+            "step": 450,
+            "mean_latent_mse": 0.00045727650285698473
+          },
+          {
+            "step": 500,
+            "mean_latent_mse": 0.0003702321264427155
+          },
+          {
+            "step": 550,
+            "mean_latent_mse": 0.00029307338991202414
+          },
+          {
+            "step": 600,
+            "mean_latent_mse": 0.00024111745005939156
+          },
+          {
+            "step": 650,
+            "mean_latent_mse": 0.00020105374278500676
+          },
+          {
+            "step": 700,
+            "mean_latent_mse": 0.00017090258188545704
+          },
+          {
+            "step": 750,
+            "mean_latent_mse": 0.0001478043122915551
+          },
+          {
+            "step": 800,
+            "mean_latent_mse": 0.00013031972048338503
+          },
+          {
+            "step": 850,
+            "mean_latent_mse": 0.00011393288150429726
+          },
+          {
+            "step": 900,
+            "mean_latent_mse": 9.969132952392101e-05
+          },
+          {
+            "step": 950,
+            "mean_latent_mse": 8.848098514135927e-05
+          },
+          {
+            "step": 1000,
+            "mean_latent_mse": 7.966056000441313e-05
+          },
+          {
+            "step": 1050,
+            "mean_latent_mse": 7.176432700362056e-05
+          },
+          {
+            "step": 1100,
+            "mean_latent_mse": 6.371892959577963e-05
+          },
+          {
+            "step": 1150,
+            "mean_latent_mse": 5.6912995205493644e-05
+          },
+          {
+            "step": 1200,
+            "mean_latent_mse": 5.0487989938119426e-05
+          },
+          {
+            "step": 1250,
+            "mean_latent_mse": 4.502608862821944e-05
+          },
+          {
+            "step": 1300,
+            "mean_latent_mse": 4.050560528412461e-05
+          },
+          {
+            "step": 1350,
+            "mean_latent_mse": 3.751462645595893e-05
+          },
+          {
+            "step": 1400,
+            "mean_latent_mse": 3.5046563425567e-05
+          },
+          {
+            "step": 1450,
+            "mean_latent_mse": 3.2996631489368156e-05
+          },
+          {
+            "step": 1500,
+            "mean_latent_mse": 3.122167254332453e-05
+          }
+        ],
+        "zero_latent_mse": 0.8830470442771912,
+        "shifted_window_latent_mse": 2.7984557151794434,
+        "posterior_mean_variance_per_dim": [
+          0.7796570062637329,
+          1.3481508493423462,
+          3.8753738403320312,
+          0.9796363115310669,
+          9.131024360656738,
+          2.392216682434082,
+          0.3833869397640228,
+          0.7996059060096741
+        ]
+      },
+      "bc": {
+        "initial_mse": 2.126075029373169,
+        "final_mse": 0.00012788892490789294,
+        "max_vector_squared_error": 0.0030169931706041098,
+        "parameter_count": 4866,
+        "training_loop_seconds_including_update_compile": 0.19876766693778336,
+        "history": [
+          {
+            "step": 0,
+            "mean_latent_mse": 2.126075029373169
+          },
+          {
+            "step": 50,
+            "mean_latent_mse": 0.05768255889415741
+          },
+          {
+            "step": 100,
+            "mean_latent_mse": 0.01248069480061531
+          },
+          {
+            "step": 150,
+            "mean_latent_mse": 0.005612652748823166
+          },
+          {
+            "step": 200,
+            "mean_latent_mse": 0.003354937070980668
+          },
+          {
+            "step": 250,
+            "mean_latent_mse": 0.002308434108272195
+          },
+          {
+            "step": 300,
+            "mean_latent_mse": 0.001725554931908846
+          },
+          {
+            "step": 350,
+            "mean_latent_mse": 0.0013730411883443594
+          },
+          {
+            "step": 400,
+            "mean_latent_mse": 0.0011304788058623672
+          },
+          {
+            "step": 450,
+            "mean_latent_mse": 0.0009581068297848105
+          },
+          {
+            "step": 500,
+            "mean_latent_mse": 0.0008047483861446381
+          },
+          {
+            "step": 550,
+            "mean_latent_mse": 0.0007014877046458423
+          },
+          {
+            "step": 600,
+            "mean_latent_mse": 0.0006151630659587681
+          },
+          {
+            "step": 650,
+            "mean_latent_mse": 0.000537868298124522
+          },
+          {
+            "step": 700,
+            "mean_latent_mse": 0.0004754505353048444
+          },
+          {
+            "step": 750,
+            "mean_latent_mse": 0.0004231396014802158
+          },
+          {
+            "step": 800,
+            "mean_latent_mse": 0.00037722993874922395
+          },
+          {
+            "step": 850,
+            "mean_latent_mse": 0.00033818394877016544
+          },
+          {
+            "step": 900,
+            "mean_latent_mse": 0.0003045907651539892
+          },
+          {
+            "step": 950,
+            "mean_latent_mse": 0.0002757520414888859
+          },
+          {
+            "step": 1000,
+            "mean_latent_mse": 0.00025086395908147097
+          },
+          {
+            "step": 1050,
+            "mean_latent_mse": 0.00022907761740498245
+          },
+          {
+            "step": 1100,
+            "mean_latent_mse": 0.00021055694378446788
+          },
+          {
+            "step": 1150,
+            "mean_latent_mse": 0.0001947767159435898
+          },
+          {
+            "step": 1200,
+            "mean_latent_mse": 0.00018150167306885123
+          },
+          {
+            "step": 1250,
+            "mean_latent_mse": 0.00016979334759525955
+          },
+          {
+            "step": 1300,
+            "mean_latent_mse": 0.00015922164311632514
+          },
+          {
+            "step": 1350,
+            "mean_latent_mse": 0.00014986578025855124
+          },
+          {
+            "step": 1400,
+            "mean_latent_mse": 0.0001416515588061884
+          },
+          {
+            "step": 1450,
+            "mean_latent_mse": 0.00013437028974294662
+          },
+          {
+            "step": 1500,
+            "mean_latent_mse": 0.00012788892490789294
+          }
+        ]
+      }
+    }
+  }
+}
