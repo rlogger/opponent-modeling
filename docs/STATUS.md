@@ -4,9 +4,19 @@ This file is the source of truth for what the repository implements and what
 still needs experiment evidence. It consolidates the historical research
 requirements and later implementation updates.
 
-## Current lean scope
+## Spatial Blotto — October 1, 2026
 
-The latest update narrowed the active repository to the objective-typed
+The `spatial_blotto` package implements the three-zone, symmetric-budget,
+equal-value spatial game, mathematical team controllers, JAX match collection,
+validated transition exports, and interactive replay. Fixed, balanced, rotating
+and reactive allocation controllers use current physical state; no training or
+opponent-intent inference runs. Game rules, all tested integration contracts and
+the next RL interface decisions are in the [Blotto guide](spatial-blotto.md).
+This addition is independent of the historical predator–prey results below.
+
+## Predator–prey baseline scope
+
+The existing predator–prey baseline covers the objective-typed
 environment, MAPPO specialists, trajectory representations, uncertainty-aware
 opponent policies, behavior cloning, CPL foundations, evaluation, and
 reproducible manifests. Within that scope, the implementation is complete:
