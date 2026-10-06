@@ -183,29 +183,41 @@ def imagined_candidates(agent, initial, actions, context, mean, std, red_source,
     red_source(raw_state, fixed_context, step) may query learned/BC/oracle policy
     or inject actions from matched real branches. Tail keys match deployed
     factored estimate_value, including its reserved opponent-key split.
+    Implicit dynamics requires no red source and supplies only schema placeholders
+    for red actions. All saved evidence must be finite, including inactive tails;
+    that diagnostic check is stricter than masking inactive planner contributions.
     """
     import jax
     import jax.numpy as jnp
 
     model = agent.model
-    if model.opponent_mode != "factored" or model.encoder_type != "identity" or model.latent_dim != 66:
-        raise ValueError("diagnostic requires the frozen factored66D identity world model")
+    if model.opponent_mode not in {"implicit", "factored"} or model.encoder_type != "identity" or model.latent_dim != 66:
+        raise ValueError("diagnostic requires an implicit or factored66D identity world model")
+    if model.opponent_mode == "factored" and red_source is None:
+        raise ValueError("factored diagnostics require an explicit red action source")
     actions = jnp.asarray(actions)
     n, horizon, _ = actions.shape
     initial = jnp.broadcast_to(jnp.asarray(initial), (n, 66))
     context = jnp.broadcast_to(jnp.asarray(context), (n, model.context_dim))
     x = model.encode(initial, model.encoder.params, jax.random.PRNGKey(0))
     states, red_actions, rewards, probabilities, masks = [np.asarray(initial)], [], [], [], []
-    alive = np.ones(n, bool)
-    key, _ = jax.random.split(key)
+    alive = (np.asarray(model.known_continuation(x)).copy() if model.transition_contract != "none"
+             else np.ones(n, bool))
+    if model.opponent_mode == "factored":
+        key, _ = jax.random.split(key)
     for t in range(horizon):
         raw = x * std + mean
-        red = jnp.asarray(red_source(raw, context, t))
+        # Implicit dynamics has no explicit red prediction. Zeros only preserve
+        # the array schema; callers must not interpret them as an action model.
+        red = (jnp.asarray(red_source(raw, context, t)) if model.opponent_mode == "factored"
+               else jnp.zeros((n, model.action_dim)))
         transition = model.transition_inputs(actions[:, t], context, red)
         reward, _ = model.reward(x, transition, model.reward_model.params)
         continuation = (jax.nn.sigmoid(model.continue_logits(x, transition, model.continue_model.params))
                         if model.predict_continues else jnp.ones(n))
         x = model.next(x, transition, model.dynamics_model.params)
+        if model.transition_contract != "none":
+            continuation *= model.known_continuation(x)
         masks.append(alive.copy())
         states.append(np.asarray(x * std + mean))
         red_actions.append(np.asarray(red))
@@ -220,6 +232,8 @@ def imagined_candidates(agent, initial, actions, context, mean, std, red_source,
     valid = np.stack(masks, 1)
     finite_return = discounted_rewards(reward, valid, agent.discount)
     tail = agent.discount ** horizon * alive * np.asarray(q).mean(0)
+    if model.transition_contract != "none":
+        tail = np.where(alive, tail, 0.)
     result = {"state": np.stack(states, 1), "red_action": np.stack(red_actions, 1),
               "reward": reward, "continues_probability": np.stack(probabilities, 1),
               "valid": valid, "finite_return": finite_return, "tail": tail,

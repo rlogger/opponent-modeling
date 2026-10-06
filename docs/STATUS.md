@@ -20,6 +20,20 @@ two fitting seeds. These runs establish feasibility; they do not satisfy the
 main experiment budgets or establish any performance hypothesis. Post-pilot
 corrections require their own locked checks before subsequent runs.
 
+The broad campaign is currently on hold. Targeted environment/controller
+corrections are authorized. A fresh comparison against `marl-opp-aware` commit
+`aecbab5daf6da402029e953be114a52e62a46c26` found exactly equal numerical outputs
+across 384 tested transitions, including controlled boundary, capture,
+collection and timeout cases. The game retains its soft boundary penalties.
+See [source provenance](../third_party/marl-opp-aware/UPSTREAM.md).
+
+The optional P11 static/clock contract is implemented and independently reviewed;
+it has focused mathematical, gradient, timeout and checkpoint tests. It has no
+fitted comparative result yet and is disabled in the unchanged-model fitting
+diagnostic. [The contract and diagnostic commands](control-pipeline.md#targeted-control-diagnostic)
+separate these two interventions. Increasing fitting is a hypothesis to test,
+not a certified repair or a substitute for the prescribed main comparison.
+
 Implemented audit remedies include episode-bounded causal context and replay
 checks, explicit finite-update checks, saved optimizer/RNG state, separately
 trained causal MLP/GRU prediction comparisons, matched controller collection,

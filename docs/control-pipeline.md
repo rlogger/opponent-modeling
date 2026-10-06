@@ -6,7 +6,58 @@ No arrows below represent measured trajectories or demonstrated performance.
 [All saved plots and interactive views](../experiments/behavior_dashboard/README.md)
 are collected in the five-tab behavior dashboard, with source-run distinctions preserved.
 
-## Current task and slide-ready summary (2026-09-08)
+## Targeted control diagnostic
+
+The October 5 work follows EVAL-03/P07/P10/P11 under specification commit
+`943d7519cdcb327f49b625ed4eac0d72291b33e5`. The broad campaign remains on hold.
+The current collector in `run_resl_campaign.py` randomly chooses the next
+eligible supplied specialist per episode while enforcing per-type transition
+quotas. The September summary below describes its older grouped collector.
+
+`scripts/run_control_diagnostic.py` forks the completed P2 TD-MPC controllers
+into fresh output. It restores the full optimizer, target network, replay RNG,
+update key, normalization and frozen opponent. It checks all six original
+controllers, simulator replay, causal context, source/artifact hashes and the
+reproduced 128-update trajectories before fitting. Its committed private
+protocol first isolates additional fitting on identical replay, then separately
+adds the existing collection/update procedure. Task rewards and planner settings
+stay fixed. The two fitting seeds and reused opponent family are diagnostic
+evidence; they are not the main comparison or a new generalization result.
+
+```bash
+uv run --locked --extra train --extra plot python scripts/run_control_diagnostic.py --execute \
+  --spec-repo "$SPEC_REPO" --protocol "$PROTOCOL" \
+  --spec-commit "$SPEC_COMMIT" --code-commit "$CODE_COMMIT" --output "$NEW_RUN"
+uv run --locked --extra train --extra plot python scripts/summarize_control_diagnostic.py \
+  --spec-repo "$SPEC_REPO" --protocol "$PROTOCOL" \
+  --spec-commit "$SPEC_COMMIT" --code-commit "$CODE_COMMIT" \
+  --run "$NEW_RUN" --output "$NEW_REPORT"
+```
+
+Use fresh directories and the exact committed protocol; the driver rejects
+overwriting a prior run. The summary reconstructs raw rollout metrics and
+checks the fixed original reward states and candidate actions at every declared
+endpoint. It reports finite-horizon reward and learned Q tail separately. A
+score including Q is not an estimate of the same quantity as three-step reward.
+Failed or incomplete diagnostics cannot establish a repaired controller.
+
+The separately configured P11 variant is
+`world_model.transition_contract: objective_static_clock_v1`. It requires the
+66D identity state and frozen normalization. It copies static resource/lava
+fields (8:40 and 56:65), advances the known clock (65), and masks future rewards
+and Q after the physical 100-step timeout. The 99-to-100 transition still earns
+its reward. Learned positions, velocities and collection flags are unchanged;
+positions outside the arena remain legal. The existing learned capture
+continuation remains separate. The update checker rejects physical-timeout
+labels that would bootstrap value, without changing supplied targets.
+
+Omitting this option preserves the historical transition and planning behavior.
+A checkpoint's configuration and normalization determine this contract; merely
+loading same-shaped weights cannot establish parity after changing it. Fitting
+the variant requires its own source/configuration binding and comparison.
+Current unit checks demonstrate the known invariants, not a return improvement.
+
+## Historical task and slide-ready summary (2026-09-08)
 
 Keep the current one-red/one-blue task. Red specialists are trained for
 capture (prey-seeking), risk aversion, or curiosity. Dataset collection and

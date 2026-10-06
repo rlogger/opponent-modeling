@@ -66,6 +66,42 @@ def test_invalid_prediction_vectors_fail_closed(diagnostic):
         diagnostic.discounted_rewards([[1, 2]], [[True]], .9)
 
 
+@pytest.mark.parametrize("clock", [None, .98, .99, 1.])
+@pytest.mark.parametrize("mode", ["implicit", "factored"])
+def test_candidate_diagnostic_preserves_planner_key_and_timeout_values(diagnostic, clock, mode):
+    import jax
+    import jax.numpy as jnp
+
+    from mopa import mppi
+    from mopa.tdmpc import create_agent, load_config
+
+    cfg = load_config(profile="smoke")
+    cfg.update(opponent_mode=mode, context_dim=0)
+    cfg["encoder"]["type"] = "identity"
+    cfg["world_model"].update(hidden_dim=16, predict_continues=True)
+    if clock is not None:
+        cfg["world_model"]["transition_contract"] = "objective_static_clock_v1"
+    mean, std = np.zeros(66, np.float32), np.ones(66, np.float32)
+    agent = nontrivial_test_agent(create_agent(cfg, 66, key=jax.random.PRNGKey(2), obs_mean=mean, obs_std=std))
+    initial = jnp.linspace(-.2, .4, 66)
+    if clock is not None:
+        initial = initial.at[65].set(clock)
+    actions = jax.random.uniform(jax.random.PRNGKey(7), (8, 3, 2), minval=-1, maxval=1)
+    context = jnp.zeros((0,))
+    key = jax.random.PRNGKey(19)
+    red_source = (lambda raw, c, time: agent.model.red_action(raw, c, agent.model.red_model.params)) if mode == "factored" else None
+    observed = diagnostic.imagined_candidates(agent, initial, actions, context, mean, std, red_source, key=key)
+    expected = mppi.estimate_value(agent, jnp.broadcast_to(initial, (8, 66)), actions,
+                                   jnp.zeros((8, 0)), 3, key)
+    if clock == 1.:
+        np.testing.assert_array_equal(expected, 0.)
+    else:
+        assert np.ptp(expected) > 1e-5
+    if clock is not None:
+        assert int(observed["valid"].sum()) == 8 * round((1 - clock) * 100)
+    np.testing.assert_allclose(observed["planner_return"], expected, rtol=2e-5, atol=2e-4)
+
+
 @pytest.fixture(scope="module")
 def frozen_components():
     """Random initialized networks exercise contracts without any fitting."""
