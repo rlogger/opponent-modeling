@@ -1,36 +1,15 @@
 # opponent-modeling
 
-Opponent behavior modeling and continuous control in a predator–prey environment.
-The experiments use capture, risk-averse, and curious MAPPO opponents, behavior
-cloning, trajectory encoders, and TD-MPC-style controllers.
+Continuous predator–prey control with MAPPO specialists, `0s` opponent modeling,
+and TD-MPC. Opponents follow capture, risk-averse, or curious objectives.
 
-The continuous workflow is:
-
-1. Train MAPPO specialists.
-2. Collect a matched trajectory dataset.
-3. Train either the `0s` opponent model and factored controller, or an implicit
-   controller without opponent context.
-4. Collect controller experience, update the controller, and evaluate on held-out
-   opponents.
-
-BC is a separate experiment; it is not a prerequisite for the `0s` workflow.
-The older discrete experiments remain available but are not part of this path.
-
-For collaborators, start with the [handoff and artifact guide](docs/COLLABORATOR_GUIDE.md).
-The [results and development record](docs/RESULTS.md) explains what was run,
-how the implementation changed, and what the evidence supports. This README
-covers execution from scratch.
+[Collaborator guide](docs/COLLABORATOR_GUIDE.md) · [Results](docs/RESULTS.md)
 
 ## Installation
 
-Requires Git, [uv](https://docs.astral.sh/uv/), and Python 3.11 or 3.12. The examples
-below use Python 3.11 and the `td-mpc2` branch. Run all commands from the repository
-root, in the same shell.
-
-`uv` manages the Python environment and packages—roughly the job of `venv` plus
-`pip`. `uv sync` installs the locked dependencies; `uv run` runs a command in that
-environment. It is not part of the learning algorithm. Install it once using the
-[uv installation guide](https://docs.astral.sh/uv/getting-started/installation/).
+Requires Git, Python 3.11 or 3.12, and
+[uv](https://docs.astral.sh/uv/getting-started/installation/) to manage Python
+packages and the virtual environment. Run commands from the repository root.
 
 ```bash
 git clone --branch td-mpc2 https://github.com/rlogger/opponent-modeling.git
@@ -40,10 +19,8 @@ export UV_PROJECT_ENVIRONMENT=venv
 uv sync --locked --all-extras --python 3.11
 ```
 
-The lockfile supplies the training, plotting, and test dependencies, including
-JAX 0.4.38, JaxMARL 0.1.0, and Distrax 0.1.5. Do not upgrade these independently.
-Keep `--all-extras` on subsequent `uv run` commands so optional dependencies remain
-installed. For a reproducible CPU run:
+Dependencies are locked to JAX 0.4.38, JaxMARL 0.1.0, and Distrax 0.1.5.
+Keep `--locked --all-extras`; do not upgrade them independently. For CPU runs:
 
 ```bash
 export JAX_PLATFORM_NAME=cpu
@@ -52,15 +29,10 @@ export OPENBLAS_NUM_THREADS=1
 export OMP_NUM_THREADS=1
 ```
 
-The specialist checkpoints and datasets required for this workflow are not
-distributed with the repository. Generate them with the commands below, or obtain
-a complete run directory together with its
-dataset, manifest, and original specialist checkpoints. The reports under
-`experiments/` do not replace those files.
-
-Use fresh output directories for new experiments. MAPPO uses fixed checkpoint
-filenames, so repeating a training command with the same output path replaces its
-previous files.
+Datasets and trained weights are not included in Git. Generate them below or
+follow the [artifact-transfer guide](docs/COLLABORATOR_GUIDE.md#artifact-transfer).
+Use fresh output directories: repeating MAPPO training at the same path overwrites
+its checkpoints.
 
 ## 1. Train continuous MAPPO specialists
 
@@ -72,48 +44,21 @@ for objective in capture risk curious; do
 done
 ```
 
-Each preset trains separate predator and prey actor–critic pairs with 128-unit,
-two-layer MLPs. Actions are two-dimensional, tanh-bounded vectors in `[-1, 1]`.
-The five-component vector passed to JaxMARL is a continuous force adapter, not a
-discrete action choice.
+Each preset trains two-layer, 128-unit predator/prey MLPs with 2D actions in
+`[-1, 1]`. Budget: 2 million joint environment transitions per seed and objective,
+18 million total. Weights, configs, and metrics go to `logs/MPE_simple_tag_v3_continuous/`.
 
-| Setting | Default |
-|---|---:|
-| Environment transitions per training seed | 2,000,000 |
-| Parallel environments | 32 |
-| Steps per rollout | 100 |
-| PPO updates per training seed | 625 |
-| PPO epochs / minibatches | 4 / 4 |
-| Learning rate | 0.0003 |
-| Discount / GAE lambda | 0.99 / 0.95 |
-
-Three objectives and three seeds require 18 million environment transitions in
-total. Both teams train on each joint transition; this is not a per-agent count.
-Training saves final weights, configuration, and loss/episode metrics to
-`logs/MPE_simple_tag_v3_continuous/`. For example:
-
-```text
-mappo_continuous_capture_MPE_simple_tag_v3_continuous_pred_actor_seed0_vmap0.safetensors
-mappo_continuous_capture_MPE_simple_tag_v3_continuous_prey_actor_seed0_vmap0.safetensors
-mappo_continuous_capture_MPE_simple_tag_v3_continuous_seed0_config.yaml
-mappo_continuous_capture_MPE_simple_tag_v3_continuous_seed0_metrics.npz
-```
-
-Critic weights are saved alongside the actors. `SEED=0` is the master random seed;
-`vmap0`, `vmap1`, and `vmap2` are the three independently initialized runs. The
-dataset readers expect this master seed and 128-unit actors. Keep both unchanged
-for the workflow below.
+Keep master `SEED=0` and 128-unit actors for compatibility with the dataset readers.
+`vmap0`, `vmap1`, and `vmap2` identify the three independent training runs.
 
 Algorithm overrides use the `alg.` prefix, for example
 `alg.TOTAL_TIMESTEPS=5000000`. `SAVE_PATH` changes the parent of the output directory;
 pass the corresponding environment subdirectory through downstream `--logdir`
 arguments. Omitting `alg=mappo_continuous_*` selects the legacy discrete preset.
 
-The continuous risk preset explicitly sets `DENSE_CHASE_COEF: 0.1`; the environment
-constructor defaults to `0.0`. To train risk with the constructor's reward instead,
-add `alg.DENSE_CHASE_COEF=0.0` to that training command. Preserve this choice in the
-saved configuration. The dataset collector uses environment defaults and does not
-reload reward overrides from the training configuration.
+The risk preset uses `DENSE_CHASE_COEF: 0.1`; collection uses the environment
+default `0.0`. Add `alg.DENSE_CHASE_COEF=0.0` to risk training if you want matching
+rewards. Collection does not reload training reward overrides.
 
 ## 2. Collect the dataset
 
@@ -125,29 +70,15 @@ uv run --locked --all-extras python scripts/make_continuous_dataset.py \
   --ckpt-seeds 0,1,2 --rollout-seed 0 --prey-type capture
 ```
 
-`--ckpt-seeds` selects the `vmap` indices, not the master random seed. Collection
-uses each predator family against the capture-family prey at the corresponding
-checkpoint index, with matched reset keys across objectives. Actions are
-deterministic policy means by default; `--sampled` selects stochastic actions.
+Collects 200 episodes per objective and checkpoint: 1,800 total, ending at capture
+or 100 steps. `--ckpt-seeds` selects `vmap` indices. Each predator faces the
+corresponding capture-prey checkpoint on matched resets. Actions use policy means;
+add `--sampled` for stochastic actions.
 
-`--n-eps 200` means 200 episodes **per objective per checkpoint**: 1,800 episodes
-in total. Episodes stop at capture or 100 steps, so the number of valid transitions
-is generally below 180,000.
-
-| File | Contents |
-|---|---|
-| `artifacts/continuous/dataset.npz` | States, observations, actions, rewards, terminal flags, masks, labels, and seeds |
-| `artifacts/continuous/dataset.manifest.json` | Collection settings, source versions, and checkpoint hashes |
-| `artifacts/continuous/report.json` | Dataset/manifest hashes, data checks, simulator replay, and behavior statistics |
-
-The default collection command replays all episodes to check simulator agreement.
-Array layout is `[episode, time, ...]`: states and observations include the final
-state (`T+1`), while actions and rewards have `T` entries. Red and blue actions
-have width 2. Use `valid_mask` or `valid_length` when analyzing data; padding after
-termination is not additional experience. Capture and timeout have separate flags.
-
-Keep the dataset unchanged after training. Checkpoint loading and controller
-adaptation verify its hash, not just its filename or array shapes.
+Writes `dataset.npz`, `dataset.manifest.json`, and `report.json` under
+`artifacts/continuous/`, including hashes and exact-replay checks. Use `valid_mask`
+or `valid_length` to exclude terminal padding. Keep the dataset unchanged after
+training; model loading checks its hash.
 
 ## 3. Train the `0s` opponent model and Equation 3 controller
 
@@ -159,31 +90,14 @@ uv run --locked --all-extras python scripts/run_0s_world_model.py \
   --encoder-steps 1500 --updates 2000 --seed 0 --heldout 2
 ```
 
-This command fits one shared `0s` action-decoder VAE, freezes its opponent decoder,
-and trains the factored world model, reward, value, policy-prior, and continuation
-heads. Checkpoints 0 and 1 supply training data; checkpoint 2 is held out. With the
-dataset above, that is 1,200 training episodes and 600 held-out episodes.
+Fits `0s`, freezes it, then trains the identity-state Equation 3 controller.
+Checkpoints 0/1 provide 1,200 training episodes; checkpoint 2 supplies 600 held-out
+episodes. The 8D opponent context uses only completed history. BC is not required.
+See [model details](docs/RESULTS.md#what-the-current-model-represents).
 
-The encoder uses eight-step windows, a 64-unit GRU, and an eight-dimensional
-opponent context `z`. At decision `t`, context includes only state–opponent-action
-pairs observed before `t`. The controller's world state `x` is a normalized 66D
-state vector, not another learned `0s` latent:
-
-```text
-predicted_red_action = decoder(x, z)
-predicted_next_state = dynamics(x, blue_action, predicted_red_action)
-```
-
-This is the identity-state Equation 3 implementation, not the upstream
-learned-latent TD-MPC2 baseline. `--updates` counts gradient updates, not environment
-steps. Specialist checkpoint files are still required for the script's matched-state
-diagnostics, even when the dataset already exists.
-
-The output directory contains `agent.msgpack`, `opponent.msgpack`,
-`state_stats.npz`, `config.json`, and `manifest.json` for reloading the model.
-`training_history.json`, `metrics.json`, `latents.npz`, and `REPORT.md` contain the
-training and representation diagnostics. This command does not evaluate the
-controller in the real environment.
+`--updates` counts gradient steps. Keep the specialist weights available for
+diagnostics. Retain `agent.msgpack`, `opponent.msgpack`, `state_stats.npz`,
+`config.json`, and `manifest.json` together for reloading. Evaluation is separate.
 
 ## 4. Continue training with controller experience
 
@@ -196,19 +110,11 @@ uv run --locked --all-extras python scripts/run_tdmpc.py adapt-0s \
   --rounds 6 --episodes-per-group 8 --updates-per-round 1000
 ```
 
-Each round collects experience against the frozen training opponents and updates
-the controller from mixed offline/online replay. The example adds 288 episodes
-and 6,000 gradient updates. Actual transition counts depend on episode length.
-The `0s` encoder and decoder, state normalization, planner settings, and environment
-rewards remain unchanged.
-
-This command requires checkpoint families `{0,1,2}`, held-out checkpoint 2, and
-the exact dataset used for the initial fit. The output directory must be new or
-empty. Updated checkpoints and training logs are saved after each round; collected
-episodes are stored under `online_round_000/`, `online_round_001/`, and so on.
-To continue an adapted run, use it as the positional input and choose another
-fresh output directory. Retain its recorded experience files. Historical replay
-paths are absolute, so moving an adapted run to another machine needs the
+Adds 288 episodes and 6,000 updates against training specialists 0/1; checkpoint 2
+stays held out. `0s`, normalization, rewards, and planner settings stay fixed.
+Requires all three checkpoint families, the original dataset, and a new or empty
+output directory. Keep the saved `online_round_*` replay files for continuation.
+Moving an adapted run between machines requires the
 [resume precautions](docs/COLLABORATOR_GUIDE.md#continuing-an-adapted-run).
 
 ## 5. Evaluate the controller
@@ -222,23 +128,13 @@ uv run --locked --all-extras python scripts/run_tdmpc.py evaluate \
   --n-eps 24 --context-modes online --controls --record
 ```
 
-`--n-eps` is the number of held-out episodes per opponent type. This example runs
-72 episodes per controller. `--controls` adds the fixed MAPPO prey and a random
-policy on matched resets. It does not train either control. `--record` saves
-transition traces and a GIF/PNG replay of the first episode from each evaluation
-group; the trace arrays retain validity masks for terminal padding.
+Runs 24 held-out episodes per opponent type, 72 per controller. `--controls` adds
+MAPPO and random policies on matched resets; `--record` saves traces and replays.
+Results: `evaluation.json` and `evaluation_per_episode.npz`.
 
-Read `evaluation.json` for returns, capture rates, episode lengths, resource
-collection, timing, and provenance. `evaluation_per_episode.npz` retains individual
-outcomes. To evaluate the offline model, use `artifacts/continuous_0s/seed_0` as
-the input run and give its results a separate output directory.
-
-Supported context ablations are `online,zero,shuffled,oracle,wrong_oracle`.
-Oracle contexts are training-set prototype means, not access to the real opponent's
-next action. A zero-context decoder is not a separately trained vanilla BC model.
-Keep held-out opponents out of model selection; use a separate validation split
-for tuning. Representation probes and ARI do not establish closed-loop control
-performance.
+For the offline model, replace the input with `artifacts/continuous_0s/seed_0`
+and use a separate output directory. Do not use held-out opponents for tuning.
+Context ablations and their limitations are in the [controller guide](docs/TD_MPC_0S.md).
 
 ## Other training paths
 
@@ -267,17 +163,12 @@ Add `--online-rounds 6 --online-episodes 8 --updates-per-round 1000` to the trai
 command for controller-generated experience. `--encoder mlp` selects a learned
 SimNorm state encoder; it also changes the generated directory name.
 
-The planner uses horizon 3, 512 candidates, 24 policy proposals, 64 elites, and
-six MPPI iterations. The value ensemble has five heads and discount 0.99. See
-[`configs/tdmpc2.yaml`](configs/tdmpc2.yaml) for network, loss, and profile settings.
-Match training budgets, inputs, and opponent splits before comparing methods.
+Settings: [`configs/tdmpc2.yaml`](configs/tdmpc2.yaml).
 
 ### Continuous behavior cloning
 
-The existing BC experiment compares a vanilla opponent policy (`no_c`) with causal
-GRU-JEPA context (`real_c`), shuffled context, and an objective-label oracle. It uses
-MLPs with continuous action outputs. This runner uses the older three-column
-context interface, **not `0s`**.
+MLP opponent policies with vanilla, GRU-JEPA, shuffled, and oracle conditioning.
+This runner uses the older 3D context interface, not `0s`.
 
 ```bash
 uv run --locked --all-extras python scripts/run_bc_continuous.py \
@@ -372,32 +263,11 @@ specialists required by the dataset collector. Use a script's `--help` to inspec
 its arguments; for the Hydra-based MAPPO trainer, `--cfg job` prints the configuration
 without training.
 
-## Repository layout
-
-| Path | Purpose |
-|---|---|
-| `src/tag_objectives/` | Environment, rewards, observations, continuous action adapter |
-| `src/mopa/` | Encoders, BC, replay, evaluation, TD-MPC, and MPPI |
-| `scripts/` | Training, collection, and evaluation entry points |
-| `configs/` | MAPPO presets and TD-MPC settings |
-| `tests/` | Environment, data, model, and integration tests |
-| `third_party/` | Upstream licenses and source-port provenance |
-| `experiments/` | Recorded protocols, reports, and diagnostic summaries |
-| `logs/`, `artifacts/` | Locally generated checkpoints and run data; git-ignored |
-
-Keep each run's configuration, manifest, checkpoints, dataset, and specialist
-weights together when archiving or sharing results. Large arrays and weights are
-local artifacts; pushing a report does not upload its training data.
-
 ## Reference
 
-- [Collaborator handoff, artifact transfer, and reproduction](docs/COLLABORATOR_GUIDE.md)
-- [Results, implementation history, and limitations](docs/RESULTS.md)
 - [Environment and reward definitions](docs/ENVIRONMENT.md)
 - [TD-MPC and `0s` implementation](docs/TD_MPC_0S.md)
-- [Historical implementation and gate status](docs/STATUS.md)
 - [Earlier continuous GRU-JEPA experiment protocols](experiments/continuous/README.md)
-- [Completed main-environment rerun](experiments/main_env_20260908/REPORT.md)
 - [TD-MPC2-JAX source provenance and license](third_party/tdmpc2-jax/UPSTREAM.md)
 
 The TD-MPC core is adapted from

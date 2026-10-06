@@ -4,6 +4,18 @@ This file is the source of truth for what the repository implements and what
 still needs experiment evidence. It consolidates the historical research
 requirements and later implementation updates.
 
+Current activity (2026-09-08): implementation and visualization, with the
+[equal-information controller benchmark paused](../experiments/matched_control_20260908/STATUS.md).
+The [updated task notes](control-pipeline.md) distinguish frozen real opponents,
+frozen `0s` inference, and trainable blue controllers. Continuous actions and
+TD-MPC training are implemented. The [three-equation `0s` inspector](../experiments/world_model_inspection/README.md)
+adds offline-trained Equation 1/2 models alongside the original Equation 3 base;
+these imagined trajectories are not a new closed-loop comparison. The generic
+Equation 2 training CLI still uses legacy 3D context; online use of the new 8D
+`0s` Equation 2 model and random-per-reset opponent selection remain unwired.
+Historical results below retain their original protocols and are not evidence
+that the paused matched benchmark finished.
+
 Latest targeted rerun: [exact main-branch environment](../experiments/main_env_20260908/REPORT.md).
 The prior version is backed up as `new-env`; the environment core now matches
 `main@8c24db3` byte-for-byte. Fresh native discrete and continuous datasets,

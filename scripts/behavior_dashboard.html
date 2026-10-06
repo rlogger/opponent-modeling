@@ -1,0 +1,217 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Opponent behavior · saved research views</title>
+  <style>
+    :root {
+      /* Plot primitives only; the page and controls use browser defaults. */
+      --background:Canvas;
+      --foreground:CanvasText;
+      --border:GrayText;
+      --popover:Canvas;
+      --popover-foreground:var(--foreground);
+      --blue:#2864b4;
+      --red:#c63e37;
+      --orange:#b36a16;
+      --yellow:#ac8210;
+      --green:#24764d;
+      --purple:#84539c;
+      --viz-series-1:var(--blue);
+      --viz-series-2:var(--orange);
+      --viz-series-3:var(--green);
+      --viz-series-4:var(--purple);
+      --viz-series-5:var(--red);
+      --viz-series-6:var(--yellow);
+    }
+    [hidden] { display:none !important; }
+    #behavior-dashboard { box-sizing:border-box; width:100%; max-width:80rem; margin-inline:auto; padding:clamp(.25rem,1.5vw,1.25rem); overflow-wrap:anywhere; }
+    #behavior-dashboard *, #behavior-dashboard *::before, #behavior-dashboard *::after { box-sizing:border-box; }
+    .bd-tabs { display:flex; flex-wrap:wrap; gap:8px; }
+    #behavior-dashboard button { max-width:100%; white-space:normal; overflow-wrap:anywhere; font-size:1rem; }
+    .bd-tab[aria-selected="true"] { font-weight:bold; }
+    .bd-panel { min-width:0; }
+    .bd-gallery figure { min-width:0; margin:1.5rem 0; }
+    .bd-gallery img { display:block; width:auto; max-width:100%; height:auto; max-height:48rem; max-height:min(75svh,48rem); object-fit:contain; }
+    .bd-media { max-width:100%; overflow:auto; overscroll-behavior-x:contain; }
+    .bd-media[data-full-size="true"] img { width:auto; max-width:none; max-height:none; }
+    .bd-gallery figcaption { overflow-wrap:anywhere; }
+    .bd-gallery button { margin:.5rem .5rem .5rem 0; }
+    .viz-controls, .viz-row { display:flex; flex-wrap:wrap; align-items:center; gap:8px; margin:8px 0; }
+    .viz-controls > *, .viz-row > * { min-width:0; max-width:100%; }
+    .viz-controls > .form-label { display:flex; flex-direction:column; gap:4px; flex:1 1 14rem; max-width:28rem; }
+    .form-select, .form-control { width:100%; max-width:100%; min-width:0; font-size:1rem; }
+    .form-check { display:flex; align-items:center; gap:8px; }
+    .form-check-input { flex-shrink:0; }
+    .form-range { max-width:100%; }
+    .sr-only { position:absolute; width:1px; height:1px; padding:0; margin:-1px; overflow:hidden; clip:rect(0,0,0,0); white-space:nowrap; border:0; }
+    .tooltip { z-index:10; padding:4px; border:1px solid CanvasText; overflow-wrap:anywhere; }
+    @media (pointer:coarse) { #behavior-dashboard button, .form-select, .form-check, .form-range { min-height:44px; } #behavior-dashboard button { min-width:44px; } }
+    @media (prefers-reduced-motion:reduce) { *, *::before, *::after { scroll-behavior:auto !important; } }
+  </style>
+</head>
+<body>
+<main id="behavior-dashboard">
+  <header class="bd-header">
+    <div>
+      <h1>Opponent behavior</h1>
+      <p>Saved trajectories, representations, and model diagnostics.</p>
+    </div>
+  </header>
+  <nav class="bd-tabs" id="bd-tabs" role="tablist" aria-label="Research views">
+    <button class="bd-tab" type="button" role="tab" id="bd-tab-recorded" aria-controls="bd-panel-recorded" aria-selected="true" tabindex="0">Recorded behavior</button>
+    <button class="bd-tab" type="button" role="tab" id="bd-tab-world" aria-controls="bd-panel-world" aria-selected="false" tabindex="-1">World-model swaps</button>
+    <button class="bd-tab" type="button" role="tab" id="bd-tab-latents" aria-controls="bd-panel-latents" aria-selected="false" tabindex="-1">0s representations</button>
+    <button class="bd-tab" type="button" role="tab" id="bd-tab-actions" aria-controls="bd-panel-actions" aria-selected="false" tabindex="-1">Action &amp; physics</button>
+    <button class="bd-tab" type="button" role="tab" id="bd-tab-forecasts" aria-controls="bd-panel-forecasts" aria-selected="false" tabindex="-1">Saved forecasts</button>
+  </nav>
+  <section class="bd-panel" id="bd-panel-recorded" role="tabpanel" aria-labelledby="bd-tab-recorded">
+    <p class="bd-context">Recorded real-environment paths: MAPPO prey and the adapted factored 0s TD-MPC controller. Matched resets; separate realized behavior.</p>
+    __CONTROLLER_VIEW__
+  </section>
+  <section class="bd-panel" id="bd-panel-world" role="tabpanel" aria-labelledby="bd-tab-world" hidden>
+    <p class="bd-context">Historical base checkpoints: original 0s Equation 3 and matched offline Equation 1/2 models. Fixed-action predictions, not MPC-selected trajectories or the adapted controller above.</p>
+    __WORLD_VIEW__
+  </section>
+  <section class="bd-panel" id="bd-panel-latents" role="tabpanel" aria-labelledby="bd-tab-latents" hidden>
+    <h2>0s representations</h2>
+    <p class="bd-context">Saved representation figures. Projection geometry does not by itself establish faithful behavior control.</p>
+    <div class="bd-gallery">__LATENT_FIGURES__</div>
+  </section>
+  <section class="bd-panel" id="bd-panel-actions" role="tabpanel" aria-labelledby="bd-tab-actions" hidden>
+    <h2>Action &amp; physics</h2>
+    <p class="bd-context">Saved action-decoder and physics diagnostics. Original figures are embedded unchanged.</p>
+    <div class="bd-gallery">__ACTION_FIGURES__</div>
+  </section>
+  <section class="bd-panel" id="bd-panel-forecasts" role="tabpanel" aria-labelledby="bd-tab-forecasts" hidden>
+    <h2>Saved forecasts</h2>
+    <p class="bd-context">Historical forecast diagnostics; predicted and recorded paths retain their source labels. Clips start on a static poster and play only when requested.</p>
+    <div class="bd-gallery">__FORECAST_FIGURES__</div>
+  </section>
+  <div class="sr-only" id="bd-announcement" aria-live="polite"></div>
+  <footer class="bd-footer">Inspection only. This page does not launch training, rollouts, or experiments. Interactive plots load D3; saved figures are embedded.</footer>
+  <noscript><p>Enable JavaScript for tab navigation and interactive plots.</p></noscript>
+</main>
+<script>
+(() => {
+  const root = document.getElementById('behavior-dashboard');
+  const tabList = root.querySelector('#bd-tabs');
+  const tabs = Array.from(tabList.querySelectorAll('[role="tab"]'));
+  const panels = tabs.map(tab => document.getElementById(tab.getAttribute('aria-controls')));
+  const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)');
+  const animations = new Map();
+  let active = 0;
+
+  function notify(panel, type) {
+    panel.querySelectorAll('#controller-inspector, #world-model-inspector').forEach(inspector => {
+      inspector.dispatchEvent(new CustomEvent(type));
+    });
+  }
+  function stopAnimation(image) {
+    const record = animations.get(image);
+    if (!record) return;
+    if (record.playing) image.src = record.poster;
+    record.playing = false;
+    record.button.setAttribute('aria-pressed', 'false');
+    record.button.textContent = 'Play animation';
+  }
+  function stopPanelAnimations(panel) {
+    panel.querySelectorAll('img.bd-animation').forEach(stopAnimation);
+  }
+  root.querySelectorAll('.bd-gallery img').forEach((image, index) => {
+    image.loading = 'lazy';
+    image.decoding = 'async';
+    const media = document.createElement('div');
+    media.className = 'bd-media';
+    media.setAttribute('role', 'region');
+    media.setAttribute('aria-label', `${image.alt || 'Saved figure'}; scroll for full-size detail`);
+    media.id = `bd-media-${index}`;
+    image.before(media);
+    media.append(image);
+    const button = document.createElement('button');
+    const label = image.closest('figure')?.querySelector('h3')?.textContent || image.alt || 'saved figure';
+    button.type = 'button';
+    button.className = 'btn bd-size-toggle';
+    button.textContent = 'Full size';
+    button.setAttribute('aria-label', `Full size: ${label}`);
+    button.setAttribute('aria-pressed', 'false');
+    button.setAttribute('aria-controls', media.id);
+    button.addEventListener('click', () => {
+      const fullSize = media.dataset.fullSize !== 'true';
+      media.dataset.fullSize = String(fullSize);
+      button.setAttribute('aria-pressed', String(fullSize));
+      button.textContent = fullSize ? 'Fit to view' : 'Full size';
+      button.setAttribute('aria-label', `${button.textContent}: ${label}`);
+      if (fullSize) media.tabIndex = 0;
+      else { media.removeAttribute('tabindex'); media.scrollLeft = 0; media.scrollTop = 0; }
+    });
+    media.before(button);
+  });
+  root.querySelectorAll('button[data-animation-toggle]').forEach(button => {
+    const image = button.closest('figure')?.querySelector('img.bd-animation');
+    if (!image || !image.dataset.animation) {
+      button.disabled = true;
+      button.textContent = 'Animation unavailable';
+      return;
+    }
+    const record = {poster:image.dataset.poster || image.getAttribute('src'), button, playing:false};
+    animations.set(image, record);
+    button.type = 'button';
+    button.setAttribute('aria-pressed', 'false');
+    button.textContent = 'Play animation';
+    button.addEventListener('click', () => {
+      if (button.closest('[role="tabpanel"]')?.hidden) return;
+      if (record.playing) { stopAnimation(image); return; }
+      // Even with reduced motion, playback requires this explicit user action.
+      image.src = image.dataset.animation;
+      record.playing = true;
+      button.setAttribute('aria-pressed', 'true');
+      button.textContent = 'Stop animation';
+    });
+  });
+  function activate(index, focus=false) {
+    if (index < 0 || index >= tabs.length) return;
+    panels.forEach((panel, i) => {
+      if (i !== index) {
+        notify(panel, 'inspector:hide');
+        stopPanelAnimations(panel);
+        panel.hidden = true;
+      }
+      tabs[i].setAttribute('aria-selected', String(i === index));
+      tabs[i].tabIndex = i === index ? 0 : -1;
+    });
+    active = index;
+    panels[index].hidden = false;
+    if (focus) tabs[index].focus();
+    requestAnimationFrame(() => {
+      if (!panels[index].hidden) notify(panels[index], 'inspector:show');
+    });
+    root.querySelector('#bd-announcement').textContent = tabs[index].textContent.trim();
+  }
+  tabs.forEach((tab, index) => {
+    tab.addEventListener('click', () => activate(index));
+    tab.addEventListener('keydown', event => {
+      let next;
+      if (event.key === 'ArrowRight') next = (index + 1) % tabs.length;
+      else if (event.key === 'ArrowLeft') next = (index - 1 + tabs.length) % tabs.length;
+      else if (event.key === 'Home') next = 0;
+      else if (event.key === 'End') next = tabs.length - 1;
+      else return;
+      event.preventDefault();
+      activate(next, true);
+    });
+  });
+  reducedMotion.addEventListener('change', () => {
+    if (reducedMotion.matches) animations.forEach((_, image) => stopAnimation(image));
+  });
+  document.addEventListener('visibilitychange', () => {
+    if (document.hidden) {
+      panels.forEach(panel => { notify(panel, 'inspector:hide'); stopPanelAnimations(panel); });
+    } else notify(panels[active], 'inspector:show');
+  });
+  activate(0);
+})();
+</script>
+</body>
+</html>

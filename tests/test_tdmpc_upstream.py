@@ -173,7 +173,7 @@ def test_gate0_validator_pins_the_single_agent_baseline(smoke_config):
     with pytest.raises(NotImplementedError, match="Gate 0"):
         validate_gate0_config(dict(smoke_config, context_dim=8))
     with pytest.raises(NotImplementedError, match="context_dim >= 1"):
-        create_agent(dict(smoke_config, opponent_mode="factored"), OBS_DIM, key=jax.random.PRNGKey(0))
+        create_agent(dict(smoke_config, opponent_mode="conditioned"), OBS_DIM, key=jax.random.PRNGKey(0))
     with pytest.raises(NotImplementedError, match="opponent_mode"):
         create_agent(dict(smoke_config, opponent_mode="bogus"), OBS_DIM, key=jax.random.PRNGKey(0))
 

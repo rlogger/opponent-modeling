@@ -1,0 +1,99 @@
+{
+  "artifacts": {
+    "0s.msgpack": "6c9fdabb5e2ace95d63fcd790db3cb81ec4897fda47640bf7a242f286b4ff6bc",
+    "bc.npz": "933bd884628095460949a82d8414458b59ea3ce40a7d935e8c1455f32ce6fda1",
+    "context.npz": "d63dacc5365e0308b9cd25f54e9ab7b9eb1f4959df1614e9577e9f084d55fbca",
+    "stats.npz": "49246c7fd646630d30308284dd49fa3d3df1fea7693a6dae26ce4eb6fbca46b4"
+  },
+  "code": {
+    "configs/tdmpc2.yaml": "2e71543a3a299c3f6b229dc7324f64faa726a7cf5447d0efd6b89e72ec92983a",
+    "scripts/run_control_benchmark.py": "54bc8045fcd6d61a1bdd6eec43224d60ab8e540f7891c922f79533f558879ad4",
+    "src/mopa/__init__.py": "7753338f7317256772cd65e2ef5a19a5874a04c1bbf54884aa0b1df02d87c3bd",
+    "src/mopa/action_decoder.py": "47df75708cdf4be8a8cc789b46d8d8382177e39b8335c2b4cfa55cc28070b8e2",
+    "src/mopa/bc.py": "877d884f898ea11ce449e916d8030bafce6b4f56cef8af08428bd93dcaef99a4",
+    "src/mopa/bc_continuous.py": "717edb7af0a4b9177a2cda926961ed2c9a589efdda01a5049195ef6f4bf83e88",
+    "src/mopa/belief.py": "3ca3e01a4be150d604dcf6fe908d8fd69557abd6748376281b8b395d0449eb1a",
+    "src/mopa/benchmark_report.py": "d1ed7ea6ef684fb9feeb4ad6f5cacd7ee189ceff0a7861bdf22c3b4519bf169b",
+    "src/mopa/context.py": "0ac8ec48972a25fbf58c797a2357ddc26169763a0c4818bd8502f5d23f8e60a3",
+    "src/mopa/continuous.py": "2b853a160d4e7b109f6961dd2125b870706736fad56a639acbb45c53c4164407",
+    "src/mopa/continuous_data.py": "2e30b4c23b404ffac33b834c6727ff42b4c8a78c113b6d54eaff75722f9c86b8",
+    "src/mopa/cpl.py": "e0254124d27434c80156478d3813b617214b95244347de54186efb45c5d1d165",
+    "src/mopa/data.py": "c0849e994e1060ec02309dd6a1b3c027b887574a33fdfea8602c4ff0334d89ac",
+    "src/mopa/encoders.py": "0f641681ea3c09198d1e5c7af420ed77d8c16ab33f53819b5dfa9e4d429c616f",
+    "src/mopa/evaluation.py": "24c5a7ab63fabdedf523baafb1c5251d6519a122e718249a904acc2a0210b5d0",
+    "src/mopa/features.py": "afea866a0ee35f9efe63815815840c5d7929237b7d1eb004c5f420bceae84def",
+    "src/mopa/manifest.py": "5bf9882da1d484f7196805ae177b3e96984aa1ae201bcd344953b799db1ae9e6",
+    "src/mopa/metrics.py": "508680a5b48285f04bac33c269a8c79c014372b71cdf9a8453ab3031a7c423d4",
+    "src/mopa/mppi.py": "f40ffd192b11979a070f0d9b00bdf4cbeeb126c75d87a8af189a27434e38da79",
+    "src/mopa/nets.py": "7a4c144c61a35958de91a82ea476d56d4be0a98799406382b0755b02e7dac47f",
+    "src/mopa/replay.py": "fc5d98003f41dd3365d5811426321456810a975f4f7fcd2019da319b52c9f0e7",
+    "src/mopa/response_ppo.py": "e44ae7f5d075ff8f6c878a242343a709db25162bb36a10a646045ae1d71e2d0b",
+    "src/mopa/samples.py": "3c5ade1185bce2cfd37d5ceb6945304e2edf5a42bc73809e394a9b59e488e398",
+    "src/mopa/sim_planner.py": "18d3f943329a60b42bd986db8f80d9fd1dd59c2c764726a556f10f418709e3ab",
+    "src/mopa/splits.py": "0a30e2b391bc2d7b554381fd02cc97747ccbad1e7b58e3dfca6dbd21e837c7ae",
+    "src/mopa/strategy.py": "7c1df4df1602cd8159229c034bd08468bf9e27381246565991b5acdb01746621",
+    "src/mopa/tdmpc.py": "2dcb91aa2d3a728d9c0dea276a16b9bc166bd21fa2f891b8cd12e46eee3e8b8f",
+    "src/mopa/tdmpc/_source_snapshot.py": "0afac44431176ffd1e1b2b4382de2452ae816d6a5eaf5c2e90b7a0ef8331edcb",
+    "src/mopa/tdmpc/modes.py": "1d0846f3d181057aabf4f847bcf2316991d773e4bcd237c35a9f58f81db57e64",
+    "src/mopa/tdmpc_data.py": "f1e413ca7cebdde5590c5b7bee51c8904324a0cb58453e8872c97a33297433ca",
+    "src/mopa/trajectory_export.py": "06d47668c0d988284262197f7124fa8ed493530f4aa1f606248b11144f5df832",
+    "src/mopa/types.py": "5430c9c270e5e5e26a9f50b171835a2cabd3b6e16d995c6acf444d1eacf0c963",
+    "src/mopa/zero_s.py": "af9ee4b11bed3c21f38c3ffcf55edfca3604e32f7474cfd81830a4abd9d79e82",
+    "src/tag_objectives/__init__.py": "a62de0fa0bb3746f86734aef53f0613e377964549aa8f46318434d645ef8ea15",
+    "src/tag_objectives/actions.py": "8b14d4d9e6eaca11d303e4de07be47a912fc1599f221934d96858089532e1cb7",
+    "src/tag_objectives/api.py": "87ed0941403d3e38cf4d32cb50879b5816fb9b0cbe73a837a63721169a3d0623",
+    "src/tag_objectives/objectives.py": "71332590fc61490bfd6271ab72da01f41df952963c10d86b577035ac74796f84",
+    "src/tag_objectives/rendering.py": "2be88dd403b2d5b4cc8d6416344823bf05f3b041cb085ae4c8f58bdf265eddd7",
+    "src/tag_objectives/resources.py": "72910059f63c01613b4ad3803236497723724e3c16525d9b21ca51b920b0d4d4",
+    "src/tag_objectives/teams.py": "7f77b373cd582a68172080a81b14ff602591283e85d74b05700c3cfd0d58cf94",
+    "src/tag_objectives/types.py": "bdf18df9a27bc8a39e7e6b766bd19708164accaeea8209788c07f7e930a4235c",
+    "uv.lock": "5a749da103734dbbd4bec009de327150381840e1f2fa1dafdaeff2b3403a5724"
+  },
+  "dataset": "928181027a9e5e86b106190b1487cda90c09e2cc5df08b569f7b93ba8350b5f5",
+  "dataset_manifest": "529c511c80ef2f1b2b44078e8e72e8238f823feab55c93c89ca6fa053827db00",
+  "encoder_steps": 1500,
+  "seed": 1,
+  "smoke": false,
+  "specialists": {
+    "0:capture": {
+      "path": "/Users/rajdeepsingh/Documents/Playground/opponent-modeling/logs/MPE_simple_tag_v3_continuous/mappo_continuous_capture_MPE_simple_tag_v3_continuous_pred_actor_seed0_vmap0.safetensors",
+      "sha256": "e88a8d1e7d884c39c4b96df282071b3b483d6c3e2adaaf72010907e8885291a6"
+    },
+    "0:curious": {
+      "path": "/Users/rajdeepsingh/Documents/Playground/opponent-modeling/logs/MPE_simple_tag_v3_continuous/mappo_continuous_curious_MPE_simple_tag_v3_continuous_pred_actor_seed0_vmap0.safetensors",
+      "sha256": "70ce23992cf59fedaa9568314a83710feb4870e649b982900a42a169e7eea195"
+    },
+    "0:risk": {
+      "path": "/Users/rajdeepsingh/Documents/Playground/opponent-modeling/logs/MPE_simple_tag_v3_continuous/mappo_continuous_risk_MPE_simple_tag_v3_continuous_pred_actor_seed0_vmap0.safetensors",
+      "sha256": "6c720d97836c9b7175859985f2002d3734f529e9738e8205e67e85bb558e47c9"
+    },
+    "1:capture": {
+      "path": "/Users/rajdeepsingh/Documents/Playground/opponent-modeling/logs/MPE_simple_tag_v3_continuous/mappo_continuous_capture_MPE_simple_tag_v3_continuous_pred_actor_seed0_vmap1.safetensors",
+      "sha256": "def2c3aaa8d5a206b9e401ba9e757cf1348148b1c8fd34d0630acaaf335339fb"
+    },
+    "1:curious": {
+      "path": "/Users/rajdeepsingh/Documents/Playground/opponent-modeling/logs/MPE_simple_tag_v3_continuous/mappo_continuous_curious_MPE_simple_tag_v3_continuous_pred_actor_seed0_vmap1.safetensors",
+      "sha256": "300eb2fe9a119f0b7d640f309d189e0bea55fabc5616a8c224aff9aa963784df"
+    },
+    "1:risk": {
+      "path": "/Users/rajdeepsingh/Documents/Playground/opponent-modeling/logs/MPE_simple_tag_v3_continuous/mappo_continuous_risk_MPE_simple_tag_v3_continuous_pred_actor_seed0_vmap1.safetensors",
+      "sha256": "f6bad7cbb9912986b2b201b156934fa4801f2aada4514b4992aed3a6d15787b0"
+    },
+    "2:capture": {
+      "path": "/Users/rajdeepsingh/Documents/Playground/opponent-modeling/logs/MPE_simple_tag_v3_continuous/mappo_continuous_capture_MPE_simple_tag_v3_continuous_pred_actor_seed0_vmap2.safetensors",
+      "sha256": "bd17f86b36448bcb885e2eed04240892729883e0129c0b13b66706703c026940"
+    },
+    "2:curious": {
+      "path": "/Users/rajdeepsingh/Documents/Playground/opponent-modeling/logs/MPE_simple_tag_v3_continuous/mappo_continuous_curious_MPE_simple_tag_v3_continuous_pred_actor_seed0_vmap2.safetensors",
+      "sha256": "07b9439945cfa656156fa62b767e0cd8068fe2c8b110803f0b61ec3e8372efba"
+    },
+    "2:risk": {
+      "path": "/Users/rajdeepsingh/Documents/Playground/opponent-modeling/logs/MPE_simple_tag_v3_continuous/mappo_continuous_risk_MPE_simple_tag_v3_continuous_pred_actor_seed0_vmap2.safetensors",
+      "sha256": "b895d4d645cb06d689f2feb862b8a1079063415cc471b7e887bc0a0bbdfb4b08"
+    }
+  },
+  "training_checkpoints": [
+    0,
+    1
+  ]
+}

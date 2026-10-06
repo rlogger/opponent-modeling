@@ -1,0 +1,122 @@
+{
+  "schema": 1,
+  "inputs": {
+    "/Users/rajdeepsingh/Documents/Playground/opponent-modeling/experiments/controller_inspection/manifest.json": "cce04d5851a58dacbf69b03b12f239625bbf3f554cec2a66fd0092ab10ce8764",
+    "/Users/rajdeepsingh/Documents/Playground/opponent-modeling/experiments/world_model_inspection/manifest.json": "fc9563fd33ce891d781cd382ed4c882c982d7d4899fe1a438d4dd33711b2b4da",
+    "/Users/rajdeepsingh/Documents/Playground/opponent-modeling/experiments/continuous_0s/manifest.json": "fe90ccbbdfbc1004b1acb0c8b039aba88960146cec6d5d16d5f26da1896b3a0b",
+    "/Users/rajdeepsingh/Documents/Playground/opponent-modeling/experiments/continuous_0s/visuals/diagnostics_manifest.json": "163c4c691a6060e582594ad7bdebb015627fcc44c421418a3f369d7789825443",
+    "/Users/rajdeepsingh/Documents/Playground/opponent-modeling/experiments/continuous_0s/visuals/rollout_manifest.json": "940474e31c5437489d8b180aa2ec050a748fdc04ea0b7d6d6b93b1e5789ce1b4",
+    "/Users/rajdeepsingh/Documents/Playground/opponent-modeling/experiments/controller_inspection/trajectories.json": "cc1b6f27ab9b7ab2af3fdfdb8f9aceec5a36a0dfbe16a9424b16204acc42c818",
+    "/Users/rajdeepsingh/Documents/Playground/opponent-modeling/experiments/world_model_inspection/world-model-data.json": "d99c04a509e8cf7baa85374a47f7b8c5ea7f5bc31384dab483364f8a146e283a"
+  },
+  "figures": [
+    {
+      "name": "encoding_viz.png",
+      "sha256": "7e478bc570c15c573c28ae9c81021fddfaf83f925b497d1aa91f502b78f59722",
+      "source_manifest": "manifest.json",
+      "title": "0s representation overview",
+      "caption": "Saved training/held-out episode PCA, checkpoint-colored PCA, training losses, held-out window PCA, and historical probe/length-control/ARI results. No refitting.",
+      "group": "latents"
+    },
+    {
+      "name": "visuals/latent_prototypes.png",
+      "sha256": "5cf91618a172ab2ec906423ccf5a96498bbb1eed8a6491233c1c89d29e2642e8",
+      "source_manifest": "visuals/diagnostics_manifest.json",
+      "title": "Latent point clouds and three mean vectors",
+      "caption": "Held-out episode latents in training-fitted PCA; stars are train-only means. Heatmap cells are eight raw latent coordinates, not strategy probabilities.",
+      "group": "latents"
+    },
+    {
+      "name": "visuals/causal_prefix.png",
+      "sha256": "a9f5ad403e5dcc404ac2166a7425a74fb76e339660e7d08f58a6d4eabd6e9f04",
+      "source_manifest": "visuals/diagnostics_manifest.json",
+      "title": "Causal-prefix inference",
+      "caption": "Previously computed train-only diagnostic probes on saved causal prefixes, using the same held-out cohort. The full-episode reference sees later behavior. No probe was fitted for this dashboard.",
+      "group": "latents"
+    },
+    {
+      "name": "visuals/specialist_match.png",
+      "sha256": "ebcd9188c74f963a76edb2022b54c12aa1012a143a71b9ca4417c585f893a0aa",
+      "source_manifest": "visuals/diagnostics_manifest.json",
+      "title": "Prototype versus specialist matching",
+      "caption": "Saved action errors on identical states. Outlined cells are each target column's best match; the diagonal is the intended behavior match, not a guaranteed outcome.",
+      "group": "actions"
+    },
+    {
+      "name": "visuals/action_controls.png",
+      "sha256": "461da09ba78b459f85f296116f8dc894f959f8b136259884cc0a037186dd615b",
+      "source_manifest": "visuals/diagnostics_manifest.json",
+      "title": "Action-prediction controls",
+      "caption": "Historical causal-history, correct-mean, wrong-mean and zero-context controls. Zero context uses the same 0s decoder with z=0; it is not separately trained vanilla BC.",
+      "group": "actions"
+    },
+    {
+      "name": "visuals/action_vectors.png",
+      "sha256": "b2d704466df51b69f68b939c3ea96de11d8fa51239b450a47eb0e2c47526baef",
+      "source_manifest": "visuals/diagnostics_manifest.json",
+      "title": "Predicted and specialist action vectors",
+      "caption": "Saved same-state actions: solid arrows are the 0s decoder; dashed arrows are the specialist. One deterministic example per recorded objective; these are commands, not trajectories.",
+      "group": "actions"
+    },
+    {
+      "name": "visuals/physics_error.png",
+      "sha256": "e1b1e994bfa15565c71a97052fc274d9cbb6e6bb209d82e1136e77b70c67cae3",
+      "source_manifest": "visuals/diagnostics_manifest.json",
+      "title": "Physics prediction across horizons",
+      "caption": "Previously measured position error with recorded joint actions. This isolates learned physics, not opponent prediction quality or closed-loop controller performance.",
+      "group": "actions"
+    },
+    {
+      "name": "latent_swap_rollouts.png",
+      "sha256": "eb5e01fc0fc03967448efa5e8b4339e806034fcf8fc7c7001d404d40001f388f",
+      "source_manifest": "manifest.json",
+      "title": "Original Equation 3 prototype rollouts",
+      "caption": "Saved base-model predictions under identical initial states and blue commands. These are imagined paths, not simulator counterfactual ground truth.",
+      "group": "forecasts"
+    },
+    {
+      "name": "visuals/additional_scenes.png",
+      "sha256": "5e6942e8891c2eeec03cf71066837bf01ccd37a19e53f800b1d3326fc7e50c04",
+      "source_manifest": "visuals/rollout_manifest.json",
+      "title": "Additional held-out starting scenes",
+      "caption": "Three saved risk-source episodes (1000, 1100, 1199), each with three prototype swaps. Not one scene per objective. Fixed-horizon predictions lack the new inspector's stop markings.",
+      "group": "forecasts"
+    },
+    {
+      "name": "visuals/latent_swap_animation.gif",
+      "sha256": "491dad252bb12c016b2a6e384268fb37975dafeefebf3888e367c537ce151db8",
+      "source_manifest": "visuals/rollout_manifest.json",
+      "title": "Original latent-swap animation",
+      "caption": "Saved fixed-horizon Equation 3 forecasts. Playback starts only on request; states beyond capture are extrapolations, not confirmed episode continuations.",
+      "group": "forecasts"
+    },
+    {
+      "name": "visuals/latent_swap_animation_final.png",
+      "sha256": "83af47c0982751132f3d0847bccad082f9233283f0cd4836c435733dff4558d6",
+      "source_manifest": "visuals/rollout_manifest.json",
+      "title": "Animation endpoint",
+      "caption": "The saved final frame of the same original animation, retained for static inspection.",
+      "group": "forecasts"
+    }
+  ],
+  "source_roles": {
+    "recorded": "Adapted factored 0s controller and MAPPO; recorded real episodes",
+    "world": "Offline Eq1/Eq2 and original base Eq3; fixed-action imaginations",
+    "figures": "Original continuous_0s seed0 historical diagnostics; not newly computed"
+  },
+  "operations": {
+    "training": false,
+    "new_rollouts": false,
+    "model_inference": false,
+    "probe_fitting": false
+  },
+  "code": {
+    "scripts/build_behavior_dashboard.py": "c20e1def2c8e3a6c0ea98ccc003d6c96a10e26210dc6a04bed1d23e6f2d27011",
+    "scripts/controller_inspector.html": "f169f2a1b9f371442571de3db55076c57a54c997b425b55d81f323e2e5aa1be5",
+    "scripts/world_model_inspector.html": "dd48c302a7d870dfe36aa76f79f9850406d9d619501638af7bd23eb82982728a",
+    "scripts/behavior_dashboard.html": "c0196e0fe9556b3c9e952dfac255586f791de01b3dfbc1dbb862190e5d395a60"
+  },
+  "artifacts": {
+    "index.html": "dd88ec02c3b37c7b85479d893f321b77d7110337fa2b2d81022838f2202c7e77"
+  }
+}

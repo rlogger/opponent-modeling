@@ -354,8 +354,10 @@ class WorldModel(struct.PyTreeNode):
             raise ValueError(f"opponent_mode must be one of {OPPONENT_MODES}")
         if encoder_type not in ENCODER_TYPES:
             raise ValueError(f"encoder_type must be one of {ENCODER_TYPES}")
-        if opponent_mode != "implicit" and context_dim < 1:
-            raise ValueError("conditioned/factored modes need context_dim >= 1")
+        if context_dim < 0:
+            raise ValueError("context_dim cannot be negative")
+        if opponent_mode == "conditioned" and context_dim < 1:
+            raise ValueError("conditioned mode needs context_dim >= 1")
         # Upstream uses latent_dim as every head's hidden width; the identity
         # baseline's latent is the raw state, so a separate width is allowed.
         hidden = latent_dim if hidden_dim is None else int(hidden_dim)
@@ -1171,7 +1173,7 @@ def validate_config(config: Dict[str, Any]) -> None:
     context_dim = int(config.get("context_dim", 0))
     if context_dim < 0:
         raise ValueError("context_dim cannot be negative")
-    if mode != "implicit" and context_dim < 1:
+    if mode == "conditioned" and context_dim < 1:
         raise NotImplementedError(f"opponent_mode={mode!r} requires context_dim >= 1")
     enc_type = config.get("encoder", {}).get("type", "mlp")
     if enc_type not in ENCODER_TYPES:

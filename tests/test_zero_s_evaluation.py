@@ -138,7 +138,8 @@ def test_real_loop_context_is_observed_only_and_freezes_after_timeout(tiny):
     assert trace["state"].shape == (2, 9, 66)
     assert trace["context"].shape == (2, 8, 8)
     assert trace["blue_action"].shape == trace["red_action"].shape == (2, 8, 2)
-    np.testing.assert_array_equal(trace["context"], np.stack(contexts, axis=1))
+    assert len(contexts) == 5  # no controller calls after every episode ends
+    np.testing.assert_array_equal(trace["context"][:, :5], np.stack(contexts, axis=1))
     np.testing.assert_array_equal(trace["context"][:, 0], 0)
     offline = tiny.opponent.context(trace["state"], trace["red_action"], trace["valid_length"])
     np.testing.assert_allclose(trace["context"], offline[:, :-1], atol=2e-6)

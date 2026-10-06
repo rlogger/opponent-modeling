@@ -1,17 +1,27 @@
 # Handoff: Continuous Opponent-Aware TD-MPC
 
-## Snapshot and evidence boundary
+## Current snapshot and evidence boundary (2026-09-08)
 
-- Base checkout when this handoff was written: `main` at `8c24db3`.
-- TD-MPC is not implemented. It remains deferred in
-  [`docs/STATUS.md`](docs/STATUS.md).
-- Existing MAPPO specialists, rollout actions, and BC are discrete.
-- Existing discrete checkpoints, datasets, `0s` results, and BC results cannot
+- Historical base when this handoff was written: `main` at `8c24db3`.
+- Continuous MAPPO specialists, datasets, BC, and the TD-MPC2 source port are
+  implemented. Offline updates and real-environment collection/update rounds
+  are supported; see [current task and equations](docs/control-pipeline.md).
+- The `0s` Equation 3 path supports online controller training with frozen
+  opponents. All three equations have `0s` prototype visualizations, but the
+  new 8D `0s` Equation 2 checkpoint has no dedicated online CLI yet: generic
+  conditioned training still uses the legacy 3D context.
+- Current opponents are fixed MAPPO specialists from capture/risk/curious
+  families, scheduled in separate groups. Random-per-reset selection and
+  within-episode switching are not implemented in this controller workflow.
+- The matched equal-information benchmark is [paused](experiments/matched_control_20260908/STATUS.md).
+  Current visualizations are diagnostics, not new comparative control evidence.
+- Legacy discrete checkpoints, datasets, `0s` results, and BC results cannot
   be presented as continuous-control results.
 - Upstream TD-MPC2-JAX was inspected at commit
   `5b05ff452424896d709848e1f249bd67e269b8a1` from July 28, 2026.
-- A smoke test proves code execution only. It is not evidence of TD-MPC,
-  opponent controllability, or improved return.
+- A smoke test proves code execution only, not effective control, faithful
+  opponent behavior, or improved return. The gates below retain the original
+  implementation contract; they are not a list of entirely unimplemented work.
 
 ## Chosen upstream implementation
 

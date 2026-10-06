@@ -1,0 +1,266 @@
+<div id="controller-inspector">
+  <h2>MAPPO &amp; TD-MPC2 · saved trajectory explorer</h2>
+  <div class="text-small text-muted">Same reset, separate realized trajectories · TD-MPC2 uses the adapted 0s world model</div>
+  <div class="viz-controls">
+    <label class="form-label">Red specialist
+      <select class="form-select" id="ci-objective"><option value="capture">Capture</option><option value="risk">Risk-averse</option><option value="curious">Curious</option></select>
+    </label>
+    <label class="form-label">Matched episode
+      <select class="form-select" id="ci-episode"></select>
+    </label>
+  </div>
+  <div class="viz-row">
+    <button type="button" class="btn" id="ci-play">Play</button>
+    <label class="form-label" for="ci-time">Decision step <output id="ci-step" class="tabular-nums">0</output></label>
+    <input class="form-range" type="range" id="ci-time" min="0" max="100" step="1" value="0" aria-label="Decision step">
+  </div>
+  <div class="ci-panes">
+    <section><h3>MAPPO</h3><div class="text-small">Local observation → actor → force</div><svg class="ci-chart" id="ci-mappo" role="img" aria-label="Recorded MAPPO red and blue paths"></svg><div class="text-small tabular-nums" id="ci-mappo-status"></div></section>
+    <section><h3>TD-MPC2 + 0s</h3><div class="text-small">State + history → imagined plans → force</div><svg class="ci-chart" id="ci-tdmpc" role="img" aria-label="Recorded TD-MPC red and blue paths"></svg><div class="text-small tabular-nums" id="ci-tdmpc-status"></div></section>
+  </div>
+  <div class="viz-row text-small ci-legend">
+    <span><i style="background:var(--blue)"></i>Blue prey</span><span><i style="background:var(--red)"></i>Red opponent</span>
+    <span>○ Start · solid trail = past · faint trail = recorded future · arrows = force commands</span>
+  </div>
+  <div class="text-small text-muted">Diamonds: resources · shaded discs: lava · full-path camera; no hard walls · agent markers not to collision scale</div>
+  <hr>
+  <div class="viz-controls">
+    <label class="form-label">Grouping view
+      <select class="form-select" id="ci-view"><option value="trajectory">Trajectory cloud · both controllers</option><option value="context" selected>0s cloud · every decision, multiple episodes</option><option value="context-end">0s cloud · last decision per episode</option></select>
+    </label>
+    <label class="form-label">Episodes per objective
+      <select class="form-select" id="ci-samples"><option value="1">First 1 matched pair</option><option value="4">First 4 matched pairs</option><option value="8">First 8 matched pairs</option><option value="24" selected>All 24 matched pairs</option></select>
+    </label>
+  </div>
+  <h3 id="ci-cloud-title">0s point cloud · all valid decisions across episodes</h3>
+  <div class="viz-row text-small ci-legend" id="ci-groups"></div>
+  <svg class="ci-chart" id="ci-cloud" role="img" aria-label="Selectable post-hoc projection of saved trajectories" aria-describedby="ci-axis-help ci-point-help"></svg>
+  <p id="ci-axis-help">Context PC1 and PC2 summarize the eight-dimensional 0s history vector on two display axes. Latent units are learned coordinates, not arena positions or probabilities.</p>
+  <p id="ci-point-help">Each dot is one TD-MPC2 decision-time context, computed from completed opponent history.</p>
+  <details>
+    <summary>What do the axes, points, and colors mean?</summary>
+    <dl>
+      <dt>PC1 / PC2 (principal components)</dt>
+      <dd>PC1 follows the largest variation in the plotted vectors; PC2 follows the next largest, perpendicular direction. Both combine many input coordinates. They are not the first two entries of z, and neither axis is inherently capture, risk, or curiosity.</dd>
+      <dt>Context / latent units</dt>
+      <dd>Context is the 8D opponent-history summary z available before an action. Its plot uses mean-centered, unscaled latent coordinates. Zero is the displayed cohort's average; a positive or negative score is not good or bad. The PCA axes were fitted after recording, even though each context uses only preceding history.</dd>
+      <dt>Trajectory / arena units</dt>
+      <dd>This is a separate projection of complete red-and-blue path shapes. Each starting position is removed and episode duration is normalized. Scores retain arena-distance scaling, but PC1 and PC2 are not physical x and y.</dd>
+      <dt>Nearby points and colors</dt>
+      <dd>Nearby points have similar projections; differences in the other dimensions may be hidden. Colors are recorded opponent-type labels, not discovered clusters. Separation does not by itself prove strategy recovery. Do not compare numeric coordinates between different PCA views.</dd>
+    </dl>
+  </details>
+  <div class="text-small" id="ci-cloud-caption">Click a point to inspect its matched paths · circle = MAPPO; diamond = TD-MPC2</div>
+  <div class="text-small text-muted" id="ci-preprocessing">Joint displacements from each agent's starting position; episode duration normalized. Axes fitted post-hoc.</div>
+  <div class="text-small text-muted">Colors are known red objectives, not discovered clusters. Descriptive PCA only; no probe scores or performance comparison.</div>
+  <div class="tooltip" role="tooltip" id="ci-tooltip" hidden></div>
+  <div class="sr-only" id="ci-announcement" aria-live="polite"></div>
+  <div role="alert" id="ci-error" hidden></div>
+</div>
+<style>
+  #controller-inspector { position:relative; }
+  #controller-inspector .ci-panes { display:grid; grid-template-columns:repeat(auto-fit,minmax(min(100%,22rem),1fr)); gap:20px; margin-top:12px; }
+  #controller-inspector section { min-width:0; }
+  #controller-inspector .ci-chart { display:block; width:100%; overflow:visible; }
+  #controller-inspector .ci-panes .ci-chart { max-width:32rem; margin-inline:auto; }
+  #controller-inspector #ci-cloud { max-width:56rem; margin-inline:auto; }
+  #controller-inspector .ci-chart text { fill:var(--foreground); font-size:12px; font-weight:400; }
+  #controller-inspector .ci-chart .domain, #controller-inspector .ci-chart .tick line { stroke:var(--border); }
+  #controller-inspector .ci-legend { gap:12px; }
+  #controller-inspector .ci-legend span { display:inline-flex; align-items:center; gap:5px; }
+  #controller-inspector .ci-legend i { width:8px; height:8px; display:inline-block; }
+  #controller-inspector .ci-legend button { display:inline-flex; align-items:center; gap:5px; }
+  #controller-inspector .ci-legend i { flex-shrink:0; }
+  #controller-inspector .ci-legend button[aria-pressed="false"] { opacity:.45; }
+  #controller-inspector #ci-tooltip { position:absolute; pointer-events:none; background:var(--popover); color:var(--popover-foreground); max-width:min(220px,100%); }
+  #controller-inspector #ci-time { flex:1; min-width:130px; }
+</style>
+<script type="application/json" id="ci-data">__TRAJECTORY_DATA__</script>
+<script src="https://cdn.jsdelivr.net/npm/d3@7.9.0/dist/d3.min.js"></script>
+<script>
+(async () => {
+  const root = document.getElementById('controller-inspector');
+  const find = id => root.querySelector('#ci-' + id);
+  try {
+  if (!window.d3) await new Promise((resolve, reject) => {
+    const script = document.createElement('script');
+    script.src = 'https://unpkg.com/d3@7.9.0/dist/d3.min.js';
+    script.onload = resolve;
+    script.onerror = () => reject(new Error('Chart library unavailable; reload to retry.'));
+    root.append(script);
+  });
+  const data = JSON.parse(document.getElementById('ci-data').textContent);
+  const reducedMotion=window.matchMedia('(prefers-reduced-motion: reduce)');
+  const colors = {capture:'var(--viz-series-1)',risk:'var(--viz-series-2)',curious:'var(--viz-series-3)'};
+  const names = {capture:'Capture',risk:'Risk-averse',curious:'Curious'};
+  const algorithms = {mappo:'MAPPO',tdmpc:'TD-MPC2'};
+  let objective='capture', pair=0, step=0, playing=null, view='context', samples=24;
+  let cloudKey='', cloudPlot=null, resizeFrame=null, suspended=false;
+  const isVisible = () => !suspended && root.getBoundingClientRect().width > 0;
+  const visible = new Set(Object.keys(colors));
+  const tip = find('tooltip');
+  const selected = controller => data.episodes.find(e => e.objective===objective && e.pair===pair && e.controller===controller);
+  const padded = values => {
+    const [lo,hi]=d3.extent(values), pad=Math.max((hi-lo)*.09,.08);
+    return [lo-pad,hi+pad];
+  };
+  function frame(node,height,xd,yd,xlabel,ylabel,square=false) {
+    const svg=d3.select(node), width=Math.max(1,node.getBoundingClientRect().width);
+    const margin={left:64,right:16,top:14,bottom:54};
+    const available=Math.max(1,width-margin.left-margin.right);
+    const plotWidth=square?Math.min(available,360):available;
+    const left=margin.left+(available-plotWidth)/2;
+    height=(square?plotWidth:Math.min(height-margin.top-margin.bottom,Math.max(180,available*.5)))+margin.top+margin.bottom;
+    const bottom=height-margin.bottom, right=left+plotWidth;
+    svg.attr('viewBox',`0 0 ${width} ${height}`).attr('height',height); svg.selectAll('*').remove();
+    const x=d3.scaleLinear().domain(xd).range([left+6,right-6]);
+    const y=d3.scaleLinear().domain(yd).range([bottom-6,margin.top+6]);
+    svg.append('rect').attr('data-chart-frame','').attr('x',left).attr('y',margin.top).attr('width',plotWidth).attr('height',bottom-margin.top).attr('fill','none').attr('stroke','var(--border)');
+    const ticks=width<420?3:5;
+    svg.append('g').attr('transform',`translate(0,${bottom})`).call(d3.axisBottom(x).ticks(ticks));
+    svg.append('g').attr('transform',`translate(${left},0)`).call(d3.axisLeft(y).ticks(ticks));
+    svg.append('text').attr('class','axis-title').attr('data-axis','x').attr('x',(left+right)/2).attr('y',height-9).attr('text-anchor','middle').text(xlabel);
+    svg.append('text').attr('class','axis-title').attr('data-axis','y').attr('transform',`translate(${left-47},${(margin.top+bottom)/2}) rotate(-90)`).attr('text-anchor','middle').text(ylabel);
+    return {svg,x,y,width,height,left,right,top:margin.top,bottom};
+  }
+  function arenaDomain() {
+    const points=[], map=data.maps[selected('mappo').map];
+    for(const c of ['mappo','tdmpc']) for(const s of selected(c).xy) points.push(s.slice(0,2),s.slice(2,4));
+    points.push(...map.resources);
+    for(const [x,y,r] of map.lava) points.push([x-r,y-r],[x+r,y+r]);
+    // Include all saved force endpoints so no arrows disappear at the frame.
+    for(const c of ['mappo','tdmpc']) {
+      const e=selected(c);
+      e.blue.forEach((a,t)=>points.push([e.xy[t][2]+a[0]*.18,e.xy[t][3]+a[1]*.18]));
+      e.red.forEach((a,t)=>points.push([e.xy[t][0]+a[0]*.18,e.xy[t][1]+a[1]*.18]));
+    }
+    const xd=padded(points.map(p=>p[0])),yd=padded(points.map(p=>p[1]));
+    const span=Math.max(xd[1]-xd[0],yd[1]-yd[0]);
+    return [xd,yd].map(d=>[(d[0]+d[1]-span)/2,(d[0]+d[1]+span)/2]);
+  }
+  function drawArena(controller,domain) {
+    const e=selected(controller), t=Math.min(step,e.length), map=data.maps[e.map];
+    const {svg,x,y}=frame(find(controller),330,...domain,'x (arena units)','y (arena units)',true);
+    svg.append('title').text(`${algorithms[controller]} recorded episode ${e.episode}, step ${t}`);
+    for(const [cx,cy,r] of map.lava) svg.append('circle').attr('cx',x(cx)).attr('cy',y(cy)).attr('r',x(cx+r)-x(cx)).attr('fill','var(--orange)').attr('fill-opacity',.16).attr('stroke','var(--orange)').attr('stroke-opacity',.4);
+    map.resources.forEach((p,i)=>{ if(!(e.collected[t]&(1<<i))) svg.append('path').attr('d',d3.symbol().type(d3.symbolDiamond).size(28)()).attr('transform',`translate(${x(p[0])},${y(p[1])})`).attr('fill','var(--yellow)'); });
+    for(const [offset,color,key,label] of [[0,'var(--red)','red','R'],[2,'var(--blue)','blue','B']]) {
+      const line=d3.line().x(p=>x(p[offset])).y(p=>y(p[offset+1]));
+      svg.append('path').attr('d',line(e.xy)).attr('fill','none').attr('stroke',color).attr('stroke-width',1).attr('opacity',.18);
+      svg.append('path').attr('d',line(e.xy.slice(0,t+1))).attr('fill','none').attr('stroke',color).attr('stroke-width',2);
+      svg.append('circle').attr('cx',x(e.xy[0][offset])).attr('cy',y(e.xy[0][offset+1])).attr('r',4).attr('fill','var(--background)').attr('stroke',color);
+      const px=x(e.xy[t][offset]),py=y(e.xy[t][offset+1]);
+      svg.append('circle').attr('cx',px).attr('cy',py).attr('r',4).attr('fill',color);
+      svg.append('text').attr('x',px+(label==='R'?-9:9)).attr('y',py-7).attr('text-anchor',label==='R'?'end':'start').text(label);
+      if(t<e.length) {
+        const a=e[key][t], dx=x(e.xy[t][offset]+.18*a[0])-px,dy=y(e.xy[t][offset+1]+.18*a[1])-py;
+        const size=Math.hypot(dx,dy), angle=Math.atan2(dy,dx);
+        svg.append('line').attr('x1',px).attr('y1',py).attr('x2',px+dx).attr('y2',py+dy).attr('stroke',color).attr('stroke-width',1.5);
+        if(size>3) svg.append('path').attr('d',`M${px+dx-4*Math.cos(angle-.5)},${py+dy-4*Math.sin(angle-.5)}L${px+dx},${py+dy}L${px+dx-4*Math.cos(angle+.5)},${py+dy-4*Math.sin(angle+.5)}`).attr('fill','none').attr('stroke',color);
+      }
+    }
+    find(controller+'-status').textContent=t===e.length?`Episode ${e.episode} · ${e.stop} at step ${t} · no next action`:`Episode ${e.episode} · state and actions at t = ${t}`;
+  }
+  function tooltip(d,event) {
+    const e=d.episode;
+    tip.hidden=false; tip.textContent=`${algorithms[e.controller]} · ${names[e.objective]} · episode ${e.episode}${d.t===null?'':` · decision ${d.t}`}`;
+    const rect=root.getBoundingClientRect();
+    tip.style.left=Math.max(0,Math.min(event.clientX-rect.left+12,rect.width-tip.offsetWidth))+'px'; tip.style.top=Math.max(0,event.clientY-rect.top-tip.offsetHeight-12)+'px';
+  }
+  function drawContextCursor() {
+    if(!isVisible() || !cloudPlot) return;
+    const {svg,x,y}=cloudPlot;
+    svg.selectAll('.context-cursor').remove();
+    if(view==='trajectory') return;
+    const kind=view==='context'?'Every point: one recorded decision':'Every point: last recorded decision';
+    if(!visible.has(objective)) { find('cloud-caption').textContent=kind+' · selected objective hidden';return; }
+    const e=selected('tdmpc'), t=Math.min(step,e.length-1), path=e.zpc.slice(0,t+1);
+    const g=svg.append('g').attr('class','context-cursor').attr('pointer-events','none');
+    g.append('path').attr('d',d3.line().x(p=>x(p[0])).y(p=>y(p[1]))(path)).attr('fill','none').attr('stroke',colors[objective]).attr('stroke-width',2);
+    // The terminal state has no recorded next-decision context or action.
+    if(step<e.length) g.append('circle').attr('cx',x(path[t][0])).attr('cy',y(path[t][1])).attr('r',7).attr('fill','none').attr('stroke','var(--foreground)').attr('stroke-width',2);
+    find('cloud-caption').textContent=`${kind} · selected path: history${step<e.length?' · ring: current decision':' · episode ended; no current-context ring'}`;
+  }
+  function drawCloud() {
+    if(!isVisible()) return;
+    const key=JSON.stringify([view,samples,[...visible],objective,pair,find('cloud').getBoundingClientRect().width]);
+    if(key===cloudKey) { drawContextCursor();return; }
+    cloudKey=key;
+    const isContext=view!=='trajectory';
+    const pool=data.episodes.filter(e=>(!isContext||e.controller==='tdmpc')&&e.pair<samples);
+    // Keep axes fixed across sample-count and label changes, avoiding fake motion.
+    const domainPool=data.episodes.filter(e=>!isContext||e.controller==='tdmpc');
+    const allPoints=isContext?domainPool.flatMap(e=>e.zpc):domainPool.map(e=>e.pc);
+    const plot=frame(find('cloud'),300,padded(allPoints.map(p=>p[0])),padded(allPoints.map(p=>p[1])),isContext?'Context PC1 (latent units)':'Trajectory PC1 (arena units)',isContext?'Context PC2 (latent units)':'Trajectory PC2 (arena units)');
+    cloudPlot=plot;
+    const {svg,x,y}=plot;
+    const points=pool.filter(e=>visible.has(e.objective)).flatMap(e=>
+      view==='context'?e.zpc.map((point,t)=>({episode:e,point,t})):
+      [{episode:e,point:isContext?e.zpc[e.zpc.length-1]:e.pc,t:isContext?e.length-1:null}]);
+    find('cloud-title').textContent=view==='trajectory'?'Joint-trajectory PCA · completed-episode samples':view==='context'?'0s point cloud · all valid decisions across episodes':'0s point cloud · last pre-action context per episode';
+    find('axis-help').textContent=isContext?'Context PC1 and PC2 summarize the eight-dimensional 0s history vector on two display axes. Latent units are learned coordinates, not arena positions or probabilities.':'Trajectory PC1 and PC2 summarize whole-episode path shapes. Arena units refer to the underlying displacement scale, not physical x/y coordinates.';
+    find('point-help').textContent=view==='context'?'Each dot is one TD-MPC2 decision-time context from completed opponent history. A connected trail follows the selected episode; the ring marks its current decision. Repeated decisions from one episode are not independent samples.':view==='context-end'?'Each diamond is the final pre-action context of one TD-MPC2 episode. MAPPO has no 0s context and is not shown here.':'Each point is one completed episode: circles are MAPPO and diamonds are TD-MPC2. Click a point to inspect that episode and its matched-reset counterpart.';
+    find('cloud-caption').textContent=isContext?'Click a point to inspect its matched paths; all context points belong to TD-MPC2.':'Click a point to inspect its matched paths · circle = MAPPO; diamond = TD-MPC2';
+    find('preprocessing').textContent=isContext?'Causal context vectors, post-hoc PCA axes. Consecutive samples are correlated; MAPPO has no 0s context.':'Joint displacements from each agent’s starting position; episode duration normalized. Axes fitted post-hoc.';
+    svg.append('title').text(isContext?'Recorded causal 0s contexts, descriptive PCA':'Recorded joint trajectory shapes, descriptive PCA');
+    svg.selectAll('.episode-mark').data(points).join('path').attr('class','episode-mark')
+      .attr('d',d=>d3.symbol().type(view==='context'||d.episode.controller==='mappo'?d3.symbolCircle:d3.symbolDiamond).size(view==='context'?10:d.episode.objective===objective&&d.episode.pair===pair?85:36)())
+      .attr('transform',d=>`translate(${x(d.point[0])},${y(d.point[1])})`)
+      .attr('fill',d=>colors[d.episode.objective]).attr('fill-opacity',d=>d.episode.objective===objective&&d.episode.pair===pair?.85:view==='context'?.25:.6)
+      .attr('stroke',d=>view!=='context'&&d.episode.objective===objective&&d.episode.pair===pair?'var(--foreground)':'none');
+    drawContextCursor();
+    const hit=svg.append('rect').attr('data-chart-hit','').attr('x',plot.left).attr('y',plot.top).attr('width',plot.right-plot.left).attr('height',plot.bottom-plot.top).attr('fill','transparent').style('cursor','pointer');
+    const neighbors=d3.Delaunay.from(points,d=>x(d.point[0]),d=>y(d.point[1]));
+    const nearest=event=>{
+      const [px,py]=d3.pointer(event,svg.node());
+      return points.length?points[neighbors.find(px,py)]:null;
+    };
+    hit.on('pointermove',event=>{const e=nearest(event); if(e) tooltip(e,event);})
+      .on('pointerleave',()=>tip.hidden=true)
+      .on('click',event=>{const d=nearest(event); if(!d) return;const e=d.episode;objective=e.objective;pair=e.pair;find('objective').value=objective;populateEpisodes();step=d.t??0;stop();render();find('announcement').textContent=`Selected ${names[objective]}, episode ${e.episode}, step ${step}`;});
+  }
+  function populateEpisodes() {
+    const options=data.episodes.filter(e=>e.controller==='mappo'&&e.objective===objective&&e.pair<samples);
+    find('episode').replaceChildren(...options.map(e=>{const o=document.createElement('option');o.value=e.pair;o.textContent=`${e.pair+1} · source ${e.episode}`;return o;}));
+    find('episode').value=pair;
+  }
+  function render() {
+    if(!isVisible()) return;
+    tip.hidden=true;
+    const max=Math.max(selected('mappo').length,selected('tdmpc').length);
+    step=Math.min(step,max);find('time').max=max;find('time').value=step;find('step').textContent=step;
+    const domain=arenaDomain();drawArena('mappo',domain);drawArena('tdmpc',domain);drawCloud();
+  }
+  function stop() { if(playing!==null) clearInterval(playing); playing=null;find('play').textContent=reducedMotion.matches?'Advance step':'Play'; }
+  function scheduleRender() {
+    if(!isVisible()) return;
+    if(resizeFrame!==null) cancelAnimationFrame(resizeFrame);
+    resizeFrame=requestAnimationFrame(()=>{resizeFrame=null;render();});
+  }
+  Object.keys(colors).forEach(key=>{
+    const b=document.createElement('button');b.type='button';b.setAttribute('aria-pressed','true');
+    const swatch=document.createElement('i');swatch.style.background=colors[key];b.append(swatch,document.createTextNode(names[key]));
+    b.addEventListener('click',()=>{visible.has(key)?visible.delete(key):visible.add(key);b.setAttribute('aria-pressed',String(visible.has(key)));drawCloud();});find('groups').append(b);
+  });
+  find('objective').addEventListener('change',e=>{objective=e.target.value;pair=0;step=0;stop();populateEpisodes();render();});
+  find('episode').addEventListener('change',e=>{pair=+e.target.value;step=0;stop();render();});
+  find('time').addEventListener('input',e=>{step=+e.target.value;stop();render();});
+  find('view').addEventListener('change',e=>{view=e.target.value;drawCloud();});
+  find('samples').addEventListener('change',e=>{samples=+e.target.value;pair=Math.min(pair,samples-1);step=0;stop();populateEpisodes();render();});
+  find('play').addEventListener('click',()=>{if(!isVisible())return;if(playing!==null){stop();return;}if(reducedMotion.matches){step=step>=+find('time').max?0:step+1;render();return;}if(step>=+find('time').max)step=0;find('play').textContent='Pause';playing=setInterval(()=>{if(!isVisible()){stop();return;}step++;render();if(step>=+find('time').max)stop();},180);});
+  reducedMotion.addEventListener('change',stop);
+  document.addEventListener('visibilitychange',()=>{if(document.hidden)stop();});
+  root.addEventListener('inspector:hide',()=>{
+    suspended=true;stop();tip.hidden=true;
+    if(resizeFrame!==null)cancelAnimationFrame(resizeFrame);
+    resizeFrame=null;
+  });
+  root.addEventListener('inspector:show',()=>{suspended=false;cloudKey='';scheduleRender();});
+  populateEpisodes();stop();
+  new ResizeObserver(scheduleRender).observe(root);
+  render();
+  } catch(error) {
+    find('error').hidden=false;find('error').textContent=`Unable to display saved controller paths: ${error.message}`;
+  }
+})();
+</script>

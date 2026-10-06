@@ -18,6 +18,7 @@ The real opponent is always the specialist policy, never the learned decoder.
 from __future__ import annotations
 
 import time
+from functools import lru_cache, partial
 from typing import TYPE_CHECKING, Any, Callable
 
 import jax
@@ -36,6 +37,16 @@ CONTEXT_MODES = ("online", "zero", "shuffled", "oracle", "wrong_oracle")
 
 # blue_fn(state, obs_dict, context (B, C), carry, key, t) -> (action (B, 2), carry)
 BlueController = Callable[[Any, dict, jax.Array, Any, jax.Array, int], tuple[jax.Array, Any]]
+
+
+@lru_cache(maxsize=16)
+def _environment_functions(env):
+    return jax.jit(jax.vmap(env.step_env)), jax.jit(lambda s: markov_state(env, s))
+
+
+@partial(jax.jit, static_argnums=(2,))
+def _red_action(params, observations, obs_width):
+    return deterministic_specialist_action(params, observations, obs_width)
 
 __all__ = [
     "CONTEXT_MODES",
@@ -81,6 +92,8 @@ def run_matched_episodes(
     initial_carry: Any = None,
     record_positions: bool = False,
     record_transitions: bool = False,
+    context_width: int | None = None,
+    max_transitions: int | None = None,
 ) -> dict[str, Any]:
     """Run ``B`` matched episodes; return per-episode metrics and bound checks.
 
@@ -92,6 +105,10 @@ def run_matched_episodes(
 
     Recorded ``context`` has shape (B, horizon, C): the actual context supplied to
     each decision, before observing that step's opponent action.
+
+    ``max_transitions`` caps actual active environment transitions, not padded
+    slots. Budget-cut episodes are recorded as truncations (not captures).
+    ``context_width=0`` enables genuine memoryless controls in zero mode.
     """
     if context_mode not in CONTEXT_MODES:
         raise ValueError(f"context_mode must be one of {CONTEXT_MODES}")
@@ -103,12 +120,14 @@ def run_matched_episodes(
         raise ValueError("online/shuffled context requires a frozen encoder")
     if context_mode == "shuffled" and len(reset_keys) < 2:
         raise ValueError("shuffled context requires at least two episodes")
+    if max_transitions is not None and max_transitions < 1:
+        raise ValueError("max_transitions must be positive")
+    if context_width is not None and (context_width < 0 or context_mode != "zero"):
+        raise ValueError("context_width requires zero mode and a nonnegative width")
     pred_name, prey_name = env.adversaries[0], env.good_agents[0]
     pred_index, prey_index = env.agents.index(pred_name), env.agents.index(prey_name)
     obs_width = max(env.observation_space(a).shape[0] for a in env.agents)
-    red_act = jax.jit(lambda o: deterministic_specialist_action(red_params, o, obs_width))
-    step_fn = jax.jit(jax.vmap(env.step_env))
-    state_fn = jax.jit(lambda s: markov_state(env, s))
+    step_fn, state_fn = _environment_functions(env)
 
     batch = len(reset_keys)
     obs, state = jax.vmap(env.reset)(jnp.asarray(reset_keys, jnp.uint32))
@@ -129,7 +148,10 @@ def run_matched_episodes(
     )
     key = jax.random.PRNGKey(int(shuffle_seed) + 7)
     prototypes = zero_s.prototypes if zero_s is not None else np.eye(CONTEXT_DIM, dtype=np.float32)
-    context_dim = prototypes.shape[-1]
+    context_dim = prototypes.shape[-1] if context_width is None else context_width
+    if zero_s is not None and context_dim != prototypes.shape[-1]:
+        raise ValueError("context_width must match the frozen encoder")
+    remaining = max_transitions
     context_carry = zero_s.initial_context(batch) if zero_s is not None else None
     update_context = jax.jit(zero_s.update_context) if zero_s is not None else None
     controller_seconds = []
@@ -140,6 +162,8 @@ def run_matched_episodes(
 
     for t in range(horizon):
         active = ~done
+        if remaining is not None:
+            active &= np.cumsum(active) <= remaining
         if context_mode == "zero":
             context = np.zeros((batch, context_dim), dtype=np.float32)
         elif context_mode == "oracle":
@@ -156,7 +180,10 @@ def run_matched_episodes(
             contexts.append(np.asarray(context))
         key, k_blue = jax.random.split(key)
         start = time.perf_counter()
-        blue_action, carry = blue(state, obs, jnp.asarray(context), carry, k_blue, t)
+        if active.any():
+            blue_action, carry = blue(state, obs, jnp.asarray(context), carry, k_blue, t)
+        else:
+            blue_action = jnp.zeros((batch, CONTINUOUS_ACTION_DIM), jnp.float32)
         blue_np = np.asarray(blue_action, dtype=np.float32)
         controller_seconds.append(time.perf_counter() - start)
         if blue_np.shape != (batch, CONTINUOUS_ACTION_DIM) or not np.isfinite(blue_np).all():
@@ -165,7 +192,7 @@ def run_matched_episodes(
             raise ValueError("controller actions must lie in [-1, 1]")
         action_abs_max = max(action_abs_max, float(np.abs(blue_np).max(initial=0.0)))
         blue_np = np.where(active[:, None], blue_np, 0.0)
-        red_action = jnp.where(jnp.asarray(active[:, None]), red_act(obs[pred_name]), 0.0)
+        red_action = jnp.where(jnp.asarray(active[:, None]), _red_action(red_params, obs[pred_name], obs_width), 0.0)
         keys = jax.vmap(lambda k: jax.random.fold_in(k, t))(step_seed_j)
         actions = joint_action_dict(env, jnp.asarray(blue_np), red_action[:, None, :])
         new_obs, new_state, rew, dones, info = step_fn(keys, state, actions)
@@ -175,6 +202,8 @@ def run_matched_episodes(
             context_carry = update_context(context_carry, state_fn(state), red_action, jnp.asarray(active))
         reward_np = np.asarray(rew[prey_name])
         ret += reward_np * active
+        if remaining is not None:
+            remaining -= int(active.sum())
         pred_lava += np.asarray(info["pred_lava"][:, pred_index]) * active
         prey_lava += np.asarray(info["prey_lava"][:, prey_index]) * active
         if record_transitions:
@@ -214,18 +243,28 @@ def run_matched_episodes(
         out["pred_pos"] = np.stack(pred_hist, axis=1)
     if record_transitions:
         valid = np.stack(rec["valid"], axis=1)
+        truncated = np.stack(rec["trunc"], axis=1)
+        terminated = np.stack(rec["term"], axis=1)
+        lengths = valid.sum(axis=1).astype(np.int32)
+        # This includes rows stopped one step before the final quota-filling
+        # transition. Never turn administrative budget cuts into captures.
+        rows = np.flatnonzero(lengths > 0)
+        last = lengths[rows] - 1
+        truncated[rows, last] |= ~terminated[rows, last]
         out["transitions"] = {
             "state": np.stack(rec["state"], axis=1).astype(np.float32),
             "blue_action": np.stack(rec["blue"], axis=1),
             "red_action": np.stack(rec["red"], axis=1),
             "blue_reward": np.stack(rec["reward"], axis=1),
-            "terminated_capture": np.stack(rec["term"], axis=1),
-            "truncated_timeout": np.stack(rec["trunc"], axis=1),
+            "terminated_capture": terminated,
+            "truncated_timeout": truncated,
             "valid_mask": valid,
-            "valid_length": valid.sum(axis=1).astype(np.int32),
+            "valid_length": lengths,
             "capture_t": capture_t.astype(np.int32),
             "prey_pos": out["prey_pos"].astype(np.float32),
             "pred_pos": out["pred_pos"].astype(np.float32),
             "context": np.stack(contexts, axis=1).astype(np.float32),
+            "final_context": (np.asarray(context_carry.context) if zero_s is not None
+                              else np.zeros((batch, context_dim), np.float32)),
         }
     return out

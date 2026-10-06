@@ -1,0 +1,343 @@
+<div id="world-model-inspector">
+  <h2>Learned world-model trajectories</h2>
+  <div class="text-small text-muted">Imagined open-loop rollout · fixed blue actions and z · no MPC</div>
+  <div class="viz-controls">
+    <label class="form-label">Starting scene
+      <select class="form-select" id="wm-scene"></select>
+    </label>
+    <label class="form-check">
+      <input class="form-check-input" id="wm-clamp" type="checkbox">
+      <span class="form-check-label">Eq. 3: clamp recorded red actions</span>
+    </label>
+  </div>
+  <div class="viz-row">
+    <button type="button" class="btn" id="wm-play">Play</button>
+    <label class="form-label" for="wm-time">Imagined step <output class="tabular-nums" id="wm-step">0</output></label>
+    <input type="range" class="form-range" id="wm-time" min="0" max="1" step="1" value="0" aria-label="Imagined rollout step">
+  </div>
+  <div class="viz-row text-small wm-legend" id="wm-roles">
+    <button type="button" data-role="red" aria-pressed="true"><i style="background:var(--red)"></i>Predicted red</button>
+    <button type="button" data-role="blue" aria-pressed="true"><i style="background:var(--blue)"></i>Predicted blue</button>
+    <button type="button" data-role="reference" aria-pressed="true"><i class="wm-reference-swatch"></i>Recorded source (not swap ground truth)</button>
+    <span>Dashed after model stop: extrapolation</span>
+  </div>
+  <div id="wm-equations"></div>
+  <div class="text-small text-muted">Diamonds: resources · shaded discs: lava · map held at initial state · arrows: Eq. 3 red force; clamped = recorded · markers not to collision scale</div>
+  <hr>
+  <h3>0s latent cloud and source means</h3>
+  <div class="text-small text-muted">Training episodes · PCA display of latent vectors · colors: known source objective · stars: mean z</div>
+  <div class="viz-row text-small wm-legend" id="wm-means"></div>
+  <svg class="wm-chart" id="wm-cloud" role="img" aria-label="Training-episode 0s latents with three source-objective mean stars" aria-describedby="wm-axis-help"></svg>
+  <p id="wm-axis-help">Latent PC1 and PC2 are two display axes summarizing the 8D 0s vectors. Each dot is one training episode; each star is the projected mean for one recorded opponent type. These are not arena positions or probabilities.</p>
+  <details>
+    <summary>How to read the latent means and predicted paths</summary>
+    <dl>
+      <dt>PC1 / PC2</dt>
+      <dd>The two largest perpendicular directions of variation in the standardized training latents. They combine the original coordinates; they are not z[0] and z[1]. This saved projection is different from the decision-time context plot in Recorded behavior, so its numeric coordinates are not directly comparable.</dd>
+      <dt>Capture / Risk / Curious mean z</dt>
+      <dd>One complete 8D average per labeled training group, with equal weight per episode. The coordinate readout shows the original eight entries, not the two PCA scores. The model receives this full vector, held fixed throughout an imagined rollout.</dd>
+      <dt>Arena x / y and action arrows</dt>
+      <dd>Arena axes are physical coordinates in the environment's own distance units. Red is the opponent and blue is the controlled agent. Arrows show force commands, not velocity. In Equation 3, z changes the predicted red action before learned physics predicts the next state.</dd>
+      <dt>Recorded source / model stop / clamped actions</dt>
+      <dd>The recorded path is a reference for the original episode, not ground truth for another z. A model stop is the learned prediction of termination; dashed paths after it are extrapolations. Clamping supplies the same recorded red actions to all three means, removing z's route into Equation 3 physics.</dd>
+      <dt>Behavior labels</dt>
+      <dd>Colors identify the source trajectory groups, not discovered clusters. Different paths under different means show sensitivity to z, but do not establish faithful capture, risk-averse, and curious behavior.</dd>
+    </dl>
+  </details>
+  <div class="text-small tabular-nums" id="wm-mean-coordinates"></div>
+  <div class="tooltip" role="tooltip" id="wm-tooltip" hidden></div>
+  <div class="sr-only" id="wm-announcement" aria-live="polite"></div>
+  <div role="alert" id="wm-error" hidden></div>
+</div>
+<style>
+  #world-model-inspector { position:relative; }
+  #world-model-inspector .wm-grid { display:grid; grid-template-columns:repeat(auto-fit,minmax(min(100%,18rem),1fr)); gap:16px; }
+  #world-model-inspector .wm-equation { margin-top:18px; }
+  #world-model-inspector .wm-panel { min-width:0; }
+  #world-model-inspector .wm-panel-label { display:flex; justify-content:space-between; align-items:baseline; flex-wrap:wrap; gap:4px 10px; }
+  #world-model-inspector .wm-chart { display:block; width:100%; overflow:visible; }
+  #world-model-inspector .wm-panel .wm-chart { max-width:26rem; margin-inline:auto; }
+  #world-model-inspector #wm-cloud { max-width:56rem; margin-inline:auto; }
+  #world-model-inspector .wm-chart text { fill:var(--foreground); font-size:12px; font-weight:400; }
+  #world-model-inspector .wm-chart .domain, #world-model-inspector .wm-chart .tick line { stroke:var(--border); }
+  #world-model-inspector .wm-legend { gap:8px 14px; }
+  #world-model-inspector .wm-legend button, #world-model-inspector .wm-mean-button { display:inline-flex; align-items:center; gap:5px; }
+  #world-model-inspector .wm-legend button[aria-pressed="false"] { opacity:.45; }
+  #world-model-inspector .wm-legend i { display:inline-block; width:9px; height:9px; flex-shrink:0; }
+  #world-model-inspector .wm-reference-swatch { border-bottom:2px dotted var(--foreground); }
+  #world-model-inspector #wm-time { flex:1; min-width:130px; }
+  #world-model-inspector #wm-tooltip { position:absolute; pointer-events:none; background:var(--popover); color:var(--popover-foreground); max-width:min(280px,100%); white-space:pre-line; }
+  #world-model-inspector #wm-mean-coordinates { min-height:1.5em; overflow-wrap:anywhere; }
+  @media (pointer:coarse) { #world-model-inspector .wm-legend button, #world-model-inspector .wm-mean-button { min-height:44px; min-width:44px; } }
+</style>
+<script type="application/json" id="wm-data">__WORLD_MODEL_DATA__</script>
+<script src="https://cdn.jsdelivr.net/npm/d3@7.9.0/dist/d3.min.js"></script>
+<script>
+(async () => {
+  const root = document.getElementById('world-model-inspector');
+  const find = name => root.querySelector('#wm-' + name);
+  try {
+    if (!window.d3) await new Promise((resolve, reject) => {
+      const script = document.createElement('script');
+      script.src = 'https://unpkg.com/d3@7.9.0/dist/d3.min.js';
+      script.onload = resolve;
+      script.onerror = () => reject(new Error('Chart library unavailable; reload to retry.'));
+      root.append(script);
+    });
+    const data = JSON.parse(document.getElementById('wm-data').textContent);
+    if (!Array.isArray(data.scenes) || !data.scenes.length || data.prototypes.length !== 3 || data.prototype_pc.length !== 3) throw new Error('Expected saved scenes and three source means.');
+    const names = ['Capture', 'Risk', 'Curious'];
+    const sourceColors = ['var(--viz-series-1)', 'var(--viz-series-2)', 'var(--viz-series-3)'];
+    const equations = [
+      {mode:'implicit', heading:'Equation 1 · z ignored'},
+      {mode:'conditioned', heading:'Equation 2 · z directly conditions dynamics'},
+      {mode:'factored', heading:'Equation 3 · z → red action → physics'}
+    ];
+    const visible = new Set(['red', 'blue', 'reference']);
+    const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)');
+    const tooltip = find('tooltip');
+    let sceneIndex = 0, step = data.scenes[0].blue.length, timer = null;
+    let selectedMean = 0, cloudPlot = null, resizeFrame = null, suspended = false;
+    const isVisible = () => !suspended && root.getBoundingClientRect().width > 0;
+    const scene = () => data.scenes[sceneIndex];
+    const vectorLabel = index => `${names[index]} mean z: [${data.prototypes[index].map(v => Number(v).toFixed(3)).join(', ')}]`;
+    const format = d3.format('.3~g');
+    const padded = values => {
+      const [low, high] = d3.extent(values.filter(Number.isFinite));
+      if (low === undefined) throw new Error('No finite coordinates in saved trajectory.');
+      const span = high - low, padding = span > 0 ? span * .09 : Math.max(Math.abs(low) * .09, .1);
+      return [low - padding, high + padding];
+    };
+
+    data.scenes.forEach((value, index) => {
+      const option = document.createElement('option');
+      option.value = index;
+      option.textContent = `${value.objective} reference · episode ${value.episode}`;
+      find('scene').append(option);
+    });
+    function selectMean(index, announce=false) {
+      selectedMean = index;
+      find('mean-coordinates').textContent = vectorLabel(index);
+      if (announce) find('announcement').textContent = vectorLabel(index);
+      root.querySelectorAll('[data-mean-index]').forEach(button => button.setAttribute('data-tooltip', vectorLabel(Number(button.dataset.meanIndex))));
+      if (cloudPlot) cloudPlot.svg.selectAll('[data-mean-star]').attr('stroke-width', (_, i) => i === selectedMean ? 2 : 1);
+    }
+    function meanButton(index) {
+      const button = document.createElement('button');
+      button.type = 'button'; button.className = 'wm-mean-button';
+      button.dataset.meanIndex = index; button.dataset.tooltip = vectorLabel(index);
+      button.setAttribute('aria-label', vectorLabel(index));
+      button.textContent = `${names[index]} mean`;
+      button.addEventListener('click', () => selectMean(index, true));
+      button.addEventListener('focus', () => selectMean(index));
+      return button;
+    }
+    equations.forEach(equation => {
+      const section = document.createElement('section'); section.className = 'wm-equation';
+      const heading = document.createElement('h3'); heading.textContent = equation.heading;
+      const grid = document.createElement('div'); grid.className = 'wm-grid';
+      for (let prototype = 0; prototype < 3; prototype++) {
+        const panel = document.createElement('div'); panel.className = 'wm-panel';
+        const label = document.createElement('div'); label.className = 'wm-panel-label text-small';
+        label.append(meanButton(prototype));
+        const status = document.createElement('span'); status.id = `wm-status-${equation.mode}-${prototype}`;
+        status.className = 'tabular-nums'; label.append(status); panel.append(label);
+        const chart = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+        chart.id = `wm-arena-${equation.mode}-${prototype}`; chart.classList.add('wm-chart');
+        chart.setAttribute('role', 'img'); panel.append(chart); grid.append(panel);
+      }
+      section.append(heading, grid); find('equations').append(section);
+    });
+    names.forEach((name, index) => {
+      const button = meanButton(index), swatch = document.createElement('i');
+      swatch.style.background = sourceColors[index]; button.prepend(swatch);
+      find('means').append(button);
+    });
+
+    function frame(node, domains, labels, square=false) {
+      const width = Math.max(1, node.getBoundingClientRect().width);
+      const margin = {left:64, right:16, top:14, bottom:52};
+      const available = Math.max(1, width - margin.left - margin.right);
+      const size = square ? Math.min(available, 330) : Math.min(260, Math.max(180, available * .5));
+      const inset = square ? Math.max(0, (available - size) / 2) : 0;
+      const left = margin.left + inset, right = square ? left + size : width - margin.right;
+      const top = margin.top, bottom = top + size, height = bottom + margin.bottom;
+      const svg = d3.select(node).attr('viewBox', `0 0 ${width} ${height}`).attr('height', height);
+      svg.selectAll('*').remove();
+      const x = d3.scaleLinear().domain(domains[0]).range([left + 8, right - 8]);
+      const y = d3.scaleLinear().domain(domains[1]).range([bottom - 8, top + 8]);
+      const clipId = `${node.id}-clip`;
+      svg.append('defs').append('clipPath').attr('id', clipId).append('rect').attr('x', left).attr('y', top).attr('width', right-left).attr('height', bottom-top);
+      svg.append('rect').attr('data-chart-frame', '').attr('x', left).attr('y', top).attr('width', right-left).attr('height', bottom-top).attr('fill', 'none').attr('stroke', 'var(--border)');
+      const ticks = width < 420 ? 3 : 5;
+      const xAxis = svg.append('g').attr('transform', `translate(0,${bottom})`).call(d3.axisBottom(x).ticks(ticks).tickFormat(format));
+      const yAxis = svg.append('g').attr('transform', `translate(${left},0)`).call(d3.axisLeft(y).ticks(ticks).tickFormat(format));
+      svg.append('text').attr('class', 'axis-title').attr('data-axis', 'x').attr('x', (left+right)/2).attr('y', height-9).attr('text-anchor', 'middle').text(labels[0]);
+      svg.append('text').attr('class', 'axis-title').attr('data-axis', 'y').attr('transform', `translate(${left-48},${(top+bottom)/2}) rotate(-90)`).attr('text-anchor', 'middle').text(labels[1]);
+      const marks = svg.append('g').attr('clip-path', `url(#${clipId})`);
+      return {svg, marks, x, y, width, height, left, right, top, bottom, xAxis, yAxis};
+    }
+    function checkLabels(plot) {
+      const tickText = plot.xAxis.selectAll('.tick text').nodes();
+      let previous = null;
+      tickText.forEach(node => {
+        const bounds = node.getBoundingClientRect();
+        if (previous && bounds.left < previous.right + 4) node.style.visibility = 'hidden';
+        else previous = bounds;
+      });
+      const svgBounds = plot.svg.node().getBoundingClientRect();
+      plot.svg.selectAll('text.axis-title,.tick text').each(function() {
+        const bounds = this.getBoundingClientRect();
+        if (bounds.left < svgBounds.left || bounds.right > svgBounds.right) {
+          if (this.closest('.tick') && this.closest('g')?.parentNode === plot.xAxis.node()) d3.select(this).attr('text-anchor', bounds.left < svgBounds.left ? 'start' : 'end');
+        }
+      });
+    }
+    function domain() {
+      const current = scene(), state = current.state0, points = [];
+      const addPaths = paths => (paths || []).forEach(path => {
+        path.xy.forEach(row => points.push(row.slice(0,2), row.slice(2,4)));
+        if (path.red) path.red.forEach((action, t) => {
+          if (t < path.xy.length) points.push([path.xy[t][0] + action[0] * .18, path.xy[t][1] + action[1] * .18]);
+        });
+      });
+      current.models.forEach(model => { addPaths(model.paths); addPaths(model.clamped_paths); });
+      (current.reference || []).forEach(row => points.push(row.slice(0,2), row.slice(2,4)));
+      points.push(state.slice(0,2), state.slice(2,4));
+      for (let resource=0; resource<16; resource++) points.push(state.slice(8+resource*2,10+resource*2));
+      for (let lava=0; lava<3; lava++) {
+        const cx=state[56+lava*2], cy=state[57+lava*2], radius=state[62+lava];
+        points.push([cx-radius,cy-radius], [cx+radius,cy+radius]);
+      }
+      const xd = padded(points.map(p => p[0])), yd = padded(points.map(p => p[1]));
+      const span = Math.max(xd[1]-xd[0], yd[1]-yd[0]);
+      return [xd,yd].map(extent => [(extent[0]+extent[1]-span)/2, (extent[0]+extent[1]+span)/2]);
+    }
+    function pathLine(marks, rows, offset, x, y, color, opacity, width, dashed=false) {
+      if (rows.length < 2) return;
+      marks.append('path').attr('d', d3.line().defined(p => Number.isFinite(p[offset]) && Number.isFinite(p[offset+1])).x(p=>x(p[offset])).y(p=>y(p[offset+1]))(rows))
+        .attr('fill','none').attr('stroke',color).attr('stroke-opacity',opacity).attr('stroke-width',width).attr('stroke-dasharray',dashed ? '5 4' : null);
+    }
+    function drawArena(mode, prototype, domains) {
+      const current=scene(), model=current.models.find(value=>value.mode===mode);
+      if (!model || model.paths.length !== 3) throw new Error(`Missing three prototype paths for ${mode}.`);
+      const clamped=mode==='factored' && find('clamp').checked && model.clamped_paths;
+      const path=(clamped || model.paths)[prototype], last=path.xy.length-1, t=Math.min(step,last);
+      const stop=Number.isInteger(path.stop) ? path.stop : last+1;
+      const plot=frame(find(`arena-${mode}-${prototype}`), domains, ['x (arena units)','y (arena units)'], true);
+      const {svg,marks,x,y}=plot, state=current.state0;
+      const description=`${mode}, ${names[prototype]} source mean, imagined frame ${t}. ${t>stop ? 'Extrapolation beyond predicted model stop.' : 'Predicted trajectory.'}`;
+      svg.attr('aria-label',description).append('title').text(description);
+      for (let lava=0; lava<3; lava++) {
+        const cx=state[56+lava*2],cy=state[57+lava*2],radius=state[62+lava];
+        marks.append('circle').attr('cx',x(cx)).attr('cy',y(cy)).attr('r',Math.abs(x(cx+radius)-x(cx))).attr('fill','var(--orange)').attr('fill-opacity',.14).attr('stroke','var(--orange)').attr('stroke-opacity',.35);
+      }
+      for (let resource=0; resource<16; resource++) if (state[40+resource] < .5) {
+        marks.append('path').attr('d',d3.symbol().type(d3.symbolDiamond).size(24)()).attr('transform',`translate(${x(state[8+resource*2])},${y(state[9+resource*2])})`).attr('fill','var(--yellow)');
+      }
+      for (const [offset, role, color] of [[0,'red','var(--red)'],[2,'blue','var(--blue)']]) {
+        if (visible.has('reference') && current.reference?.length) {
+          const reference=marks.append('g').attr('stroke-dasharray','1 4');
+          pathLine(reference,current.reference,offset,x,y,'var(--foreground)',.3,1.2);
+        }
+        if (!visible.has(role)) continue;
+        const boundary=Math.min(stop,last), prefix=path.xy.slice(0,t+1);
+        pathLine(marks,path.xy.slice(0,boundary+1),offset,x,y,color,.2,1.2);
+        if (stop<=last) pathLine(marks,path.xy.slice(boundary),offset,x,y,color,.24,1.2,true);
+        pathLine(marks,prefix.slice(0,boundary+1),offset,x,y,color,1,2.1);
+        if (t>stop) pathLine(marks,prefix.slice(boundary),offset,x,y,color,.85,2.1,true);
+        marks.append('circle').attr('cx',x(path.xy[0][offset])).attr('cy',y(path.xy[0][offset+1])).attr('r',3.5).attr('fill','var(--background)').attr('stroke',color);
+        const px=x(path.xy[t][offset]),py=y(path.xy[t][offset+1]);
+        marks.append('circle').attr('cx',px).attr('cy',py).attr('r',4).attr('fill',t>stop ? 'var(--background)' : color).attr('stroke',color);
+        const label=marks.append('text').attr('data-optional-label','').attr('x',px+(role==='red'?-8:8)).attr('y',py-8).attr('text-anchor',role==='red'?'end':'start').text(role==='red'?'R':'B');
+        const bb=label.node().getBBox();
+        if (bb.x<plot.left+3 || bb.x+bb.width>plot.right-3 || bb.y<plot.top+3) label.remove();
+        if (mode==='factored' && role==='red' && path.red && t<stop && t<current.blue.length && t<path.red.length) {
+          const action=path.red[t],ex=x(path.xy[t][0]+.18*action[0]),ey=y(path.xy[t][1]+.18*action[1]);
+          const dx=ex-px,dy=ey-py,angle=Math.atan2(dy,dx);
+          marks.append('line').attr('x1',px).attr('y1',py).attr('x2',ex).attr('y2',ey).attr('stroke',color).attr('stroke-width',1.5);
+          if (Math.hypot(dx,dy)>3) marks.append('path').attr('d',`M${ex-4*Math.cos(angle-.5)},${ey-4*Math.sin(angle-.5)}L${ex},${ey}L${ex-4*Math.cos(angle+.5)},${ey-4*Math.sin(angle+.5)}`).attr('fill','none').attr('stroke',color);
+        }
+      }
+      find(`status-${mode}-${prototype}`).textContent = stop<=last ? `model stop ${stop}${t>stop?' · extrapolated':''}` : 'no model stop';
+      checkLabels(plot);
+    }
+    function showTooltip(event, lines) {
+      tooltip.textContent=lines.join('\n'); tooltip.hidden=false;
+      const bounds=root.getBoundingClientRect();
+      const left=Math.max(0,Math.min(event.clientX-bounds.left+12,bounds.width-tooltip.offsetWidth-4));
+      const top=Math.max(0,event.clientY-bounds.top-tooltip.offsetHeight-12);
+      tooltip.style.left=`${left}px`; tooltip.style.top=`${top}px`;
+    }
+    function drawCloud() {
+      if(!isVisible()) return;
+      const all=[...data.latent_cloud.map(value=>value.point),...data.prototype_pc];
+      cloudPlot=frame(find('cloud'),[padded(all.map(p=>p[0])),padded(all.map(p=>p[1]))],['latent PC 1','latent PC 2']);
+      const {svg,marks,x,y,left,right,top,bottom}=cloudPlot;
+      svg.append('title').text('All supplied training-episode 0s latents; stars mark the projected capture, risk and curious source means.');
+      marks.selectAll('.wm-cloud-point').data(data.latent_cloud).join('circle').attr('class','wm-cloud-point').attr('cx',d=>x(d.point[0])).attr('cy',d=>y(d.point[1])).attr('r',2.5).attr('fill',d=>sourceColors[d.label]).attr('fill-opacity',.24);
+      marks.selectAll('[data-mean-star]').data(data.prototype_pc).join('path').attr('data-mean-star','').attr('d',d3.symbol().type(d3.symbolStar).size(150)()).attr('transform',p=>`translate(${x(p[0])},${y(p[1])})`).attr('fill',(_,i)=>sourceColors[i]).attr('stroke','var(--foreground)').attr('stroke-width',(_,i)=>i===selectedMean?2:1);
+      const hit=svg.append('rect').attr('data-chart-hit','').attr('x',left).attr('y',top).attr('width',right-left).attr('height',bottom-top).attr('fill','transparent');
+      const points=[...data.latent_cloud.map(value=>({...value,mean:false})),...data.prototype_pc.map((point,label)=>({point,label,mean:true}))];
+      function nearest(event) {
+        const [px,py]=d3.pointer(event,svg.node());
+        let candidate=null,distance=Infinity;
+        points.forEach(point=>{const d=(x(point.point[0])-px)**2+(y(point.point[1])-py)**2;if(d<distance){candidate=point;distance=d;}});
+        if (!candidate) return;
+        const labels=candidate.mean ? [vectorLabel(candidate.label)] : [`${names[candidate.label]} · training episode ${candidate.episode}`,`PC 1 ${format(candidate.point[0])} · PC 2 ${format(candidate.point[1])}`];
+        showTooltip(event,labels);
+        if (event.type==='click' && candidate.mean) selectMean(candidate.label,true);
+      }
+      hit.on('pointermove',nearest).on('click',nearest).on('pointerleave',()=>{tooltip.hidden=true;});
+      checkLabels(cloudPlot);
+    }
+    function renderArenas() {
+      if(!isVisible()) return;
+      const domains=domain();
+      equations.forEach(equation=>{for(let prototype=0;prototype<3;prototype++)drawArena(equation.mode,prototype,domains);});
+      find('step').value=`${step} / ${scene().blue.length}`;
+      find('time').value=step;
+    }
+    function pause() {if(timer!==null)clearInterval(timer);timer=null;find('play').textContent='Play';}
+    function scheduleRender() {
+      if(!isVisible()) return;
+      if(resizeFrame!==null)cancelAnimationFrame(resizeFrame);
+      resizeFrame=requestAnimationFrame(()=>{resizeFrame=null;renderArenas();drawCloud();});
+    }
+    function changeScene() {
+      pause();sceneIndex=Number(find('scene').value);step=scene().blue.length;
+      find('time').max=scene().blue.length;
+      const supportsClamp=Boolean(scene().models.find(model=>model.mode==='factored')?.clamped_paths);
+      find('clamp').disabled=!supportsClamp;
+      if(!supportsClamp)find('clamp').checked=false;
+      renderArenas();find('announcement').textContent=`Scene ${scene().episode}, ${scene().objective} reference.`;
+    }
+    find('scene').addEventListener('change',changeScene);
+    find('clamp').addEventListener('change',()=>{renderArenas();find('announcement').textContent=find('clamp').checked?'Equation 3 uses the same recorded red action sequence for all source means.':'Equation 3 predicts red actions from each source mean.';});
+    find('time').addEventListener('input',()=>{pause();step=Number(find('time').value);renderArenas();});
+    find('play').addEventListener('click',()=>{
+      if(!isVisible())return;
+      if(timer!==null){pause();return;}
+      if(step>=scene().blue.length)step=0;
+      renderArenas();find('play').textContent='Pause';
+      timer=setInterval(()=>{if(!isVisible()){pause();return;}step++;renderArenas();if(step>=scene().blue.length)pause();},reducedMotion.matches?650:280);
+    });
+    find('roles').querySelectorAll('button[data-role]').forEach(button=>button.addEventListener('click',()=>{
+      const role=button.dataset.role;visible.has(role)?visible.delete(role):visible.add(role);
+      button.setAttribute('aria-pressed',String(visible.has(role)));renderArenas();
+    }));
+    root.addEventListener('inspector:hide',()=>{
+      suspended=true;pause();tooltip.hidden=true;
+      if(resizeFrame!==null)cancelAnimationFrame(resizeFrame);
+      resizeFrame=null;
+    });
+    root.addEventListener('inspector:show',()=>{suspended=false;scheduleRender();});
+    selectMean(0);changeScene();drawCloud();
+    const observer=new ResizeObserver(scheduleRender);
+    observer.observe(root);
+    document.addEventListener('visibilitychange',()=>{if(document.hidden)pause();});
+  } catch(error) {
+    find('error').hidden=false;find('error').textContent=`Unable to display saved world-model paths: ${error.message}`;
+  }
+})();
+</script>

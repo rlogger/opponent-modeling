@@ -11,6 +11,7 @@ rollouts unchanged (handoff Gate 4 requirement).
 from __future__ import annotations
 
 import json
+from dataclasses import dataclass
 from pathlib import Path
 from typing import Any
 
@@ -21,14 +22,17 @@ import numpy as np
 import optax
 from flax import struct
 from flax.linen.initializers import orthogonal
+from flax.training.train_state import TrainState
 from flax.traverse_util import flatten_dict, unflatten_dict
 
 from mopa.bc import BC_BATCH, BC_HID, BC_STEPS
+from mopa.zero_s import zero_s_features
 from tag_objectives.actions import CONTINUOUS_ACTION_DIM
 
 __all__ = [
     "ContinuousBCNet",
     "ContinuousBCPolicy",
+    "FrozenBCOpponent",
     "continuous_bc_metrics",
     "fit_continuous_bc",
 ]
@@ -127,6 +131,64 @@ class ContinuousBCPolicy(struct.PyTreeNode):
             hidden_size=int(manifest["hidden_size"]),
             metadata_json=json.dumps(manifest.get("metadata", {}), sort_keys=True),
         )
+
+
+@dataclass(frozen=True)
+class FrozenBCOpponent:
+    """No-latent Equation 3 adapter using the same current-state features as 0s.
+
+    Fit ``policy`` on :func:`zero_s_features`, then freeze it while the blue
+    controller learns. The decoder sees eight positions/velocities, never
+    history, objective labels, or a latent. Saving reuses the existing BC format.
+    """
+
+    policy: ContinuousBCPolicy
+
+    def __post_init__(self) -> None:
+        if self.policy.input_size != 8 or self.policy.action_dim != 2:
+            raise ValueError("BC opponent requires eight state features and two actions")
+        mean, std = np.asarray(self.policy.mean), np.asarray(self.policy.std)
+        if mean.shape != (8,) or std.shape != (8,) or not np.isfinite(mean).all() or not np.isfinite(std).all() or np.any(std <= 0):
+            raise ValueError("BC normalization must be finite, positive, and eight-dimensional")
+
+    def actions(self, state: Any, context: Any = None) -> jax.Array:
+        """Predict bounded red actions from raw 66D state and an empty context."""
+        state = jnp.asarray(state, jnp.float32)
+        if context is not None and jnp.asarray(context).shape != state.shape[:-1] + (0,):
+            raise ValueError("vanilla BC requires empty context matching the state batch")
+        return self.policy.act(zero_s_features(state))
+
+    def attach(self, agent: Any, obs_mean: np.ndarray, obs_std: np.ndarray) -> Any:
+        """Install the frozen decoder before restoring serialized agent weights."""
+        model = agent.model
+        if model.opponent_mode != "factored" or model.encoder_type != "identity":
+            raise ValueError("BC opponent requires factored mode and the identity state encoder")
+        if model.context_dim != 0 or model.latent_dim != 66 or model.action_dim != 2:
+            raise ValueError("BC opponent requires 66D state, two actions, and no latent context")
+        mean, std = np.asarray(obs_mean, np.float32), np.asarray(obs_std, np.float32)
+        if mean.shape != (66,) or std.shape != (66,) or not np.isfinite(mean).all() or not np.isfinite(std).all() or np.any(std <= 0):
+            raise ValueError("world-state normalization must be finite, positive, and 66D")
+        encoded_mean = model.encode(jnp.asarray(mean), model.encoder.params, jax.random.PRNGKey(0))
+        encoded_scale = model.encode(jnp.asarray(mean + std), model.encoder.params, jax.random.PRNGKey(0))
+        if not np.allclose(encoded_mean, 0, atol=1e-5) or not np.allclose(encoded_scale, 1, atol=1e-4):
+            raise ValueError("normalization does not match the attached identity encoder")
+        feature_mean, feature_std = self.policy.mean, self.policy.std
+        net = ContinuousBCNet(action_dim=self.policy.action_dim, hidden_size=self.policy.hidden_size)
+
+        def apply(variables, inputs):
+            raw_state = inputs * std + mean
+            features = (zero_s_features(raw_state) - feature_mean) / feature_std
+            return net.apply(variables, features)
+
+        red = TrainState.create(apply_fn=apply, params=self.policy.params, tx=optax.set_to_zero())
+        return agent.replace(model=model.replace(red_model=red), red_loss_scale=0.0)
+
+    def save(self, path: Path | str) -> None:
+        self.policy.save(path)
+
+    @classmethod
+    def load(cls, path: Path | str) -> "FrozenBCOpponent":
+        return cls(ContinuousBCPolicy.load(path))
 
 
 def fit_continuous_bc(
