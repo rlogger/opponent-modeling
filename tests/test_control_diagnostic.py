@@ -218,3 +218,68 @@ def test_specialist_verification_keeps_weights_as_runtime_jit_inputs():
     changed = np.asarray(predict(observations))
     np.testing.assert_array_equal(changed, _red_action(params, observations, 35))
     assert np.max(np.abs(changed - original)) > .5
+
+
+def test_protocol_requires_exact_frozen_executable_even_when_other_commit_is_clean(driver, tmp_path, monkeypatch):
+    import subprocess
+
+    code, private = tmp_path / 'code', tmp_path / 'private'
+    git_prefix = ['git', '-c', 'core.hooksPath=/dev/null', '-c', 'commit.gpgsign=false',
+                  '-c', 'user.name=Protocol binding regression', '-c', 'user.email=regression@example.invalid']
+
+    def git(repo, *arguments):
+        return subprocess.check_output([*git_prefix, *arguments], cwd=repo, text=True).strip()
+
+    def commit(repo):
+        git(repo, 'add', '.')
+        git(repo, 'commit', '-q', '-m', 'Protocol binding fixture')
+        return git(repo, 'rev-parse', 'HEAD')
+
+    for repo in (code, private):
+        repo.mkdir()
+        git(repo, 'init', '-q', '--template=')
+    # Use the real source_binding guard on a real clean Git repository, not a
+    # stub that automatically accepts the requested executable revision.
+    for name in ('src/example.py', 'scripts/example.py', 'configs/tdmpc2.yaml',
+                 'uv.lock', 'experiments/matched_control_20260908/verify.py'):
+        path = code / name
+        path.parent.mkdir(parents=True, exist_ok=True)
+        path.write_text('# first executable revision\n')
+    first = commit(code)
+    (code / 'src/example.py').write_text('# different clean executable revision\n')
+    second = commit(code)
+    assert first != second
+    monkeypatch.setitem(driver.source_binding.__globals__, 'ROOT', code)
+    assert driver.source_binding(second)  # All existing source guards pass.
+    frozen = protocol()
+    frozen['frozen_executable_commit'] = first
+    path = private / 'protocol.json'
+
+    def freeze():
+        path.write_text(json.dumps(frozen) + '\n')
+        return commit(private)
+
+    args = SimpleNamespace(protocol=path, spec_repo=private, spec_commit=freeze(), code_commit=second)
+    with pytest.raises(ValueError, match='executable commit differs from frozen protocol'):
+        driver.bind_protocol(args)
+    # Re-freezing the protocol to the actual executable must restore acceptance.
+    frozen['frozen_executable_commit'] = second
+    args.spec_commit = freeze()
+    loaded, bindings = driver.bind_protocol(args)
+    assert loaded == frozen
+    assert bindings[str(path.resolve())] == driver.file_sha256(path)
+    # Missing pins cannot silently become an unrestricted protocol.
+    del frozen['frozen_executable_commit']
+    args.spec_commit = freeze()
+    with pytest.raises(ValueError, match='executable commit differs from frozen protocol'):
+        driver.bind_protocol(args)
+    frozen['frozen_executable_commit'] = second
+    args.spec_commit = freeze()
+    # The added relationship check does not replace either pre-existing guard.
+    path.write_text(path.read_text() + ' ')
+    with pytest.raises(ValueError, match='committed private specification'):
+        driver.bind_protocol(args)
+    git(private, 'checkout', '--', 'protocol.json')
+    (code / 'src/example.py').write_text('# unpublished source change\n')
+    with pytest.raises(ValueError, match='committed clean executable source'):
+        driver.bind_protocol(args)

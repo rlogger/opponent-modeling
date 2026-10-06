@@ -88,6 +88,8 @@ def bind_protocol(args):
         raise ValueError('protocol must equal the committed private specification')
     p = json.loads(original)
     protocol_configuration(p)
+    if args.code_commit != p.get('frozen_executable_commit'):
+        raise ValueError('executable commit differs from frozen protocol')
     bound = source_binding(args.code_commit)
     bound[str(args.protocol.resolve())] = file_sha256(args.protocol)
     return p, bound
