@@ -69,6 +69,10 @@ def check_update(info: dict, step: int) -> None:
             raise FloatingPointError(f"unverified or nonfinite {name} at update {step}")
     if any(not np.isfinite(np.asarray(value)).all() for value in info.values()):
         raise FloatingPointError(f"nonfinite training metric at update {step}")
+    if "physical_timeout_targets_valid" in info and not bool(
+        np.asarray(info["physical_timeout_targets_valid"])
+    ):
+        raise ValueError(f"physical timeout must be terminal for value at update {step}")
 
 
 
@@ -79,6 +83,7 @@ PyTree = Any
 DEFAULT_CONFIG_PATH = Path(__file__).resolve().parents[2] / "configs" / "tdmpc2.yaml"
 OPPONENT_MODES = ("implicit", "conditioned", "factored")
 ENCODER_TYPES = ("mlp", "identity")
+TRANSITION_CONTRACTS = ("none", "objective_static_clock_v1")
 
 __all__ = [
     "DEFAULT_CONFIG_PATH",
@@ -294,6 +299,11 @@ class WorldModel(struct.PyTreeNode):
     symlog_min: float
     symlog_max: float
     predict_continues: bool = struct.field(pytree_node=False)
+    # Optional P11 model contract. Static metadata must be bound by the saved
+    # config/normalization; it is not inferred from same-shaped checkpoint weights.
+    transition_contract: str = struct.field(pytree_node=False, default="none")
+    state_mean: tuple = struct.field(pytree_node=False, default=())
+    state_std: tuple = struct.field(pytree_node=False, default=())
 
     # -- mode-specific input assembly -----------------------------------------
     @property
@@ -361,6 +371,9 @@ class WorldModel(struct.PyTreeNode):
         encoder_type: str = "mlp",
         red_hidden_dim: int = 128,
         hidden_dim: Optional[int] = None,
+        transition_contract: str = "none",
+        state_mean: Optional[np.ndarray] = None,
+        state_std: Optional[np.ndarray] = None,
         *,
         key: PRNGKey,
     ) -> "WorldModel":
@@ -368,6 +381,19 @@ class WorldModel(struct.PyTreeNode):
             raise ValueError(f"opponent_mode must be one of {OPPONENT_MODES}")
         if encoder_type not in ENCODER_TYPES:
             raise ValueError(f"encoder_type must be one of {ENCODER_TYPES}")
+        if transition_contract not in TRANSITION_CONTRACTS:
+            raise ValueError(f"transition_contract must be one of {TRANSITION_CONTRACTS}")
+        if transition_contract != "none":
+            if encoder_type != "identity" or latent_dim != 66:
+                raise ValueError("objective_static_clock_v1 requires identity 66D state")
+            mean, std = np.asarray(state_mean, np.float32), np.asarray(state_std, np.float32)
+            if (mean.shape != (66,) or std.shape != (66,)
+                    or not np.isfinite(mean).all() or not np.isfinite(std).all()
+                    or np.any(std <= 0)):
+                raise ValueError("transition contract needs finite positive 66D normalization")
+            contract_mean, contract_std = tuple(mean.tolist()), tuple(std.tolist())
+        else:
+            contract_mean, contract_std = (), ()
         if context_dim < 0:
             raise ValueError("context_dim cannot be negative")
         if opponent_mode == "conditioned" and context_dim < 1:
@@ -535,6 +561,9 @@ class WorldModel(struct.PyTreeNode):
             symlog_min=float(symlog_min),
             symlog_max=float(symlog_max),
             predict_continues=predict_continues,
+            transition_contract=transition_contract,
+            state_mean=contract_mean,
+            state_std=contract_std,
         )
 
     @jax.jit
@@ -555,8 +584,32 @@ class WorldModel(struct.PyTreeNode):
             {"params": params}, jnp.concatenate([x, a], axis=-1)
         ).astype(jnp.float32)
         if self.encoder_type == "identity":
-            return x + out
+            predicted = x + out
+            if self.transition_contract != "none":
+                # Copy fixed geometry exactly in normalized coordinates. Only
+                # the known physical clock is decoded; all dynamic residuals
+                # (including legal outside-arena positions) remain unchanged.
+                step = jnp.rint(100 * (x[..., 65] * self.state_std[65] + self.state_mean[65]))
+                clock = (jnp.minimum(step + 1, 100) / 100 - self.state_mean[65]) / self.state_std[65]
+                predicted = predicted.at[..., 8:40].set(x[..., 8:40])
+                predicted = predicted.at[..., 56:65].set(x[..., 56:65])
+                predicted = predicted.at[..., 65].set(clock)
+                predicted = jnp.where((step < 100)[..., None], predicted, x)
+            return predicted
         return self.latent_activation(out)
+
+    @jax.jit
+    def known_continuation(self, x: jax.Array) -> jax.Array:
+        """Known physical-timeout mask, independent of learned capture logits.
+
+        The optional 66D contract is the finite 100-step objective task. Legacy
+        models impose no known mask. A final transition still earns its reward;
+        callers apply this mask to the next state before future reward/Q.
+        """
+        if self.transition_contract == "none":
+            return jnp.ones(x.shape[:-1], dtype=bool)
+        step = jnp.rint(100 * (x[..., 65] * self.state_std[65] + self.state_mean[65]))
+        return step < 100
 
     @jax.jit
     def reward(
@@ -1117,6 +1170,19 @@ class TDMPC2(struct.PyTreeNode):
         finite_policy = jnp.all(jnp.stack([jnp.all(jnp.isfinite(g)) for g in jax.tree.leaves(policy_grads)]))
         info = {**model_info, **policy_info, "world_gradients_finite": finite_world,
                 "policy_gradients_finite": finite_policy}
+        if model.transition_contract != "none":
+            # Inputs are raw 66D observations. Only valid episode transitions
+            # constrain labels; padded tails do not. Report a mismatch for the
+            # existing per-update checker, rather than rewriting TD/BCE targets.
+            ended = jnp.logical_or(terminated, truncated)
+            valid = jnp.concatenate([
+                jnp.ones((1, batch_size), dtype=bool),
+                jnp.cumsum(ended[:-1], axis=0) == 0,
+            ], axis=0)
+            timed_out = jnp.rint(100 * next_observations[..., 65]) >= 100
+            info["physical_timeout_targets_valid"] = jnp.all(
+                ~valid | ~timed_out | terminated.astype(bool)
+            )
 
         return new_agent, info
 
@@ -1223,6 +1289,11 @@ def validate_config(config: Dict[str, Any]) -> None:
     enc_type = config.get("encoder", {}).get("type", "mlp")
     if enc_type not in ENCODER_TYPES:
         raise ValueError(f"encoder.type must be one of {ENCODER_TYPES}")
+    contract = config.get("world_model", {}).get("transition_contract", "none")
+    if contract not in TRANSITION_CONTRACTS:
+        raise ValueError(f"transition_contract must be one of {TRANSITION_CONTRACTS}")
+    if contract != "none" and enc_type != "identity":
+        raise ValueError("objective_static_clock_v1 requires identity 66D state")
     if enc_type == "mlp" and (
         config["world_model"]["latent_dim"] % config["world_model"]["simnorm_dim"]
     ):
@@ -1306,6 +1377,9 @@ def create_agent(
         encoder_type=encoder_type,
         red_hidden_dim=int(factored_cfg.get("red_hidden_dim", 128)),
         hidden_dim=model_cfg.get("hidden_dim"),
+        transition_contract=model_cfg.get("transition_contract", "none"),
+        state_mean=obs_mean,
+        state_std=obs_std,
         key=model_key,
     )
     if model.action_dim >= 20:

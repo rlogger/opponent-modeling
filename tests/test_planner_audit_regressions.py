@@ -124,7 +124,7 @@ def test_imagination_uses_each_predicted_state_and_counts_terminal_q_once(horizo
         return jnp.concatenate([x, jnp.zeros_like(x)], axis=-1)
 
     model = SimpleNamespace(
-        opponent_mode="factored", predict_continues=stop_at is not None,
+        opponent_mode="factored", predict_continues=stop_at is not None, transition_contract="none",
         red_model=SimpleNamespace(params=None), reward_model=SimpleNamespace(params=None),
         dynamics_model=SimpleNamespace(params=None), continue_model=SimpleNamespace(params=None),
         policy_model=SimpleNamespace(params=None), value_model=SimpleNamespace(params=None),

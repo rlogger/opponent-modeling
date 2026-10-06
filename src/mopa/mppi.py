@@ -195,6 +195,8 @@ def estimate_value(
     """
     model = agent.model
     G, discount = 0.0, 1.0
+    if model.transition_contract != "none":
+        discount = model.known_continuation(x).astype(jnp.float32)
     if model.opponent_mode == "factored":
         # Explicit per-step red keys (reserved; the first experiment uses the
         # deterministic red mean). Splitting only here keeps the implicit
@@ -218,10 +220,15 @@ def estimate_value(
                 > 0.5
             )
         x = model.next(x=x, a=a_t, params=model.dynamics_model.params)
-        G += discount * reward
+        if model.transition_contract != "none":
+            G += jnp.where(discount != 0, discount * reward, 0.0)
+        else:
+            G += discount * reward
         discount *= agent.discount
         if model.predict_continues:
             discount *= continues
+        if model.transition_contract != "none":
+            discount *= model.known_continuation(x)
 
     action_key, Q_key = jax.random.split(key, 2)
     next_action = model.sample_actions(
@@ -238,4 +245,6 @@ def estimate_value(
         key=Q_key,
     )
     Q = Qs.mean(axis=0)
+    if model.transition_contract != "none":
+        return G + jnp.where(discount != 0, discount * Q, 0.0)
     return G + discount * Q
