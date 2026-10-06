@@ -279,7 +279,7 @@ def test_checkpoint_and_episode_masks_disagree_when_ckpt_mixes():
     val_ckpts = set(ckpt[cmask])
     assert set(ckpt[~cmask]).isdisjoint(val_ckpts)
     # Episode mask typically mixes checkpoints in both folds.
-    assert set(ckpt[emask]) & set(ckpt[~emask]) or True  # structural smoke
+    assert set(ckpt[emask]) & set(ckpt[~emask])
 
 
 def test_leave_one_checkpoint_out_folds():

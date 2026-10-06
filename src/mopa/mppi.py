@@ -42,7 +42,7 @@ def _repeat_context(context: jax.Array, n: int) -> jax.Array:
     return context[..., None, :].repeat(n, axis=-2)
 
 
-@partial(jax.jit, static_argnames=("horizon", "deterministic", "train"))
+@partial(jax.jit, static_argnames=("horizon", "deterministic", "train", "return_diagnostics"))
 def plan(
     agent: "TDMPC2",
     x: jax.Array,
@@ -52,6 +52,7 @@ def plan(
     deterministic: bool = False,
     train: bool = False,
     *,
+    return_diagnostics: bool = False,
     key: PRNGKey,
 ) -> Tuple[jax.Array, Tuple[jax.Array, jax.Array]]:
     model = agent.model
@@ -165,7 +166,16 @@ def plan(
     else:
         final_action = action[..., 0, :]
 
-    return final_action.clip(-1, 1), (mean, std)
+    result = (final_action.clip(-1, 1), (mean, std))
+    if return_diagnostics:
+        # Pure observation of the existing final population; no additional RNG
+        # draws or arithmetic feed back into the selected action or warm start.
+        return (*result, {"candidate_actions": actions, "candidate_values": values,
+                          "estimate_value_key": value_keys[-1],
+                          "elite_indices": elite_inds, "elite_values": elite_values,
+                          "selected_population_index": jnp.take_along_axis(
+                              elite_inds, action_ind[..., None], axis=-1)[..., 0]})
+    return result
 
 
 @partial(jax.jit, static_argnames=("horizon",))

@@ -2,8 +2,21 @@
 
 Continuous predator–prey control with MAPPO specialists, `0s` opponent modeling,
 and TD-MPC. Opponents follow capture, risk-averse, or curious objectives.
+The repository also includes the separate three-zone [Spatial Blotto environment](docs/spatial-blotto.md).
 
-[Collaborator guide](docs/COLLABORATOR_GUIDE.md) · [Results](docs/RESULTS.md)
+[Implementation status](docs/STATUS.md) · [Collaborator guide](docs/COLLABORATOR_GUIDE.md) · [Results](docs/RESULTS.md)
+
+Project requirements and adopted decisions are governed by the private
+`rlogger/marl-private` repository. This repository contains the executable
+implementation and public reproduction evidence; private meeting material stays
+in that repository. Runs identify the specification commit and protocol version
+alongside the executable commit, configuration and artifact hashes.
+
+The October 5 audit has completed a local feasibility pilot. The prescribed main
+comparisons and final publication are still pending. The pilot is infrastructure
+and runtime evidence, not evidence that opponent modeling improves control.
+Historical experiments keep their original directories and claims are qualified
+in [Results](docs/RESULTS.md).
 
 ## Installation
 
@@ -12,7 +25,7 @@ Requires Git, Python 3.11 or 3.12, and
 packages and the virtual environment. Run commands from the repository root.
 
 ```bash
-git clone --branch td-mpc2 https://github.com/rlogger/opponent-modeling.git
+git clone https://github.com/rlogger/opponent-modeling.git
 cd opponent-modeling
 
 export UV_PROJECT_ENVIRONMENT=venv
@@ -28,6 +41,11 @@ export XLA_PYTHON_CLIENT_PREALLOCATE=false
 export OPENBLAS_NUM_THREADS=1
 export OMP_NUM_THREADS=1
 ```
+
+For reproduction, check out the exact executable commit in the selected run
+manifest before installing dependencies. `td-mpc2`, `new-env`, and the fork
+encoding experiments preserve historical implementations; they are not
+interchangeable with the consolidated implementation.
 
 Datasets and trained weights are not included in Git. Generate them below or
 follow the [artifact-transfer guide](docs/COLLABORATOR_GUIDE.md#artifact-transfer).
@@ -262,6 +280,13 @@ Smoke outputs check execution, not policy quality, and cannot replace the traine
 specialists required by the dataset collector. Use a script's `--help` to inspect
 its arguments; for the Hydra-based MAPPO trainer, `--cfg job` prints the configuration
 without training.
+
+## Spatial Blotto
+
+The separate [Spatial Blotto specification and commands](docs/spatial-blotto.md)
+cover three-zone rules, mathematical and scripted controllers, terminal-state
+handling, tests and exports. Its environment and scripted payoff examples do not
+establish learned Blotto control or transfer of predator–prey results.
 
 ## Reference
 

@@ -106,8 +106,8 @@ def train_only_oracle_acc(
 
 def _validated_probs(probs: np.ndarray, y_true: np.ndarray) -> tuple[np.ndarray, np.ndarray]:
     p = np.asarray(probs, dtype=np.float64)
-    y = np.asarray(y_true, dtype=np.int64)
-    if p.ndim != 2 or len(p) != len(y):
+    y = np.asarray(y_true)
+    if p.ndim != 2 or y.shape != (len(p),) or y.dtype.kind not in "iu":
         raise ValueError("probs must have shape (N, K) aligned with y_true")
     if len(y) == 0:
         raise ValueError("probability metrics require at least one example")
@@ -118,7 +118,7 @@ def _validated_probs(probs: np.ndarray, y_true: np.ndarray) -> tuple[np.ndarray,
     row_sum = p.sum(axis=1, keepdims=True)
     if np.any(row_sum <= 0.0):
         raise ValueError("each probability row must have positive mass")
-    return p / row_sum, y
+    return p / row_sum, y.astype(np.int64)
 
 
 def multiclass_nll(probs: np.ndarray, y_true: np.ndarray, eps: float = 1e-9) -> float:
@@ -214,8 +214,8 @@ def temperature_scale_logits(
     makes the selected value exactly reproducible.
     """
     x = np.asarray(logits, dtype=np.float64)
-    y = np.asarray(y_true, dtype=np.int64)
-    if x.ndim != 2 or len(x) != len(y) or grid_size < 3:
+    y = np.asarray(y_true)
+    if x.ndim != 2 or y.shape != (len(x),) or y.dtype.kind not in "iu" or grid_size < 3:
         raise ValueError("logits/y shape mismatch or grid_size < 3")
     candidates = np.exp(np.linspace(-3.0, 3.0, grid_size))
     losses = [multiclass_nll(softmax_with_temperature(x, t), y) for t in candidates]

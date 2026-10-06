@@ -288,9 +288,9 @@ def fit_bc(
     if not np.issubdtype(y.dtype, np.integer):
         if not np.all(np.equal(y, np.floor(y))):
             raise ValueError("BC actions must contain integers")
-    y = y.astype(np.int32)
     if n_actions < 2 or np.any(y < 0) or np.any(y >= n_actions):
         raise ValueError("BC actions must lie within n_actions")
+    y = y.astype(np.int32)
     if steps < 0:
         raise ValueError("BC steps cannot be negative")
 
@@ -364,9 +364,9 @@ def bc_metrics_from_logits(
     if not np.issubdtype(target.dtype, np.integer):
         if not np.all(np.equal(target, np.floor(target))):
             raise ValueError("BC targets must contain integers")
-    target = target.astype(np.int32)
     if np.any(target < 0) or np.any(target >= scores.shape[1]):
         raise ValueError("BC target is outside the action vocabulary")
+    target = target.astype(np.int32)
     if not np.all(np.isfinite(scores)):
         raise ValueError("BC logits must be finite")
 

@@ -1,5 +1,21 @@
 # Results and development record
 
+Updated October 5, 2026. The tables below are preserved historical measurements,
+not results of the current audit campaign. The new local pilot completed eight
+small causal-prediction fits and ten controller arms over two fitting seeds.
+Its purpose was feasibility and runtime; the prescribed main comparisons,
+frozen-prefix diagnostic, opponent-weight replay validation and final publication
+remain pending. See [Implementation status](STATUS.md).
+
+Historical gate labels are not current acceptance certificates. In particular,
+the earlier strict continuous-BC offline criterion failed on one fold; favorable
+closed-loop signs do not repair that failure. The earlier nine fold × opponent
+groups are not nine independent controller fits, and the nominal matched-control
+pass does not establish a reliable benefit of explicit opponent modeling.
+Later code corrections preserve the original raw results and require newly bound
+runs before any changed scientific claim. No SOTA, calibrated uncertainty,
+adaptive co-training or learned Blotto claim is made here.
+
 Snapshot: September 8, 2026, published `td-mpc2` implementation at `fc0dc64`
 (code unchanged by the README commit `84a38de`). All numbers below come from
 saved reports and JSON artifacts. This documentation audit did not rerun training.
@@ -33,7 +49,7 @@ consume random keys differently, so stochastic policy samples and downstream
 planning/update outputs are not claimed bitwise identical. Later identity-state,
 continuation, replay, and opponent-mode extensions are documented separately.
 
-## What the current model represents
+## What the September model represents
 
 `x` is the normalized 66D Markov state. `z` is an 8D vector inferred by the frozen
 `0s` encoder from completed state/action history; it is zero before any history
@@ -47,7 +63,7 @@ this same space, not three encoders or class probabilities.
 | 2: context-conditioned | `x_next = dynamics(x, blue_action, z)` | Generic conditioned driver uses the older 3D GRU-JEPA context, not the 8D `0s` checkpoint |
 | 3: factored | `red_action = decoder(x, z)`; `x_next = dynamics(x, blue_action, red_action)` | Current `run_0s_world_model.py` and `adapt-0s` workflow |
 
-Only the Equation 3 `0s` workflow produced the current adaptation results below.
+Only the Equation 3 `0s` workflow produced the historical adaptation results below.
 The real red opponent is still a frozen MAPPO policy. Changing `z` changes the
 model's prediction, not the real opponent's policy. Context is held fixed within
 each imagined planning horizon and refreshed after real transitions.

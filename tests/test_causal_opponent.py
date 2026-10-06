@@ -236,9 +236,11 @@ def test_runner_rejects_config_or_data_outside_frozen_protocol():
     cfg = config("recurrent_vae")
     binding = {"checkpoint_families": {"train": [0, 1], "validation": [], "test": [2]},
                "evaluation_split": "test", "evaluation_samples": 32,
-               "dataset_sha256": "a" * 64, "dataset_sidecar_sha256": "b" * 64}
+               "dataset_sha256": "a" * 64, "dataset_sidecar_sha256": "b" * 64, "splits_sha256": "d" * 64}
     protocol = {"causal_prediction": {"main": {"configurations": [asdict(cfg)], "seeds": [0], **binding}}}
     runner.validate_protocol_run(protocol, "main", cfg, 0, binding)
+    with pytest.raises(ValueError, match="splits_sha256"):
+        runner.validate_protocol_run(protocol, "main", cfg, 0, dict(binding, splits_sha256="e" * 64))
     with pytest.raises(ValueError, match="configuration"):
         runner.validate_protocol_run(protocol, "main", replace(cfg, steps=cfg.steps + 1), 0, binding)
     with pytest.raises(ValueError, match="dataset_sha256"):

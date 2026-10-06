@@ -44,7 +44,7 @@ def validate_protocol_run(protocol, stage, config, seed, binding):
     frozen = protocol["causal_prediction"][stage]
     if asdict(config) not in frozen["configurations"] or seed not in frozen["seeds"]:
         raise ValueError("configuration or seed is not frozen in causal-prediction protocol")
-    for name in ("checkpoint_families", "evaluation_split", "evaluation_samples", "dataset_sha256", "dataset_sidecar_sha256"):
+    for name in ("checkpoint_families", "evaluation_split", "evaluation_samples", "dataset_sha256", "dataset_sidecar_sha256", "splits_sha256"):
         if binding[name] != frozen[name]:
             raise ValueError(f"{name} differs from frozen causal-prediction protocol")
 
@@ -131,7 +131,8 @@ def main():
         raise ValueError("dataset sidecar must bind source checkpoints")
     binding = {"checkpoint_families": {k: sorted(np.unique(families[v]).tolist()) for k, v in indices.items()},
                "evaluation_split": args.evaluation_split, "evaluation_samples": args.evaluation_samples,
-               "dataset_sha256": sha256(args.dataset), "dataset_sidecar_sha256": sha256(sidecar_path)}
+               "dataset_sha256": sha256(args.dataset), "dataset_sidecar_sha256": sha256(sidecar_path),
+               "splits_sha256": sha256(args.splits)}
     validate_protocol_run(protocol, args.stage, cfg, args.seed, binding)
     manifest = {
         "schema": SCHEMA, "status": "running", "stage": args.stage, "seed": args.seed, "config": asdict(cfg),

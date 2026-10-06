@@ -1,7 +1,10 @@
 # Collaborator guide
 
-Updated September 8, 2026. This guide covers the published `td-mpc2` workflow,
-the artifacts behind its results, and the checks needed before extending it.
+Updated October 5, 2026. This guide preserves the September `td-mpc2`
+reproduction workflow and distinguishes it from the current consolidation.
+`marl-private` governs project instructions; [Implementation status](STATUS.md)
+records the current evidence boundary. The new local feasibility pilot is
+complete, while prescribed main experiments and final publication remain pending.
 
 ## Start here
 
@@ -15,22 +18,23 @@ the artifacts behind its results, and the checks needed before extending it.
 plans and experiments. They are not a current checklist of unimplemented work,
 and their older continuous results are not the current `0s` results.
 
-## Source snapshot
+## Historical source snapshot
 
 | Reference | Role |
 |---|---|
-| `td-mpc2` | Active continuous-control branch; use this for new work |
+| `td-mpc2` | Historical continuous-control branch; retain for source-bound reproduction |
 | `fc0dc648bec5586fe32f79fb9cfc584b03d52342` | Published implementation used by the completed main-environment evaluation |
 | `84a38de8b33daa2d6ca942690453408bc12a74fe` | Same implementation, with the expanded execution README; clean-source verification target |
 | `main` at `8c24db3c7deff8bd32610b04c3f1ebc08bf5e429` | Source of the restored environment core; not the continuous TD-MPC implementation |
 | `new-env` at `180571beed82326a0d11da8fad20c1ebb1886841` | Backup made before restoring the environment from main |
 
 For historical reproduction, start from a separate clean checkout pinned to
-`84a38de8b33daa2d6ca942690453408bc12a74fe`, then use this guide. For new work,
-use `td-mpc2` and record the actual commit and dirty state. Do not assume a local
+`84a38de8b33daa2d6ca942690453408bc12a74fe`, then use this guide. For the new campaign,
+use the consolidated executable commit and private protocol identified in its
+manifest, and record the actual commit and dirty state. Do not assume a local
 working copy has the same implementation as the published result.
 
-At this audit, the author's working tree also contained unpublished benchmark,
+At the September documentation audit, the author's working tree also contained unpublished benchmark,
 dashboard, inspector, and controller changes. They were not included in this
 documentation commit or the clean-source tests. In particular, the newer matched
 controller benchmark was paused, not completed.
@@ -191,7 +195,7 @@ completed output directories. The historical `verify.py` scripts write
 `verification.json` and need local data and paths. Neither is a safe clone-only
 smoke test. Use the README's unit tests for installation checks.
 
-## Clean-source verification
+## Historical clean-source verification
 
 The audit used a clean `git archive` export of `84a38de`, with imports explicitly
 resolved to the exported source rather than the author's dirty working tree.
@@ -224,21 +228,32 @@ uv run --locked --no-sync --all-extras python -m compileall -q src scripts tests
 
 The two test groups took 31.34 and 65.51 seconds. Omit `--no-sync` when following
 the README installation flow on a new machine; it is recorded here only to make
-the audit's execution conditions explicit. The full test suite was not run.
+the audit's execution conditions explicit. The full test suite was not run in that September check. Before the October
+pilot, the consolidated locked suite passed 787 tests without skips; subsequent
+corrections require fresh checks against their own source commit.
 
 This verification does not regenerate the experiment tables, transfer artifacts,
 or establish GPU compatibility. Synthetic optimizer steps in unit tests are not
 new experiment training.
 
-## Next implementation work
+## Current work and reproduction boundary
 
-Keep the environment fixed while extending the controller. First make replay
-relocation explicit and test checkpoint/resume behavior. Then agree on a matched
-control protocol before spending another training budget: implicit TD-MPC,
-separately trained vanilla-BC opponent modeling, `0s`, and a clearly specified
-MAPPO benchmark, with training-only selection and multiple controller seeds.
+The new campaign binds every run to both specification and executable commits,
+a frozen protocol, dataset/checkpoint hashes, split membership and raw traces.
+Use fresh output directories and preserve the historical paused benchmark.
+The pilot is a feasibility run; it cannot replace prescribed main budgets,
+independent fitting seeds or raw-to-reported result verification.
 
-Add missing planner diagnostics when running that experiment: predicted versus
-executed return for a comparable sequence, proposal origin among elites, active
-environment throughput, and per-episode failures. Do not describe the paused
-local benchmark or open-loop inspector outputs as completed control evidence.
+World representation on/off means identity global-state input versus a learned
+world encoder. It is distinct from changing the opponent encoder or setting an
+opponent context to zero. Likewise, replay updates of controller weights and
+replay updates of opponent-model weights are separate operations.
+
+The [Spatial Blotto environment](spatial-blotto.md) is included in the
+consolidated source. Its scripted and mathematical examples remain separate
+from predator–prey experiments and from unclaimed learned Blotto control.
+
+See [Implementation status](STATUS.md) for completed checks, pending experiments
+and the limits of the historical reports. Private presentations and discussion
+remain in `marl-private`; public artifacts identify their governing protocol and
+specification commit without copying that material.

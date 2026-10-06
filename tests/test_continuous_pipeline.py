@@ -70,6 +70,37 @@ def test_simulator_diagnostic_preserves_prior_output(tmp_path):
     assert (tmp_path / "results.json").read_text() == "preserved"
 
 
+def test_bc_diagnostic_preserves_prior_output_and_rejects_negative_quota(tmp_path):
+    driver = _load("run_bc_continuous.py")
+    (tmp_path / "results.json").write_text("preserved")
+    with pytest.raises(FileExistsError):
+        driver.main(["--artifact-dir", str(tmp_path)])
+    with pytest.raises(ValueError, match="nonnegative"):
+        driver.main(["--closed-loop-eps", "-1"])
+    assert (tmp_path / "results.json").read_text() == "preserved"
+
+
+def test_bc_pairing_does_not_pair_different_fits_or_folds():
+    driver = _load("run_bc_continuous.py")
+    # Equal numbers of retained rows previously paired different fitting seeds.
+    fold = {"heldout_checkpoint": 0, "seeds": [
+        {"seed": 1, "offline": {"no_c": {"mse": 1.}}},
+        {"seed": 2, "offline": {"real_c": {"mse": 0.}}}]}
+    with pytest.raises(ValueError, match="unpaired"):
+        driver._paired([fold], "offline", {"mse": "lower"}, "real_c", "no_c")
+    with pytest.raises(ValueError, match="duplicate checkpoint"):
+        driver.summarize([fold, fold])
+
+
+def test_bc_quota_cannot_silently_shrink():
+    driver = _load("run_bc_continuous.py")
+    data = {"objective_label": np.arange(3), "checkpoint_seed": np.zeros(3),
+            "valid_length": np.full(3, 10)}
+    with pytest.raises(ValueError, match="exceeds eligible"):
+        driver.closed_loop_continuation(None, data, arm="no_c", heldout_checkpoint=0,
+            encoder=None, ctx=2, requested_episodes=2, shuffle_seed=0, logdir=Path("unused"))
+
+
 def test_continuous_drivers_compose(tmp_path):
     logdir = tmp_path / "logs"
     _write_checkpoints(logdir)

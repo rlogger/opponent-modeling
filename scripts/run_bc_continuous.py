@@ -170,6 +170,8 @@ def closed_loop_continuation(
     agreement_tolerance: float = 0.25,
 ) -> dict[str, Any]:
     """Replay the exact expert prefix, then evaluate the cloned red predator."""
+    if requested_episodes < 0:
+        raise ValueError("requested_episodes must be nonnegative; zero means all eligible")
     labels = np.asarray(data["objective_label"], dtype=np.int32)
     ckpts = np.asarray(data["checkpoint_seed"], dtype=np.int32)
     valid_length = np.asarray(data["valid_length"], dtype=np.int32)
@@ -179,6 +181,8 @@ def closed_loop_continuation(
         raise ValueError("closed-loop groups must have equal sizes")
     eligible = np.all(np.stack([valid_length[g] > ctx for g in groups]), axis=0)
     offsets = np.flatnonzero(eligible)
+    if requested_episodes > len(offsets):
+        raise ValueError("requested episode quota exceeds eligible matched prefixes")
     if requested_episodes:
         offsets = offsets[:requested_episodes]
     if len(offsets) == 0:
@@ -354,9 +358,30 @@ def _aggregate_section(folds, section, metrics) -> dict[str, Any]:  # noqa: ANN0
 def _paired(folds, section, metrics, candidate, baseline) -> dict[str, Any]:  # noqa: ANN001
     out: dict[str, Any] = {}
     for metric, better in metrics.items():
-        b = _fold_metric_means(folds, section, baseline, metric)
-        c = _fold_metric_means(folds, section, candidate, metric)
-        if not b or len(b) != len(c):
+        b, c = [], []
+        for fold in folds:
+            paired_values = []
+            for seed in fold["seeds"]:
+                rows = [seed[section].get(arm) for arm in (baseline, candidate)]
+                if any(row is None for row in rows):
+                    if not all(row is None for row in rows):
+                        raise ValueError("unpaired arms in a fitting seed")
+                    continue
+                if section == "closed_loop":
+                    rows = [row["macro"] for row in rows]
+                values = [row.get(metric) for row in rows]
+                if any(value is None for value in values):
+                    if not all(value is None for value in values):
+                        raise ValueError("unpaired metrics in a fitting seed")
+                    continue
+                if not np.isfinite(values).all():
+                    raise ValueError("nonfinite paired metric")
+                paired_values.append(values)
+            if paired_values:
+                means = np.mean(paired_values, axis=0)
+                b.append(means[0])
+                c.append(means[1])
+        if not b:
             continue
         delta = np.asarray(c) - np.asarray(b)
         improvement = delta if better == "higher" else -delta
@@ -371,6 +396,18 @@ def _paired(folds, section, metrics, candidate, baseline) -> dict[str, Any]:  # 
 
 
 def summarize(folds: list[dict[str, Any]]) -> dict[str, Any]:
+    checkpoints = [fold["heldout_checkpoint"] for fold in folds]
+    if len(checkpoints) != len(set(checkpoints)):
+        raise ValueError("duplicate checkpoint folds")
+    expected_seeds = None
+    for fold in folds:
+        seeds = [row["seed"] for row in fold["seeds"]]
+        if not seeds or len(seeds) != len(set(seeds)):
+            raise ValueError("empty or duplicate fitting seeds")
+        if expected_seeds is None:
+            expected_seeds = set(seeds)
+        elif set(seeds) != expected_seeds:
+            raise ValueError("fitting seed sets differ between folds")
     pairs = {
         "real_c_vs_no_c": ("real_c", "no_c"),
         "real_c_vs_shuffled_c": ("real_c", "shuffled_c"),
@@ -430,11 +467,8 @@ def summarize(folds: list[dict[str, Any]]) -> dict[str, Any]:
     g["gate2_real_c_offline_controls_pass"] = offline_gate
     g["gate2_real_c_closed_loop_controls_pass"] = closed_gate
     g["gate2_oracle_type_information_is_action_relevant"] = oracle_gate
-    g["gate2_pass"] = (
-        None
-        if None in {offline_gate, closed_gate, oracle_gate}
-        else bool(offline_gate and closed_gate and oracle_gate)
-    )
+    g["gate2_pass"] = None
+    g["interpretation"] = "Per-fold signs are descriptive; no automatic scientific acceptance criterion."
     return {
         "offline": _aggregate_section(folds, "offline", OFFLINE_METRICS),
         "closed_loop": _aggregate_section(folds, "closed_loop", CLOSED_LOOP_METRICS),
@@ -474,6 +508,10 @@ def main(argv: list[str] | None = None) -> int:
         raise ValueError(f"--lat must be in [1, {CONTEXT_DIM}]")
     if min(args.encoder_steps, args.bc_steps, args.ctx) < 1:
         raise ValueError("training budgets and ctx must be positive")
+    if args.closed_loop_eps < 0:
+        raise ValueError("--closed-loop-eps must be nonnegative")
+    if args.artifact_dir.exists():
+        raise FileExistsError("new artifact directory required; preserve prior runs")
 
     ds = load_continuous_dataset(args.dataset)
     data = ds.as_dict()
@@ -502,7 +540,7 @@ def main(argv: list[str] | None = None) -> int:
         f"{observations.shape[1]}-D observations, checkpoints {ckpt_seeds}"
     )
 
-    args.artifact_dir.mkdir(parents=True, exist_ok=True)
+    args.artifact_dir.mkdir(parents=True, exist_ok=False)
     folds: list[dict[str, Any]] = []
     for heldout in ckpt_seeds:
         print(f"fold: held-out checkpoint {heldout}")

@@ -94,7 +94,8 @@ def imagined_returns(
     """Discounted blue return of ``actions`` ``(K, H, 2)`` from batched ``state``.
 
     ``state`` is a pytree batched over ``K`` candidates, ``context`` is ``(K, C)``,
-    ``keys`` is ``(H, K, 2)``. Accumulation stops at the first capture/timeout.
+    ``keys`` is ``(H,K)`` for typed keys or ``(H,K,2)`` for legacy keys.
+    Already-terminal starts return zero; accumulation stops at capture/timeout.
     """
     prey_name = env.good_agents[0]
     pred_name = env.adversaries[0]
@@ -109,12 +110,12 @@ def imagined_returns(
         obs = obs_fn(state)
         red = red_policy(obs[pred_name], context)
         _, new_state, rew, dones, _ = step(key, state, joint_action_dict(env, blue, red[:, None, :]))
-        total = total + disc * rew[prey_name] * alive
+        total = total + disc * jnp.where(alive, rew[prey_name], 0.0)
         alive = alive & ~dones["__all__"]
         disc = disc * discount
         return (new_state, alive, disc, total), None
 
-    init = (state, jnp.ones((k,), dtype=bool), jnp.ones(()), jnp.zeros((k,)))
+    init = (state, ~jnp.any(state.done, axis=-1), jnp.ones(()), jnp.zeros((k,)))
     (_, _, _, total), _ = jax.lax.scan(
         body, init, (jnp.swapaxes(actions, 0, 1), keys), length=horizon
     )
@@ -148,7 +149,7 @@ def _plan_single(
     score = jnp.full((cfg.num_elites,), 1.0 / cfg.num_elites)
     for i in range(cfg.mppi_iterations):
         actions = jnp.clip(mean[None] + std[None] * noise[:, i], -1.0, 1.0)
-        step_keys = jax.random.split(value_keys[i], h * k).reshape(h, k, 2)
+        step_keys = jax.random.split(value_keys[i], (h, k))
         values = imagined_returns(
             env, states, actions, contexts, red_policy, step_keys, discount=cfg.discount
         )

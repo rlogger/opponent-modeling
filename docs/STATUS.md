@@ -1,35 +1,57 @@
 # Implementation status
 
-This file is the source of truth for what the repository implements and what
-still needs experiment evidence. It consolidates the historical research
-requirements and later implementation updates.
+Updated October 5, 2026. `marl-private` governs adopted project requirements and
+documented audit remedies. This file records implementation and evidence status;
+older implementation notes do not supersede those private instructions.
 
-Current activity (2026-09-08): implementation and visualization, with the
-[equal-information controller benchmark paused](../experiments/matched_control_20260908/STATUS.md).
-The [updated task notes](control-pipeline.md) distinguish frozen real opponents,
-frozen `0s` inference, and trainable blue controllers. Continuous actions and
-TD-MPC training are implemented. The [three-equation `0s` inspector](../experiments/world_model_inspection/README.md)
-adds offline-trained Equation 1/2 models alongside the original Equation 3 base;
-these imagined trajectories are not a new closed-loop comparison. The generic
-Equation 2 training CLI still uses legacy 3D context; online use of the new 8D
-`0s` Equation 2 model and random-per-reset opponent selection remain unwired.
-Historical results below retain their original protocols and are not evidence
-that the paused matched benchmark finished.
+## Current audit and experiment status
 
-Latest targeted rerun: [exact main-branch environment](../experiments/main_env_20260908/REPORT.md).
-The prior version is backed up as `new-env`; the environment core now matches
-`main@8c24db3` byte-for-byte. Fresh native discrete and continuous datasets,
-native `0s` fits and matched controller outcomes are unchanged. The earlier
-[controller adaptation](../experiments/original_env_20260908/REPORT.md) still
-scores +4.10 versus MAPPO +17.27 (one model seed, 24 resets per opponent).
-Source rollback does not establish faithful learned three-way behavior control.
+The integration branch combines the continuous-control implementation with the
+existing [Spatial Blotto environment](spatial-blotto.md). Historical branches,
+experiments and unpublished source snapshots are preserved. Final publication
+and the prescribed main experiments are pending.
 
-## Current lean scope
+Before the new local pilot, the locked suite passed **787 tests, with no skips**,
+and Ruff passed. The pilot used executable commit
+`99bfaa7a8c4b3e83ecbd8a55a3f481325eef2506` and specification commit
+`0f86e0dce7b622e40968474a859790a71eaf9072`, protocol `RESL-20261005-P2`.
+It completed eight small causal-prediction fits and ten controller arms across
+two fitting seeds. These runs establish feasibility; they do not satisfy the
+main experiment budgets or establish any performance hypothesis. Post-pilot
+corrections require their own locked checks before subsequent runs.
 
-The latest update narrowed the active repository to the objective-typed
+Implemented audit remedies include episode-bounded causal context and replay
+checks, explicit finite-update checks, saved optimizer/RNG state, separately
+trained causal MLP/GRU prediction comparisons, matched controller collection,
+and withdrawal of automatic scientific success labels. Unit tests establish
+these contracts; empirical acceptance remains tied to the corresponding run.
+
+| Private instruction | Current evidence boundary |
+|---|---|
+| A01: frozen trained TD-MPC prefix/continuation diagnostic | Prescribed numerical and visual comparison remains pending; historical prototype swaps are different evidence. |
+| A02: world representation on/off, global state when off | Identity and learned MLP paths have implementation tests. A matched trained comparison remains pending; opponent-encoder comparisons do not close this instruction. |
+| A03: randomly sample supplied pretrained opponents | New controller campaign implements per-episode selection and records identities; pilot execution is not the prescribed main result. |
+| A04/A05: trajectory history and component integration | Causal timing, replay, attachment and checkpoint tests exist; final simulator and result verification remains required. |
+| A06: actual opponent-weight updates through replay | Continuation of the original `0s` optimizer is implemented and tested; real-episode before/after validation remains pending. |
+| A07: three-zone Spatial Blotto | Environment, mathematical/scripted controllers and terminal/export contracts are present. Learned Blotto control is not claimed. |
+| A08: opponent uncertainty | Sampling and uncertainty diagnostics are explicit; calibrated uncertainty and novel-opponent claims require empirical evidence. |
+| A09 and code-audit remedies | New comparisons remain distinct from the unavailable exact source/artifacts of the reported MLP-VAE experiment. |
+
+No SOTA claim is supported. No historical failed criterion is changed to passed
+by a smoke test, a later code correction, or completion of a different run.
+
+## Historical September implementation snapshot
+
+The following sections preserve earlier implementation and experiment records.
+Their gate labels and deferrals describe those historical protocols. Current
+scientific interpretation is given above and in [Results](RESULTS.md).
+
+## Historical lean scope
+
+The earlier scaffold update narrowed that stage to the objective-typed
 environment, MAPPO specialists, trajectory representations, uncertainty-aware
 opponent policies, behavior cloning, CPL foundations, evaluation, and
-reproducible manifests. Within that scope, the implementation is complete:
+reproducible manifests. The following implementation checks were recorded for that stage:
 
 | Requirement | Implementation | Verification |
 |---|---|---|
@@ -46,27 +68,27 @@ reproducible manifests. Within that scope, the implementation is complete:
 | Reproducible experiment artifacts | `scripts/run_part1.py`, `scripts/run_bc.py`, `mopa.manifest` | Git/checkpoint/dataset hashes, versions, split membership, reset keys, lengths, and metrics |
 | Dependency and regression checks | `uv.lock`, `.github/workflows/ci.yml` | Locked tests, lint, synthetic pipeline, and MAPPO smoke |
 
-## Continuous opponent-aware TD-MPC (handoff gates)
+## Historical continuous opponent-aware TD-MPC (handoff gates)
 
 The continuous-action programme from [`handoff.md`](../handoff.md) is
-implemented end to end; its experiment record with all numbers is
+recorded in the earlier implementation; its experiment record with all numbers is
 [`experiments/continuous/README.md`](../experiments/continuous/README.md).
 
 | Gate | Implementation | Verification | Status |
 |---|---|---|---|
 | 0 upstream parity | `mopa.tdmpc`, `mopa.mppi`, `configs/tdmpc2.yaml`, `third_party/tdmpc2-jax/` | Bitwise comparison against pinned `5b05ff4` for every deterministic path; golden fixed-seed values in `tests/test_tdmpc_upstream.py` | pass |
 | 1 continuous env + specialists | `tag_objectives.actions`, `mopa.continuous`, `mopa.nets.ContinuousActor`, `scripts/train_mappo.py` (`ACTION_TYPE: Continuous`), `mopa.continuous_data`, `scripts/make_continuous_dataset.py` | Adapter tests (zero/axes/diagonals/bounds/batch/jit/vmap), tanh-Gaussian log-prob vs Distrax, data-contract tests, bitwise exact replay of 1,800 episodes, 96% family probe | pass |
-| 2 continuous opponent BC | `mopa.context`, `mopa.bc_continuous`, `scripts/run_bc_continuous.py` | Unit tests; 3 folds × 3 seeds experiment | partial: oracle and closed-loop criteria pass, strict offline `real_c` criterion fails on one fold |
-| 3 simulator-backed planner | `mopa.sim_planner`, `mopa.evaluation`, `scripts/run_sim_planner.py` | `tests/test_mppi.py`; 9 fold × opponent groups | pass |
+| 2 continuous opponent BC | `mopa.context`, `mopa.bc_continuous`, `scripts/run_bc_continuous.py` | Unit tests; 3 folds × 3 seeds experiment | failed strict offline criterion: oracle and closed-loop signs were favorable, but do not satisfy the full requirement |
+| 3 simulator-backed planner | `mopa.sim_planner`, `mopa.evaluation`, `scripts/run_sim_planner.py` | `tests/test_mppi.py`; 9 fold × opponent groups | historical pass label withdrawn as current acceptance; nine fold × opponent groups are not nine independent fits |
 | 4 TD-MPC world model | `mopa.tdmpc` (implicit / conditioned / factored, identity or learned encoder, same-transition continuation head), `mopa.tdmpc_data` (episode-bounded replay, `relative` reward-relevant features, online append), `scripts/run_tdmpc.py` (offline updates plus online collection rounds against training families) | `tests/test_tdmpc.py` (modes, EMA target, causal inputs, context invariance, termination masking); model error vs persistence and calibration reports per run; 3 modes × 3 seeds experiment | pass for the identity-encoder state-space baseline: every mode beats persistence at 1 / 3 / 10 steps on the held-out family, reward EV 0.46–0.54, capture AUROC 0.99; learned `mlp` encoder not yet run |
-| 5 matched comparison | `scripts/run_tdmpc.py compare` | Paired matched-reset deltas across modes × seeds, factored action-clamp invariance, claim gates; 32 matched held-out resets × 3 opponents × 3 seeds | nominal pass, weak evidence: all modes beat the fixed prey and random; `factored` − `implicit` = +1.19 ± 4.77 return (6 / 9 pairs, seed-consistent only vs the capture predator); invariance exact in all factored seeds |
+| 5 matched comparison | `scripts/run_tdmpc.py compare` | Paired matched-reset deltas across modes × seeds, factored action-clamp invariance, claim gates; 32 matched held-out resets × 3 opponents × 3 seeds | historical nominal-pass label withdrawn as current acceptance: all modes beat the fixed prey and random; `factored` − `implicit` = +1.19 ± 4.77 return (6 / 9 pairs, seed-consistent only vs the capture predator); invariance exact in all factored seeds |
 
-Deferred within this programme: the learned-encoder (`mlp`) comparison,
+Historically deferred within that programme (not a current instruction to defer adopted A01–A08): the learned-encoder (`mlp`) comparison,
 sampled (non-deterministic) red opponents in factored rollouts, a calibrated
 tanh-Gaussian red head, an oracle-context training arm, opponent switching,
 co-training, and the cyclic / Spatial Blotto tasks.
 
-## Evidence boundary
+## Historical evidence boundary
 
 Implementation is not a scientific result. The repository includes one
 source-bound, multi-seed [BC experiment](../experiments/bc/README.md), but not
@@ -92,11 +114,10 @@ The following must be true before claiming that strategy was recovered:
    past-only displacement, report every declared encoder seed, and distinguish
    full-episode post-hoc scores from prefix-time evidence.
 
-## Deferred research integrations
+## Historical deferred research integrations
 
-These appeared in older or below-the-divider planning material but conflict
-with the latest explicit removal of planners "for now," are mutually exclusive
-alternatives, or lack an implementable protocol:
+The earlier scaffold listed the following deferrals. Later adopted private
+instructions and frozen protocols govern their current status:
 
 - DreamerV3, MA-TDMPC, and MuZero/MCTS planners (TD-MPC2 is now implemented;
   see the continuous programme above).
@@ -110,7 +131,7 @@ The CPL counterfactual API is implemented so a planner can plug in without
 changing data integrity rules; the TD-MPC controllers have not yet been wired
 into it. Nothing here is presented as completed co-training.
 
-## Open experiment decisions
+## Historical open experiment decisions
 
 The current protocol does not specify the preference ordering for CPL, success
 thresholds for “clearly distinguishable,” full training budgets, confidence

@@ -29,7 +29,7 @@
       <select class="form-select" id="ci-view"><option value="trajectory">Trajectory cloud · both controllers</option><option value="context" selected>0s cloud · every decision, multiple episodes</option><option value="context-end">0s cloud · last decision per episode</option></select>
     </label>
     <label class="form-label">Episodes per objective
-      <select class="form-select" id="ci-samples"><option value="1">First 1 matched pair</option><option value="4">First 4 matched pairs</option><option value="8">First 8 matched pairs</option><option value="24" selected>All 24 matched pairs</option></select>
+      <select class="form-select" id="ci-samples"><option value="1">First 1 matched pair</option><option value="4">First 4 matched pairs</option><option value="8">First 8 matched pairs</option><option value="all" selected>All matched pairs</option></select>
     </label>
   </div>
   <h3 id="ci-cloud-title">0s point cloud · all valid decisions across episodes</h3>
@@ -90,11 +90,18 @@
     root.append(script);
   });
   const data = JSON.parse(document.getElementById('ci-data').textContent);
+  const allPairs = Math.max(...data.episodes.map(e => e.pair)) + 1;
+  const allOption = find('samples').querySelector('option[selected]');
+  allOption.value = allPairs;
+  allOption.textContent = `All ${allPairs} matched pairs`;
+  for (const option of [...find('samples').options]) {
+    if (option !== allOption && +option.value >= allPairs) option.remove();
+  }
   const reducedMotion=window.matchMedia('(prefers-reduced-motion: reduce)');
   const colors = {capture:'var(--viz-series-1)',risk:'var(--viz-series-2)',curious:'var(--viz-series-3)'};
   const names = {capture:'Capture',risk:'Risk-averse',curious:'Curious'};
   const algorithms = {mappo:'MAPPO',tdmpc:'TD-MPC2'};
-  let objective='capture', pair=0, step=0, playing=null, view='context', samples=24;
+  let objective='capture', pair=0, step=0, playing=null, view='context', samples=allPairs;
   let cloudKey='', cloudPlot=null, resizeFrame=null, suspended=false;
   const isVisible = () => !suspended && root.getBoundingClientRect().width > 0;
   const visible = new Set(Object.keys(colors));

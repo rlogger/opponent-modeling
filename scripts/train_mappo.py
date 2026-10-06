@@ -217,9 +217,9 @@ def make_train(config, env):
                         apply_fn=critics[t].apply, params=critic_params, tx=critic_tx
                     ),
                 )
-            return states
+            return states, rng
 
-        train_states = create_train_states(rng)
+        train_states, rng = create_train_states(rng)
 
         rng, _rng = jax.random.split(rng)
         reset_rngs = jax.random.split(_rng, config["NUM_ENVS"])

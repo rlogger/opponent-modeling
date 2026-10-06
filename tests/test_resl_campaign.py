@@ -89,6 +89,28 @@ def test_documented_five_arm_budget_is_accepted(campaign, stage):
         assert cfg["rounds"] * cfg["transitions_per_training_group"] * 3 * len(cfg["training_checkpoints"]) == 21_600
 
 
+def test_world_representation_toggle_retains_global_inputs_and_no_opponent_context(campaign, tmp_path):
+    value = protocol()
+    cfg = value["control_pilot"]
+    cfg.update(study="world_representation", arms=list(campaign.WORLD_REPRESENTATION_ARMS))
+    with pytest.raises(ValueError, match="global-state inputs"):
+        campaign.protocol_configuration(value, "pilot")
+    cfg["world_encoders"] = {"implicit": "identity", "implicit_mlp": "mlp"}
+    campaign.protocol_configuration(value, "pilot")
+    binding = {"configuration": cfg, "source_hashes": campaign.source_hashes()}
+    shared = campaign.prepare_shared(tmp_path, 11, {}, np.zeros(66), np.ones(66), binding)
+    assert shared["models"] == shared["contexts"] == {}
+    assert not list(tmp_path.rglob("*.msgpack"))
+    for arm, encoder in cfg["world_encoders"].items():
+        model = campaign.controller_configuration(arm, 0)
+        assert model["opponent_mode"] == "implicit" and model["context_dim"] == 0
+        assert model["encoder"]["type"] == encoder
+        if encoder == "mlp":
+            assert model["encoder"]["normalize_inputs"] is True
+        assert model["world_model"]["hidden_dim"] == 128
+        assert model["tdmpc2"]["population_size"] == 512
+
+
 def test_collection_randomizes_episode_specialists_and_keeps_exact_quotas(campaign, monkeypatch, tmp_path):
     cfg = protocol()["control_pilot"]
     observed = []
@@ -141,7 +163,22 @@ def test_representation_controls_are_a_separate_explicit_protocol(campaign):
     cfg["predictor_config"] = dict(method="recurrent_vae", feature_schema="expert17_v1",
         history=8, latent_dim=8, hid=64, batch=128, learning_rate=.001, beta=1.,
         free_bits=.2, sample_training=True, objective="past_next_action")
+    from dataclasses import asdict, replace
+
+    selected = campaign.CausalOpponentConfig(**{**cfg["predictor_config"], "steps": cfg["encoder_steps"], "max_history": 4})
+    cfg["predictor_config"]["max_history"] = 4
+    with pytest.raises(ValueError, match="per-arm predictor configurations"):
+        campaign.protocol_configuration(value, "pilot")
+    history, gap = campaign.match_encoder_capacity(replace(selected, method="deterministic_history",
+        beta=0., sample_training=False), replace(selected, method="recurrent_vae", encoder_hid=None))
+    cfg["predictor_configurations"] = {
+        "bc": asdict(replace(selected, method="bc", history=0, max_history=None,
+            encoder_hid=None, beta=0., sample_training=False)),
+        "history": asdict(history), "causal_vae": asdict(selected)}
+    cfg["history_encoder_parameter_gap"] = gap
     campaign.protocol_configuration(value, "pilot")
+    assert cfg["predictor_configurations"]["history"]["encoder_hid"] == 101
+    assert cfg["predictor_configurations"]["bc"]["max_history"] is None
     cfg["predictor_config"]["objective"] = "target_inclusive_reconstruction"
     with pytest.raises(ValueError, match="past-only"):
         campaign.protocol_configuration(value, "pilot")

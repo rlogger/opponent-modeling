@@ -16,7 +16,7 @@ import json
 import subprocess
 import sys
 import time
-from dataclasses import asdict
+from dataclasses import asdict, replace
 from pathlib import Path
 from types import SimpleNamespace
 
@@ -40,6 +40,7 @@ from mopa.causal_opponent import (  # noqa: E402
     CausalOpponent,
     CausalOpponentConfig,
     fit_causal_opponent,
+    match_encoder_capacity,
 )
 from mopa.continuous_data import (  # noqa: E402
     OBJECTIVE_TYPES,
@@ -62,6 +63,7 @@ from mopa.zero_s import ZeroSOpponent, zero_s_features  # noqa: E402
 
 ARMS = historical.ARMS
 REPRESENTATION_ARMS = ("implicit", "bc", "history", "causal_vae", "ppo", "ppo_history")
+WORLD_REPRESENTATION_ARMS = ("implicit", "implicit_mlp")
 CONTEXT_MODEL = {"0s": "0s", "ppo_z": "0s", "history": "history",
                  "causal_vae": "causal_vae", "ppo_history": "causal_vae"}
 write_json = historical.write_json
@@ -75,11 +77,28 @@ def source_hashes():
     return {str(p.relative_to(ROOT)): file_sha256(p) for p in sorted(files)}
 
 
+def representation_configurations(cfg):
+    """Derive then verify every predeclared predictor before any fitting."""
+    selected = CausalOpponentConfig(**{**cfg["predictor_config"], "steps": cfg["encoder_steps"]})
+    reference = replace(selected, method="recurrent_vae", encoder_hid=None)
+    history, gap = match_encoder_capacity(replace(selected, method="deterministic_history",
+        encoder_hid=None, beta=0., sample_training=False), reference)
+    bc = replace(selected, method="bc", history=0, max_history=None, encoder_hid=None,
+                 beta=0., sample_training=False)
+    values = {"bc": asdict(bc), "history": asdict(history), "causal_vae": asdict(selected)}
+    if values != cfg.get("predictor_configurations"):
+        raise ValueError("freeze the derived per-arm predictor configurations in the private protocol")
+    if gap != cfg.get("history_encoder_parameter_gap"):
+        raise ValueError("freeze the unavoidable nearest-width parameter-count gap")
+    return values
+
+
 def protocol_configuration(protocol, stage):
     """No budget defaults, silent profile reduction, or six-arm substitution."""
     cfg = dict(protocol[f"control_{stage}"])
     study = cfg.get("study", "architecture")
-    arms = ARMS if study == "architecture" else REPRESENTATION_ARMS if study == "representation" else ()
+    arms = {"architecture": ARMS, "representation": REPRESENTATION_ARMS,
+            "world_representation": WORLD_REPRESENTATION_ARMS}.get(study, ())
     if not arms or tuple(cfg["arms"]) != arms:
         raise ValueError("explicit separate architecture/representation arm set required")
     if study == "representation":
@@ -126,6 +145,11 @@ def protocol_configuration(protocol, stage):
             raise ValueError("main must preserve predeclared seeds and checkpoint split")
         if any(cfg[k] != v for k, v in fixed.items()):
             raise ValueError("main budget differs from the documented five-arm protocol")
+    if study == "representation":
+        representation_configurations(cfg)
+    if study == "world_representation" and cfg.get("world_encoders") != {
+        "implicit": "identity", "implicit_mlp": "mlp"}:
+        raise ValueError("world representation comparison requires explicit identity/mlp global-state inputs")
     return cfg, seeds
 
 
@@ -251,19 +275,19 @@ def prepare_shared(out, seed, data, mean, std, binding):
         if saved["binding"] != binding or saved["seed"] != seed or saved["status"] != "complete":
             raise ValueError("shared source binding changed or incomplete fit; preserve and use fresh output")
         verify_files(shared, saved["artifacts"])
+    elif study == "world_representation":
+        shared.mkdir(parents=True, exist_ok=False)
+        np.savez(shared / "stats.npz", mean=mean, std=std)
+        write_json(path, {"binding": binding, "seed": seed, "status": "complete",
+                         "fit_seconds": 0., "opponent_fitting": "none",
+                         "artifacts": {"stats.npz": file_sha256(shared / "stats.npz")}})
     elif study == "representation":
         shared.mkdir(parents=True, exist_ok=False)
         write_json(path, {"binding": binding, "seed": seed, "status": "fitting"})
         cfg = binding["configuration"]
         started = time.monotonic()
         configurations = {}
-        for name, method in (("bc", "bc"), ("history", "deterministic_history"),
-                             ("causal_vae", cfg["predictor_config"]["method"])):
-            values = {**cfg["predictor_config"], "method": method, "steps": cfg["encoder_steps"]}
-            if name in {"bc", "history"}:
-                values.update(beta=0., sample_training=False)
-            if name == "bc":
-                values["history"] = 0
+        for name, values in representation_configurations(cfg).items():
             predictor_cfg = CausalOpponentConfig(**values)
             model, history = fit_causal_opponent(
                 data["state"], data["red_action"], data["valid_length"], np.arange(len(data["state"])),
@@ -312,9 +336,11 @@ def prepare_shared(out, seed, data, mean, std, binding):
     if study == "architecture":
         models = {"0s": ZeroSOpponent.load(shared / "0s.msgpack"), "bc": FrozenBCOpponent.load(shared / "bc.npz")}
         contexts = {"0s": np.load(shared / "context.npz")["context"]}
-    else:
+    elif study == "representation":
         models = {name: CausalOpponent.load(shared / f"{name}.msgpack") for name in ("bc", "history", "causal_vae")}
         contexts = {name: np.load(shared / f"{name}_context.npz")["context"] for name in models}
+    else:
+        models, contexts = {}, {}
     return {"models": models, "contexts": contexts, "manifest_sha256": file_sha256(path)}
 
 
@@ -374,6 +400,20 @@ def save_checkpoint(agent, out, manifest, rng, update_key):
     write_json(out / "manifest.json", manifest)
 
 
+def controller_configuration(arm, context_dim):
+    """Existing normalized global-state versus learned SimNorm world encoders."""
+    cfg = load_config(profile="gate4")
+    cfg.update(opponent_mode="implicit" if arm in WORLD_REPRESENTATION_ARMS else "factored",
+               context_dim=context_dim)
+    cfg["encoder"]["type"] = "mlp" if arm == "implicit_mlp" else "identity"
+    if arm == "implicit_mlp":
+        cfg["encoder"]["normalize_inputs"] = True
+    cfg["world_model"].update(hidden_dim=128, predict_continues=True)
+    cfg["tdmpc2"]["continue_loss_scale"] = 1.0
+    cfg["factored"]["red_loss_scale"] = 0.0
+    return cfg
+
+
 def run_arm(out, seed, arm, data, mean, std, shared, params, binding):
     cfg = binding["configuration"]
     directory = out / f"seed_{seed}" / arm
@@ -383,18 +423,13 @@ def run_arm(out, seed, arm, data, mean, std, shared, params, binding):
     context_model = CONTEXT_MODEL.get(arm)
     context = shared["contexts"][context_model] if context_model else np.zeros((*data["state"].shape[:2], 0), np.float32)
     opponent = shared["models"][context_model] if context_model else None
-    model_cfg = load_config(profile="gate4")
-    model_cfg.update(opponent_mode="implicit" if arm == "implicit" else "factored", context_dim=context.shape[-1])
-    model_cfg["encoder"]["type"] = "identity"
-    model_cfg["world_model"].update(hidden_dim=128, predict_continues=True)
-    model_cfg["tdmpc2"]["continue_loss_scale"] = 1.0
-    model_cfg["factored"]["red_loss_scale"] = 0.0
+    model_cfg = controller_configuration(arm, context.shape[-1])
     is_ppo = arm.startswith("ppo")
     agent = (create_response(mean, std, context_dim=context.shape[-1], seed=seed, hidden=128) if is_ppo
              else create_agent(model_cfg, 66, key=jax.random.PRNGKey(seed), obs_mean=mean, obs_std=std))
     if arm in {"0s", "bc", "history", "causal_vae"}:
         agent = shared["models"][arm].attach(agent, mean, std)
-    frozen_red = None if is_ppo or arm == "implicit" else flax.serialization.to_bytes(agent.model.red_model.params)
+    frozen_red = None if is_ppo or arm in WORLD_REPRESENTATION_ARMS else flax.serialization.to_bytes(agent.model.red_model.params)
     replay = None if is_ppo else SequenceReplay.from_dataset(
         training_trace(data, cfg["terminal_contract"]), np.arange(len(data["state"])), agent.horizon, context)
     rng, update_key = np.random.default_rng(seed), jax.random.PRNGKey(10_000 + seed)
@@ -544,8 +579,10 @@ def summarize(out, binding, params):
             np.testing.assert_array_equal(stats["std"], std)
         if cfg.get("study", "architecture") == "architecture":
             opponents = {"0s": ZeroSOpponent.load(shared / "0s.msgpack")}
-        else:
+        elif cfg["study"] == "representation":
             opponents = {name: CausalOpponent.load(shared / f"{name}.msgpack") for name in ("history", "causal_vae")}
+        else:
+            opponents = {}
         for arm in cfg["arms"]:
             opponent = opponents.get(CONTEXT_MODEL.get(arm))
             directory = out / f"seed_{seed}" / arm

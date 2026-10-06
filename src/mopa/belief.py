@@ -25,7 +25,7 @@ class Belief:
 
     @property
     def hard(self) -> np.ndarray:
-        return self.probs.argmax(axis=1)
+        return np.asarray(self.classes)[self.probs.argmax(axis=1)]
 
     def mean_entropy(self) -> float:
         return float(self.entropy.mean())
