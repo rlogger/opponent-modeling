@@ -57,6 +57,19 @@ def _write_checkpoints(logdir: Path, seeds=(0, 1)):
                 k += 1
 
 
+@pytest.mark.parametrize("arguments", [["--n-eps", "0"], ["--heldout", "1,1"]])
+def test_simulator_comparison_rejects_empty_or_duplicate_groups_before_execution(arguments):
+    with pytest.raises(ValueError):
+        _load("run_sim_planner.py").main(arguments)
+
+
+def test_simulator_diagnostic_preserves_prior_output(tmp_path):
+    (tmp_path / "results.json").write_text("preserved")
+    with pytest.raises(FileExistsError):
+        _load("run_sim_planner.py").main(["--artifact-dir", str(tmp_path)])
+    assert (tmp_path / "results.json").read_text() == "preserved"
+
+
 def test_continuous_drivers_compose(tmp_path):
     logdir = tmp_path / "logs"
     _write_checkpoints(logdir)
@@ -96,11 +109,13 @@ def test_continuous_drivers_compose(tmp_path):
     ) == 0
     sim = json.loads((sim_dir / "results.json").read_text())
     assert sim["claim_gates"]["actions_within_bounds"] is True
+    assert sim["claim_gates"]["gate3_pass"] is None
 
     td_root = tmp_path / "tdmpc"
     run_td = _load("run_tdmpc.py")
     for mode in ("implicit", "factored"):
-        online = ["--online-rounds", "1", "--online-episodes", "1", "--updates-per-round", "2", "--logdir", str(logdir)] if mode == "factored" else []
+        # Paired aggregation requires the same declared fitting/interaction budget.
+        online = ["--online-rounds", "1", "--online-episodes", "1", "--updates-per-round", "2", "--logdir", str(logdir)]
         assert run_td.main(
             [
                 "train", "--mode", mode, "--encoder", "identity", "--profile", "smoke",
@@ -147,5 +162,6 @@ def test_continuous_drivers_compose(tmp_path):
         factored_manifest["evaluation"]["heldout"]["termination_calibration"] is not None
     )
     assert len(mq["online_rounds"]) == 1 and set(mq["online_rounds"][0]["per_opponent"]) == set(OBJECTIVE_TYPES)
-    assert cmp_["summary"]["implicit__identity"]["model_quality"]["online_rounds"] == []
+    assert len(cmp_["summary"]["implicit__identity"]["model_quality"]["online_rounds"]) == 1
+    assert cmp_["claim_gates"]["identity"]["gate5_success_claim_supported"] is None
     assert cmp_["summary"]["factored__identity"]["model_quality_per_seed"][0]["total_updates"] == 5

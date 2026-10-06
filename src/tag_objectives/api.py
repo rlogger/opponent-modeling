@@ -118,7 +118,9 @@ def evaluate_policy(
     """Roll ``policy`` for ``n_eps`` episodes; return the standard metric panel.
 
     ``policy`` maps ``(obs_dict, rng) -> action_dict`` with batch size ``n_eps``.
-    Episodes freeze at first capture so metrics describe the first episode only.
+    Episodes freeze at capture or the environment timeout, so metrics describe
+    the first episode only. Survival counts actual transitions, including when
+    the requested recording horizon exceeds the environment horizon.
     """
     key = jax.random.PRNGKey(0) if key is None else key
     T = int(num_steps or env.max_steps)
@@ -161,7 +163,7 @@ def evaluate_policy(
     near = np.any(res_lava_d < 1.25 * np.asarray(state.lava_rad)[:, None, :], axis=-1)
     return EpisodeMetrics(
         capture_rate=captured.astype(np.float32),
-        survival_time=np.where(captured, capture_t, T).astype(np.float32),
+        survival_time=np.asarray(state.step, dtype=np.float32),
         resources_collected=res.sum(-1).astype(np.float32),
         near_lava_collected=(res & near).sum(-1).astype(np.float32),
         pred_lava_steps=np.asarray(pred_lava, dtype=np.float32),

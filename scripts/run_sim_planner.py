@@ -121,6 +121,10 @@ def build_parser() -> argparse.ArgumentParser:
 
 def main(argv: list[str] | None = None) -> int:
     args = build_parser().parse_args(argv)
+    if args.n_eps < 1 or not args.heldout or len(set(args.heldout)) != len(args.heldout):
+        raise ValueError("positive evaluation episodes and distinct held-out checkpoints required")
+    if args.artifact_dir.exists() and any(args.artifact_dir.iterdir()):
+        raise FileExistsError("simulator diagnostic requires a fresh output directory")
     cfg = MPPIConfig(
         horizon=args.horizon,
         population_size=args.population,
@@ -148,6 +152,8 @@ def main(argv: list[str] | None = None) -> int:
         "planner_bc_no_c",
     ]
     controllers = all_controllers if args.controllers == "all" else args.controllers.split(",")
+    if not controllers or len(set(controllers)) != len(controllers) or not set(controllers) <= set(all_controllers):
+        raise ValueError("distinct known controllers required")
 
     results: dict[str, Any] = {
         "schema_version": 1,
@@ -186,6 +192,8 @@ def main(argv: list[str] | None = None) -> int:
         for label, pred_type in enumerate(OBJECTIVE_TYPES):
             rows = np.flatnonzero((ds.checkpoint_seed == heldout) & (ds.objective_label == label))
             rows = rows[: args.n_eps]
+            if len(rows) != args.n_eps:
+                raise ValueError("insufficient held-out episodes for the requested comparison")
             reset_keys = ds.environment_seed[rows]
             step_seed = ds.step_seed[rows]
             red_params = load_continuous_actor_params(
@@ -285,16 +293,9 @@ def main(argv: list[str] | None = None) -> int:
         "planner_true_red_mean_return_delta_vs_fixed_policy": None if tr is None else tr["delta_mean"],
         "planner_true_red_mean_return_delta_vs_random": None if rr is None else rr["delta_mean"],
     }
-    results["claim_gates"]["gate3_pass"] = (
-        None
-        if None in {results["claim_gates"]["planner_true_red_return_beats_fixed_policy_all_groups"],
-                    results["claim_gates"]["planner_true_red_return_beats_random_all_groups"]}
-        else bool(
-            results["claim_gates"]["actions_within_bounds"]
-            and results["claim_gates"]["planner_true_red_return_beats_fixed_policy_all_groups"]
-            and results["claim_gates"]["planner_true_red_return_beats_random_all_groups"]
-        )
-    )
+    # A favorable sign on this diagnostic does not certify the research claim.
+    results["claim_gates"]["gate3_pass"] = None
+    results["claim_gates"]["interpretation"] = "descriptive paired episode outcomes; no independent-fit uncertainty or predeclared success criterion"
     args.artifact_dir.mkdir(parents=True, exist_ok=True)
     out_path = args.artifact_dir / "results.json"
     out_path.write_text(json.dumps(_jsonable(results), indent=2, sort_keys=True) + "\n")

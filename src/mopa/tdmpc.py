@@ -18,8 +18,8 @@ Compatibility substitutions (documented in ``third_party/tdmpc2-jax/UPSTREAM.md`
 The world latent is named ``x`` (upstream ``z``) per the handoff notation.
 
 Gate 4 local changes (``opponent_mode="implicit"`` with ``context_dim=0``,
-``encoder.type="mlp"``, ``normalize_inputs=False`` and ``predict_continues=False`` remain the unchanged
-upstream computation, guarded by fixed-seed golden values in the tests):
+``encoder.type="mlp"``, ``normalize_inputs=False`` and ``predict_continues=False`` retain the normal-scale
+upstream golden tests; stable Mish and required-input guards are documented in UPSTREAM.md):
 
 - batch size is derived from the sampled tensors; empty padded steps have zero
   consistency loss;
@@ -61,6 +61,17 @@ from flax.training.train_state import TrainState
 
 from mopa import mppi
 
+
+def check_update(info: dict, step: int) -> None:
+    """Inspect every update before a later finite logged value can hide a failure."""
+    for name in ("world_gradients_finite", "policy_gradients_finite"):
+        if name not in info or not bool(np.asarray(info[name])):
+            raise FloatingPointError(f"unverified or nonfinite {name} at update {step}")
+    if any(not np.isfinite(np.asarray(value)).all() for value in info.values()):
+        raise FloatingPointError(f"nonfinite training metric at update {step}")
+
+
+
 PRNGKey = jax.Array
 Params = Any
 PyTree = Any
@@ -80,6 +91,7 @@ __all__ = [
     "WorldModel",
     "build_encoder",
     "create_agent",
+    "check_update",
     "load_config",
     "mish",
     "percentile_normalization",
@@ -99,7 +111,9 @@ __all__ = [
 # Helpers: upstream tdmpc2_jax/common/{activations,util,loss,scale}.py
 # --------------------------------------------------------------------------- #
 def mish(x: jax.Array) -> jax.Array:
-    return x * jnp.tanh(jnp.log(1 + jnp.exp(x)))
+    # Algebraically identical to the pinned port, but exp(x) cannot overflow
+    # before tanh saturates (the old expression has NaN gradients at x=100).
+    return x * jnp.tanh(jax.nn.softplus(x))
 
 
 def simnorm(x: jax.Array, simplex_dim: int = 8) -> jax.Array:
@@ -809,11 +823,34 @@ class TDMPC2(struct.PyTreeNode):
 
         ``red_actions`` (recorded joint actions) are required in ``factored``
         mode; ``context`` / ``next_context`` ``(horizon, batch, context_dim)``
-        are required in ``conditioned`` and ``factored`` modes.
+        are required in ``conditioned`` and ``factored`` modes when context_dim
+        is positive. Missing information is never silently imputed as zeros.
         """
         world_model_key, policy_key = jax.random.split(key, 2)
         model = self.model
+        if actions.ndim != 3 or actions.shape[-1] != model.action_dim:
+            raise ValueError("actions must have shape (horizon, batch, action_dim)")
         horizon, batch_size = actions.shape[0], actions.shape[1]  # local: from tensors
+        if horizon < 1 or batch_size < 1:
+            raise ValueError("update requires a positive horizon and batch size")
+        for name, value in (("rewards", rewards), ("terminated", terminated), ("truncated", truncated)):
+            if value.shape != (horizon, batch_size):
+                raise ValueError(f"{name} must have shape (horizon, batch)")
+        if jax.tree.structure(observations) != jax.tree.structure(next_observations):
+            raise ValueError("observations and next_observations must share a tree structure")
+        for current, following in zip(jax.tree.leaves(observations), jax.tree.leaves(next_observations)):
+            if current.ndim < 3 or current.shape[:2] != (horizon, batch_size) or current.shape != following.shape:
+                raise ValueError("observation leaves must align as (horizon, batch, features...)")
+        needs_context = model.opponent_mode != "implicit" and model.context_dim > 0
+        for name, value in (("context", context), ("next_context", next_context)):
+            if needs_context and value is None:
+                raise ValueError(f"{name} is required for {model.opponent_mode} mode")
+            if value is not None and value.shape != (horizon, batch_size, model.context_dim):
+                raise ValueError(f"{name} must have shape (horizon, batch, context_dim)")
+        if model.opponent_mode == "factored" and red_actions is None:
+            raise ValueError("red_actions is required for factored mode")
+        if red_actions is not None and red_actions.shape != actions.shape:
+            raise ValueError("red_actions must have the same shape as actions")
         zeros_c = jnp.zeros((horizon, batch_size, model.context_dim), jnp.float32)
         context = zeros_c if context is None else jnp.asarray(context, jnp.float32)
         next_context = zeros_c if next_context is None else jnp.asarray(next_context, jnp.float32)
@@ -924,8 +961,9 @@ class TDMPC2(struct.PyTreeNode):
                 params=value_params,
                 key=value_key,
             )
-            # Upstream sums this term over axis=1 (batch) rather than axis=0
-            # (time) as in the reward loss. Preserved verbatim for parity.
+            # Q logits are (ensemble, time, batch, bins); cross-entropy removes
+            # bins, so axis=1 sums time, then mean reduces ensemble and batch.
+            # This equals the reward loss's temporal reduction per value net.
             value_loss = jnp.sum(
                 lam[:, None]
                 * soft_crossentropy(
@@ -1072,7 +1110,13 @@ class TDMPC2(struct.PyTreeNode):
             ),
             value_scale=policy_info["value_scale"],
         )
-        info = {**model_info, **policy_info}
+        # Record failures before optax.zero_nans sanitizes gradients. Callers
+        # must not certify a run with false flags as a numerically valid fit.
+        world_grads = (encoder_grads, dynamics_grads, value_grads, reward_grads, continue_grads, red_grads)
+        finite_world = jnp.all(jnp.stack([jnp.all(jnp.isfinite(g)) for g in jax.tree.leaves(world_grads)]))
+        finite_policy = jnp.all(jnp.stack([jnp.all(jnp.isfinite(g)) for g in jax.tree.leaves(policy_grads)]))
+        info = {**model_info, **policy_info, "world_gradients_finite": finite_world,
+                "policy_gradients_finite": finite_policy}
 
         return new_agent, info
 
@@ -1126,8 +1170,9 @@ def build_identity_encoder(
     """Local: parameter-free normalized Markov-state encoder."""
     mean = np.asarray(obs_mean, np.float32)
     std = np.asarray(obs_std, np.float32)
-    if mean.shape != std.shape or mean.ndim != 1 or np.any(std <= 0):
-        raise ValueError("identity encoder needs positive 1-D normalization vectors")
+    if (mean.shape != std.shape or mean.ndim != 1 or mean.size < 1
+            or not np.isfinite(mean).all() or not np.isfinite(std).all() or np.any(std <= 0)):
+        raise ValueError("identity encoder needs finite positive 1-D normalization vectors")
     module = IdentityEncoder(mean=tuple(mean.tolist()), std=tuple(std.tolist()))
     return TrainState.create(
         apply_fn=module.apply,
@@ -1221,6 +1266,8 @@ def create_agent(
     if encoder_type == "identity":
         if obs_mean is None or obs_std is None:
             raise ValueError("identity encoder requires obs_mean and obs_std")
+        if np.shape(obs_mean) != (obs_dim,) or np.shape(obs_std) != (obs_dim,):
+            raise ValueError("identity encoder normalization must match obs_dim")
         encoder = build_identity_encoder(obs_mean, obs_std, key=encoder_key)
         latent_dim = int(obs_dim)
     else:

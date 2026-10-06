@@ -57,9 +57,8 @@ Dependency versions were not changed.
 Stochastic caveat: distrax and TensorFlow Probability may consume the PRNG key
 differently inside `sample`. Fixed-seed sampled actions are therefore
 reproducible **within** this port but are not claimed to be bitwise identical
-to the upstream TFP samples. Deterministic paths (`encode`, `next`, `reward`,
-`Q`, policy mean, log-probability of a given pre-squash action, planning with a
-fixed noise realization) are unchanged expressions.
+to the upstream TFP samples. This paragraph describes the original Gate 0 port;
+the later local changes below qualify current numerical parity.
 
 ## Fixed-seed comparison against the pinned source (Gate 0 spike)
 
@@ -83,9 +82,9 @@ upstream package is not installed in the repository environment.
 | `update`: encoder, dynamics, reward, value, target-value parameters | bitwise identical |
 | `update`: policy loss / policy parameters | 3.4e-5 / 5.7e-4 max abs diff (stochastic policy samples only) |
 
-Conclusion: every deterministic expression is unchanged; the only divergence is
-the sampler's internal key handling, which is the documented Distrax
-substitution. Bitwise equality is **not** claimed for stochastic paths.
+These are historical measurements of the original Gate 0 port, not a claim of
+current bitwise equality after the local changes below. Bitwise equality was
+not claimed for stochastic paths.
 
 ## Post-Gate-0 local changes (Gate 4)
 
@@ -134,7 +133,9 @@ not for this port:
 - `update` allocates `finished` / `latent_xs` with the configured `batch_size`
   rather than the sampled batch.
 - The value loss sums `lam[:, None] * soft_crossentropy(...)` over `axis=1`
-  (batch) whereas the reward loss sums over `axis=0` (time).
+  (time in the ensemble, time, batch tensor), whereas the reward loss sums
+  over `axis=0` (time in the time, batch tensor). Both reductions weight time;
+  the different axis numbers are correct.
 - Bootstrapping uses `(1 - terminated)`; truncation only ends the imagined
   rollout mask (`finished`).
 - The encoder uses `optax.adam`; all other heads use `optax.adamw`.
@@ -156,3 +157,19 @@ not for this port:
 - Forbidden imports (`hydra`, `tensorflow`, `tensorflow_probability`, `orbax`,
   `dm_control`, `einops`, `jaxtyping`) are absent from the ported files and
   asserted by `tests/test_tdmpc_upstream.py::test_ported_files_have_no_forbidden_imports`.
+
+## October 2026 correctness repairs
+
+Mish now uses `x * tanh(softplus(x))` instead of explicitly exponentiating `x`.
+The real-valued function is unchanged; float32 evaluation and derivatives remain
+finite at large positive inputs. Historical normal-scale golden comparisons
+remain tests, rather than a claim of bitwise parity over every input.
+
+Factored updates reject missing recorded opponent actions; context-dependent
+updates reject missing current or next contexts and inconsistent batch shapes.
+Identity-state normalization rejects nonfinite means or nonpositive scales.
+The optimizer still retains its upstream `zero_nans` transform, but each update
+reports whether world and policy gradients were finite before that transform.
+Training drivers must reject a false flag immediately. Regression tests in
+`tests/test_planner_audit_regressions.py` and
+`tests/test_tdmpc_driver_contracts.py` cover these contracts.

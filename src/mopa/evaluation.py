@@ -105,6 +105,8 @@ def run_matched_episodes(
 
     Recorded ``context`` has shape (B, horizon, C): the actual context supplied to
     each decision, before observing that step's opponent action.
+    ``final_context`` is the same intervention evaluated after the final valid
+    transition. Context freezes at each episode's capture, timeout or quota cut.
 
     ``max_transitions`` caps actual active environment transitions, not padded
     slots. Budget-cut episodes are recorded as truncations (not captures).
@@ -139,7 +141,6 @@ def run_matched_episodes(
     prey_hist = [np.asarray(state.p_pos[:, prey_index])]
     pred_hist = [np.asarray(state.p_pos[:, pred_index : pred_index + 1])]
     action_abs_max = 0.0
-    acted_after_done = False
     carry = initial_carry
     shuffle = (
         derangement(np.arange(batch, dtype=np.int32), np.random.default_rng(shuffle_seed))
@@ -154,6 +155,28 @@ def run_matched_episodes(
     remaining = max_transitions
     context_carry = zero_s.initial_context(batch) if zero_s is not None else None
     update_context = jax.jit(zero_s.update_context) if zero_s is not None else None
+    completed = np.zeros(batch, dtype=np.int32)
+
+    def decision_context():
+        if context_mode == "zero":
+            return np.zeros((batch, context_dim), dtype=np.float32)
+        if context_mode in {"oracle", "wrong_oracle"}:
+            index = label if context_mode == "oracle" else (label + 1) % len(prototypes)
+            return np.repeat(prototypes[index][None], batch, axis=0)
+        if zero_s is not None:
+            values = np.asarray(context_carry.context)
+        else:
+            # The legacy API calls its length argument capture_t, but a timeout
+            # or quota cut also ends the observed prefix. Never use -1 capture
+            # metadata to select a one-step prefix after a timeout.
+            values = encoder.online_context(
+                prey_hist, pred_hist, completed < len(prey_hist) - 1,
+                completed, horizon=horizon,
+            )
+            values = np.where(completed[:, None] > 0, values, 0.0)
+        return values[shuffle] if context_mode == "shuffled" else values
+
+    context = decision_context()
     controller_seconds = []
     contexts = []
     rec: dict[str, list[np.ndarray]] = {k: [] for k in ("state", "blue", "red", "reward", "term", "trunc", "valid")}
@@ -164,18 +187,6 @@ def run_matched_episodes(
         active = ~done
         if remaining is not None:
             active &= np.cumsum(active) <= remaining
-        if context_mode == "zero":
-            context = np.zeros((batch, context_dim), dtype=np.float32)
-        elif context_mode == "oracle":
-            context = np.repeat(prototypes[label][None], batch, axis=0)
-        elif context_mode == "wrong_oracle":
-            context = np.repeat(prototypes[(label + 1) % len(prototypes)][None], batch, axis=0)
-        else:
-            context = np.asarray(context_carry.context) if zero_s is not None else encoder.online_context(
-                prey_hist, pred_hist, done, np.asarray(state.capture_t), horizon=horizon
-            )
-            if context_mode == "shuffled":
-                context = context[shuffle]
         if record_transitions:
             contexts.append(np.asarray(context))
         key, k_blue = jax.random.split(key)
@@ -221,6 +232,10 @@ def run_matched_episodes(
         done = done | np.asarray(dones["__all__"])
         prey_hist.append(np.asarray(state.p_pos[:, prey_index]))
         pred_hist.append(np.asarray(state.p_pos[:, pred_index : pred_index + 1]))
+        completed += active.astype(np.int32)
+        # Snapshot each row at its own last transition. In shuffled mode this
+        # also prevents a stopped row from using a donor's later observations.
+        context = np.where(active[:, None], decision_context(), context)
         if record_transitions:
             rec["state"].append(np.asarray(state_fn(state)))
 
@@ -229,13 +244,12 @@ def run_matched_episodes(
     out: dict[str, Any] = {
         "blue_return": ret.astype(np.float32),
         "captured": captured.astype(np.float32),
-        "survival_time": np.where(captured, capture_t, horizon).astype(np.float32),
+        "survival_time": completed.astype(np.float32),
         "resources_collected": np.asarray(state.collected).sum(-1).astype(np.float32),
         "pred_lava_steps": pred_lava,
         "prey_lava_steps": prey_lava,
         "pred_coverage": np.asarray(state.visited).sum(-1).astype(np.float32),
         "blue_action_abs_max": action_abs_max,
-        "acted_after_done": acted_after_done,
         "controller_seconds_per_batch": np.asarray(controller_seconds),
     }
     if record_positions or record_transitions:
@@ -264,7 +278,6 @@ def run_matched_episodes(
             "prey_pos": out["prey_pos"].astype(np.float32),
             "pred_pos": out["pred_pos"].astype(np.float32),
             "context": np.stack(contexts, axis=1).astype(np.float32),
-            "final_context": (np.asarray(context_carry.context) if zero_s is not None
-                              else np.zeros((batch, context_dim), np.float32)),
+            "final_context": np.asarray(context, dtype=np.float32),
         }
     return out

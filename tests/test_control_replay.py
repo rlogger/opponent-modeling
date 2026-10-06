@@ -6,10 +6,10 @@ import jax
 import jax.numpy as jnp
 import numpy as np
 import pytest
+from test_control_benchmark import env_and_red, opponent  # noqa: F401
 
 from mopa.continuous_data import deterministic_specialist_action, markov_state
 from mopa.evaluation import run_matched_episodes
-from test_control_benchmark import env_and_red, opponent  # noqa: F401
 
 
 @pytest.fixture(scope="module")
@@ -21,7 +21,7 @@ def verifier():
     return module
 
 
-def record(env, red, opponent, quota):
+def record(env, red, opponent_model, quota):
     reset = np.asarray(jax.random.split(jax.random.PRNGKey(90), 3))
     step_keys = np.asarray(jax.random.split(jax.random.PRNGKey(91), 3))
 
@@ -29,15 +29,15 @@ def record(env, red, opponent, quota):
         return jnp.tile(jnp.array([[.3, -.2]]), (3, 1)), carry
 
     result = run_matched_episodes(env, red, blue, reset, step_keys, horizon=5,
-        context_mode="online" if opponent else "zero", label=0, zero_s=opponent,
-        context_width=None if opponent else 0, max_transitions=quota, record_transitions=True)
+        context_mode="online" if opponent_model else "zero", label=0, zero_s=opponent_model,
+        context_width=None if opponent_model else 0, max_transitions=quota, record_transitions=True)
     return {**result["transitions"], "environment_seed": reset, "step_seed": step_keys}
 
 
-def audit(verifier, path, env, red, opponent=None):
+def audit(verifier, path, env, red, opponent_model=None):
     return verifier.verify_trace(path, env, jax.jit(jax.vmap(env.step_env)),
         jax.jit(lambda s: markov_state(env, s)),
-        jax.jit(lambda obs: deterministic_specialist_action(red, obs, 35)), opponent)
+        jax.jit(lambda obs: deterministic_specialist_action(red, obs, 35)), opponent_model)
 
 
 @pytest.mark.parametrize("quota,use_context", [(1, False), (7, False), (None, False), (1, True), (7, True)])
@@ -70,6 +70,7 @@ def test_numerical_replay_rejects_corruption(verifier, env_and_red, opponent, tm
     elif corruption == "padding":
         data["blue_action"][0, -1, 0] = .1
     else:
+        data["final_context"] = data["final_context"].copy()
         data["final_context"][0, 0] += 1.
     path = tmp_path / "corrupt.npz"
     np.savez(path, **data)

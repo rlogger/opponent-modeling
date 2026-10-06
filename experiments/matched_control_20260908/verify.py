@@ -10,7 +10,11 @@ import jax
 import jax.numpy as jnp
 import numpy as np
 
-from mopa.continuous_data import deterministic_specialist_action, load_continuous_actor_params, markov_state
+from mopa.continuous_data import (
+    deterministic_specialist_action,
+    load_continuous_actor_params,
+    markov_state,
+)
 from mopa.manifest import file_sha256, package_versions
 from mopa.zero_s import ZeroSOpponent
 from tag_objectives import joint_action_dict, make_env

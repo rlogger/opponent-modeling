@@ -126,7 +126,9 @@ def action_controls(metrics, out):
         bars = ax.bar(x + (i - 1.5) * width, values, width, color=color, label=name)
         ax.bar_label(bars, fmt="%.3f", fontsize=8, padding=3)
     ax.set(xticks=x, xticklabels=(*TYPES, "Equal-type mean"), ylabel="Mean squared 2D action error",
-           title="Action prediction on recorded held-out states (lower is better)", ylim=(0, 0.92))
+           title="Action prediction on recorded held-out states (lower is better)")
+    ax.set_ylim(bottom=0)
+    ax.margins(y=0.15)
     ax.legend(ncol=2, frameon=False, fontsize=9)
     save(fig, out, "action_controls.png")
 
@@ -166,8 +168,11 @@ def physics_error(metrics, out):
         ax.plot(horizons, y, "o-", color=color, linewidth=2.5, label=label)
         for x, v in zip(horizons, y):
             ax.annotate(f"{v:.3f}", (x, v), xytext=(0, 9), textcoords="offset points", ha="center")
+    counts = [str(values[str(h)]["n_starts"]) for h in horizons]
     ax.set(xticks=horizons, xlabel="Open-loop forecast horizon (steps)", ylabel="Position RMSE (arena coordinates)",
-           title="Physics prediction: 4,096 held-out starts per horizon", ylim=(0, 0.83))
+           title="Physics prediction: " + ", ".join(counts) + " held-out starts by horizon")
+    ax.set_ylim(bottom=0)
+    ax.margins(y=0.15)
     ax.legend(frameon=False, fontsize=9)
     save(fig, out, "physics_error.png")
 

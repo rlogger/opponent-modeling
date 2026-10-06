@@ -61,7 +61,7 @@ from mopa.manifest import (  # noqa: E402
     git_sha,
     package_versions,
 )
-from mopa.tdmpc import create_agent, load_config  # noqa: E402
+from mopa.tdmpc import check_update, create_agent, load_config  # noqa: E402
 from mopa.tdmpc_data import (  # noqa: E402
     FEATURE_MAPS,
     SequenceReplay,
@@ -96,6 +96,31 @@ def _parse_ints(value: str) -> tuple[int, ...]:
     return tuple(int(v) for v in value.split(",") if v.strip())
 
 
+def executable_source() -> dict[str, str]:
+    return {str(p.relative_to(_ROOT)): file_sha256(p) for p in
+            [Path(__file__), _ROOT / "uv.lock", _ROOT / "configs/tdmpc2.yaml",
+             *sorted((_ROOT / "src").rglob("*.py"))]}
+
+
+def checkpoint_bindings(dataset: Path, logdir: Path) -> tuple[str, list[dict]]:
+    """Verify the supplied specialist population against the dataset sidecar."""
+    sidecar = dataset.with_suffix(".manifest.json")
+    data = json.loads(sidecar.read_text())
+    rows = data.get("source_checkpoints", [])
+    if not rows:
+        raise ValueError("dataset sidecar lacks source checkpoints")
+    seen = set()
+    for row in rows:
+        identity = (row["objective"], row["team"], int(row["seed"]))
+        if identity in seen:
+            raise ValueError("duplicate specialist identity in dataset sidecar")
+        seen.add(identity)
+        path = continuous_checkpoint_path(logdir, *identity)
+        if file_sha256(path) != row["sha256"]:
+            raise ValueError(f"specialist differs from dataset source: {identity}")
+    return file_sha256(sidecar), rows
+
+
 # --------------------------------------------------------------------------- #
 # Shared setup
 # --------------------------------------------------------------------------- #
@@ -124,6 +149,13 @@ def load_agent(template, path: Path):  # noqa: ANN001
 
 def build_template(run: Path):  # noqa: ANN001
     manifest = json.loads((run / "manifest.json").read_text())
+    if manifest.get("agent_sha256") is not None and file_sha256(run / "agent.msgpack") != manifest["agent_sha256"]:
+        raise ValueError("agent checkpoint does not match training manifest")
+    if manifest.get("state_stats_sha256") is not None and file_sha256(run / "state_stats.npz") != manifest["state_stats_sha256"]:
+        raise ValueError("state statistics do not match training manifest")
+    if manifest.get("schema_version", 1) >= 2 and "source_0s_commit" not in manifest:
+        if not manifest.get("state_stats_sha256") or not manifest.get("agent_sha256"):
+            raise ValueError("version 2 runs require checkpoint and normalization hashes")
     opponent = None
     if "source_0s_commit" in manifest:
         # The 0s runner stores a separate config and a frozen decoder whose
@@ -154,6 +186,11 @@ def build_template(run: Path):  # noqa: ANN001
 # train
 # --------------------------------------------------------------------------- #
 def cmd_train(args: argparse.Namespace) -> int:
+    if args.updates < 1 or args.log_every < 1 or args.online_rounds < 0 or args.updates_per_round < 1:
+        raise ValueError("positive update/log budgets and nonnegative online rounds required")
+    source_hashes = executable_source()
+    dataset_hash = file_sha256(args.dataset)
+    sidecar_hash, specialists = checkpoint_bindings(args.dataset, args.logdir)
     cfg = load_config(profile=args.profile)
     cfg["opponent_mode"] = args.mode
     cfg["encoder"]["type"] = args.encoder
@@ -183,7 +220,8 @@ def cmd_train(args: argparse.Namespace) -> int:
     key = jax.random.PRNGKey(10_000 + args.seed)
 
     out = run_dir(args.out, args.mode, args.encoder, args.heldout, args.seed, args.context_source, args.features)
-    out.mkdir(parents=True, exist_ok=True)
+    # Historical runs are immutable; a new budget or repeat needs a new root.
+    out.mkdir(parents=True, exist_ok=False)
     log: list[dict[str, float]] = []
     t0 = time.time()
     step = 0
@@ -195,6 +233,7 @@ def cmd_train(args: argparse.Namespace) -> int:
             batch = replay.sample(rng, agent.batch_size)
             key, k = jax.random.split(key)
             agent, info = agent.update(**batch, key=k)
+            check_update(info, step)
             if step % args.log_every == 0 or step == total_updates:
                 row = {
                     "step": step,
@@ -249,8 +288,12 @@ def cmd_train(args: argparse.Namespace) -> int:
             "reward_calibration": reward_calibration(agent, rep, seed=args.seed),
             "termination_calibration": termination_calibration(agent, rep, seed=args.seed),
         }
+    if source_hashes != executable_source() or dataset_hash != file_sha256(args.dataset):
+        raise RuntimeError("executable source or dataset changed during training")
+    if (sidecar_hash, specialists) != checkpoint_bindings(args.dataset, args.logdir):
+        raise RuntimeError("dataset provenance changed during training")
     manifest = {
-        "schema_version": 1,
+        "schema_version": 2,
         "git_sha": git_sha(_ROOT),
         "git_dirty": git_dirty(_ROOT),
         "dependencies": package_versions(),
@@ -275,7 +318,9 @@ def cmd_train(args: argparse.Namespace) -> int:
         "final_replay_transitions": replay.n_transitions,
         "final_replay_episodes": replay.n_episodes,
         "state_dim": state_dim,
-        "dataset": {"path": str(args.dataset), "sha256": file_sha256(args.dataset)},
+        "dataset": {"path": str(args.dataset), "sha256": dataset_hash,
+                    "manifest_sha256": sidecar_hash},
+        "specialist_checkpoints": specialists,
         "context_encoder": (
             {"path": str(enc_path), "sha256": file_sha256(enc_path), "frozen": True}
             if enc_path is not None else None
@@ -287,6 +332,8 @@ def cmd_train(args: argparse.Namespace) -> int:
         "training_log": log,
         "evaluation": evaluation,
         "agent_sha256": file_sha256(out / "agent.msgpack"),
+        "state_stats_sha256": file_sha256(out / "state_stats.npz"),
+        "executable_source": source_hashes,
     }
     (out / "manifest.json").write_text(json.dumps(_jsonable(manifest), indent=2, sort_keys=True) + "\n")
     print(json.dumps(_jsonable({k: v["model_error"]["per_horizon"] for k, v in evaluation.items()}), indent=1))
@@ -355,6 +402,11 @@ def collect_online_round(
     train_ckpts = sorted(int(c) for c in set(ds.checkpoint_seed.tolist()) - {heldout})
     if zero_s is not None and (mode != "factored" or context_source != "zero_s" or encoder is not None):
         raise ValueError("0s collection requires factored mode and its own causal context")
+    if context_source not in {"zero_s", "causal", "zero", "none", "oracle"}:
+        raise ValueError("unknown collection context source")
+    decision_mode = ("zero" if mode == "implicit" or context_source in {"zero", "none"}
+                     else "oracle" if context_source == "oracle" else "online")
+    decision_encoder = encoder if decision_mode == "online" else None
     if record_dir is not None:
         record_dir.mkdir(parents=True, exist_ok=False)
     summary: dict[str, Any] = {"groups": [], "n_episodes": 0, "n_transitions": 0}
@@ -367,9 +419,10 @@ def collect_online_round(
             step_seed = np.asarray(jax.random.split(jax.random.PRNGKey(base + 1), episodes_per_group), np.uint32)
             out = run_matched_episodes(
                 env, red_params, controller, reset_keys, step_seed, horizon=horizon,
-                context_mode="zero" if mode == "implicit" else "online",
-                label=label, encoder=encoder,
+                context_mode=decision_mode,
+                label=label, encoder=decision_encoder,
                 zero_s=zero_s,
+                context_width=replay.context.shape[-1] if decision_mode == "zero" else None,
                 shuffle_seed=base, record_transitions=True,
             )
             tr = out["transitions"]
@@ -386,6 +439,10 @@ def collect_online_round(
                 ctx = encoder.causal_context(tr["prey_pos"], tr["pred_pos"], tr["valid_length"])
             if mode == "implicit":
                 ctx = ctx[..., : replay.context.shape[-1]] * 0.0
+            np.testing.assert_allclose(ctx[:, :-1], tr["context"], atol=2e-5, rtol=2e-5,
+                                       err_msg="replay context differs from actual decisions")
+            np.testing.assert_allclose(ctx[:, -1], tr["final_context"], atol=2e-5, rtol=2e-5,
+                                       err_msg="replay final context differs from decision context")
             replay.append(tr, ctx, feature_map=features)
             recording = {}
             if record_dir is not None:
@@ -509,6 +566,7 @@ def cmd_adapt_zero_s(args: argparse.Namespace) -> int:
             key, update_key = jax.random.split(key)
             agent, info = agent.update(**replay.sample(rng, agent.batch_size), key=update_key)
             step += 1
+            check_update(info, step)
             if step % args.log_every == 0 or update == args.updates_per_round - 1:
                 row = {"step": step, "round": round_index, "seconds": time.time() - t0,
                        **{k: float(np.asarray(info[k])) for k in
@@ -568,10 +626,19 @@ def cmd_evaluate(args: argparse.Namespace) -> int:
     if args.n_eps < 1:
         raise ValueError("n-eps must be positive")
     agent, manifest, stats = build_template(args.run)
+    source_hashes = executable_source()
+    sidecar_hash, source_checkpoints = checkpoint_bindings(args.dataset, args.logdir)
+    if manifest.get("dataset", {}).get("manifest_sha256") not in (None, sidecar_hash):
+        raise ValueError("dataset sidecar differs from training provenance")
+    if manifest.get("schema_version", 1) >= 2 and "source_0s_commit" not in manifest:
+        if source_checkpoints != manifest.get("specialist_checkpoints"):
+            raise ValueError("specialist population differs from training provenance")
     mode = manifest["mode"]
     heldout = int(manifest["heldout_checkpoint"])
     zero_s = ZeroSOpponent.load(args.run / "opponent.msgpack") if manifest.get("context_source") == "zero_s" else None
     ds = load_continuous_dataset(args.dataset)
+    if manifest.get("dataset") and file_sha256(args.dataset) != manifest["dataset"]["sha256"]:
+        raise ValueError("evaluation dataset does not match the training manifest")
     if zero_s is not None:
         if file_sha256(args.dataset) != manifest["dataset"]["sha256"]:
             raise ValueError("0s evaluation dataset does not match the training manifest")
@@ -599,6 +666,8 @@ def cmd_evaluate(args: argparse.Namespace) -> int:
     prey_params = load_continuous_actor_params(prey_path) if args.controls else None
     output_dir = args.out or (args.run / "closed_loop" if zero_s is not None else args.run)
     output_dir.mkdir(parents=True, exist_ok=True)
+    if (output_dir / "evaluation.json").exists() or (output_dir / "evaluation_per_episode.npz").exists():
+        raise FileExistsError("evaluation output already exists; choose a fresh output directory")
     groups = [np.flatnonzero((ds.checkpoint_seed == heldout) & (ds.objective_label == label))[:args.n_eps]
               for label in range(len(OBJECTIVE_TYPES))]
     if any(len(rows) != args.n_eps for rows in groups):
@@ -615,13 +684,15 @@ def cmd_evaluate(args: argparse.Namespace) -> int:
     for label, pred_type in enumerate(OBJECTIVE_TYPES):
         rows = groups[label]
         reset_keys, step_seed = ds.environment_seed[rows], ds.step_seed[rows]
+        per_episode[f"{pred_type}__reset_keys"] = np.asarray(reset_keys)
+        per_episode[f"{pred_type}__step_keys"] = np.asarray(step_seed)
         red_path = continuous_checkpoint_path(args.logdir, pred_type, "pred", heldout)
+        digest = file_sha256(red_path)
         if zero_s is not None:
-            digest = file_sha256(red_path)
             expected = next(item["sha256"] for item in manifest["specialist_checkpoints"] if item["type"] == pred_type)
             if digest != expected:
                 raise ValueError(f"specialist checkpoint does not match 0s manifest: {pred_type}")
-            checkpoints.append({"type": pred_type, "path": str(red_path), "sha256": digest})
+        checkpoints.append({"type": pred_type, "seed": heldout, "sha256": digest})
         red_params = load_continuous_actor_params(red_path)
         specs = [("tdmpc", blue, cm, encoder if cm in {"online", "shuffled"} else None) for cm in context_modes]
         if args.controls:
@@ -678,7 +749,7 @@ def cmd_evaluate(args: argparse.Namespace) -> int:
                 flush=True,
             )
     result = {
-        "schema_version": 1,
+        "schema_version": 2,
         "git_sha": git_sha(_ROOT),
         "git_dirty": git_dirty(_ROOT),
         "run": str(args.run),
@@ -692,6 +763,9 @@ def cmd_evaluate(args: argparse.Namespace) -> int:
         "n_eps_per_opponent": args.n_eps,
         "planner": {k: manifest["config"]["tdmpc2"][k] for k in ("horizon", "population_size", "policy_prior_samples", "num_elites", "mppi_iterations")},
         "runs": runs,
+        "specialist_checkpoints": checkpoints,
+        "executable_source": source_hashes,
+        "context_modes": context_modes,
         "factored_invariance": (None if zero_s is not None else
                                 factored_invariance_checks(agent, ds, eval_eps, context, int(manifest["seed"]), features)),
     }
@@ -711,8 +785,11 @@ def cmd_evaluate(args: argparse.Namespace) -> int:
         )
         if args.controls:
             result["prey_control_checkpoint"] = {"path": str(prey_path), "sha256": file_sha256(prey_path)}
-    (output_dir / "evaluation.json").write_text(json.dumps(_jsonable(result), indent=2, sort_keys=True, allow_nan=False) + "\n")
+    if source_hashes != executable_source():
+        raise RuntimeError("executable source changed during evaluation")
     np.savez_compressed(output_dir / "evaluation_per_episode.npz", **per_episode)
+    result["per_episode_sha256"] = file_sha256(output_dir / "evaluation_per_episode.npz")
+    (output_dir / "evaluation.json").write_text(json.dumps(_jsonable(result), indent=2, sort_keys=True, allow_nan=False) + "\n")
     print(f"Wrote {output_dir / 'evaluation.json'}")
     return 0
 
@@ -720,6 +797,125 @@ def cmd_evaluate(args: argparse.Namespace) -> int:
 # --------------------------------------------------------------------------- #
 # compare
 # --------------------------------------------------------------------------- #
+def validate_comparison_inputs(runs, evaluations, manifests, episodes):
+    """Fail closed before pairing fits or interpreting copied run directories.
+
+    Distinct modes may differ in their opponent head, but must share data,
+    feature schema, reset identities, optimization and interaction budgets.
+    Legacy reports without these bindings remain historical evidence.
+    """
+    if not runs or not (len(runs) == len(evaluations) == len(manifests) == len(episodes)):
+        raise ValueError("comparison requires aligned nonempty run inputs")
+    seen, common = set(), None
+    resets, fitting_seeds, contexts, rows_by_arm, actual_budgets = {}, {}, {}, {}, {}
+    for path, evaluation, manifest, per_episode in zip(runs, evaluations, manifests, episodes):
+        identity = (evaluation["mode"], evaluation["encoder"], int(evaluation["seed"]))
+        arm, seed = identity[:2], identity[2]
+        if identity in seen:
+            raise ValueError(f"duplicate independent-fit identity: {identity}")
+        seen.add(identity)
+        fitting_seeds.setdefault(arm, set()).add(seed)
+        if any(evaluation[k] != manifest[k] for k in ("mode", "encoder", "seed")):
+            raise ValueError("evaluation and training identities disagree")
+        for key, name in (("agent_sha256", "agent.msgpack"), ("manifest_sha256", "manifest.json"),
+                          ("per_episode_sha256", "evaluation_per_episode.npz")):
+            if not evaluation.get(key) or file_sha256(path / name) != evaluation[key]:
+                raise ValueError(f"stale or unbound evaluation artifact: {name}")
+        if not manifest.get("state_stats_sha256") or file_sha256(path / "state_stats.npz") != manifest["state_stats_sha256"]:
+            raise ValueError("missing or changed normalization artifact")
+        if not manifest.get("dataset", {}).get("sha256") or not manifest.get("specialist_checkpoints"):
+            raise ValueError("comparison requires dataset and specialist hashes")
+        if not manifest.get("config") or not evaluation.get("executable_source") or not manifest.get("executable_source"):
+            raise ValueError("comparison requires resolved configuration and evaluation source hashes")
+        expected_specialists = sorted(
+            (row["objective"], int(row["seed"]), row["sha256"])
+            for row in manifest["specialist_checkpoints"]
+            if row["team"] == "pred" and row["seed"] == manifest["heldout_checkpoint"])
+        evaluated_specialists = sorted(
+            (row["type"], int(row["seed"]), row["sha256"])
+            for row in evaluation.get("specialist_checkpoints", []))
+        if (len(expected_specialists) != len(OBJECTIVE_TYPES)
+                or {row[0] for row in expected_specialists} != set(OBJECTIVE_TYPES)
+                or evaluated_specialists != expected_specialists):
+            raise ValueError("evaluation specialist hashes do not match the held-out population")
+        config = json.loads(json.dumps(manifest["config"]))
+        for key in ("opponent_mode", "context_dim", "seed"):
+            config.pop(key, None)  # These are declared arm or independent-fit differences.
+        online = manifest.get("online", {})
+        signature = {
+            "dataset": manifest["dataset"],
+            "features": manifest.get("features", "markov"),
+            "heldout": manifest["heldout_checkpoint"],
+            "updates": manifest.get("total_updates", manifest.get("updates")),
+            "online": {k: online.get(k, 0) for k in ("rounds", "episodes_per_group_per_round", "updates_per_round")},
+            "planner": evaluation["planner"], "config": config,
+            "normalization": manifest["state_stats_sha256"],
+            "specialists": manifest["specialist_checkpoints"],
+            "evaluation_specialists": evaluation.get("specialist_checkpoints"),
+            "source": manifest.get("executable_source", manifest.get("git_sha")),
+            "evaluation_source": evaluation["executable_source"], "profile": manifest.get("profile"),
+        }
+        # Absolute storage paths do not change the scientific comparison.
+        signature["dataset"] = {k: v for k, v in signature["dataset"].items() if k != "path"}
+        if common is not None and signature != common:
+            raise ValueError("incompatible datasets, splits, features, budgets, configurations, specialists or sources")
+        common = signature
+        budget = (manifest.get("final_replay_transitions"),
+                  tuple(row["n_transitions"] for row in online.get("log", [])))
+        if budget[0] is None or len(budget[1]) != online.get("rounds", 0):
+            raise ValueError("actual interaction budget is not recorded")
+        if seed in actual_budgets and budget != actual_budgets[seed]:
+            raise ValueError("actual paired interaction budgets differ")
+        actual_budgets[seed] = budget
+        if identity[0] != "implicit":
+            context = manifest.get("context_encoder")
+            if not context or not context.get("sha256"):
+                raise ValueError("explicit-context comparison requires encoder hash")
+            context_id = (manifest.get("context_source"), context["sha256"])
+            if seed in contexts and contexts[seed] != context_id:
+                raise ValueError("paired context encoder or collection source differs")
+            contexts[seed] = context_id
+        for typ in OBJECTIVE_TYPES:
+            key = (seed, typ)
+            reset_names = (f"{typ}__reset_keys", f"{typ}__step_keys")
+            if not all(name in per_episode for name in reset_names):
+                raise ValueError("paired comparison requires recorded reset and step identities; rerun evaluation")
+            current = tuple(per_episode[name] for name in reset_names)
+            if any(a.ndim != 2 or a.shape[1] != 2 or not len(a) for a in current) or current[0].shape != current[1].shape:
+                raise ValueError("invalid reset/step identity shapes")
+            if len(np.unique(current[0], axis=0)) != len(current[0]):
+                raise ValueError("duplicate evaluation reset identity")
+            if key in resets and any(not np.array_equal(a, b) for a, b in zip(resets[key], current)):
+                raise ValueError("paired reset/step identities disagree")
+            resets[key] = current
+        row_ids, objective_rows = set(), set()
+        for row in evaluation["runs"]:
+            row_id = f"{row['opponent']}__{row['controller']}__{row['context_mode']}"
+            if row_id in row_ids:
+                raise ValueError("duplicate evaluation row")
+            row_ids.add(row_id)
+            if row["opponent"] not in OBJECTIVE_TYPES:
+                raise ValueError("unknown evaluation opponent")
+            if row["controller"] == "tdmpc":
+                objective_rows.add((row["opponent"], row["context_mode"]))
+            if row["n_episodes"] != len(per_episode[f"{row['opponent']}__reset_keys"]):
+                raise ValueError("metric episode count differs from reset count")
+            for metric in METRICS:
+                values = per_episode.get(f"{row_id}__{metric}")
+                if values is None or values.shape != (row["n_episodes"],) or not np.isfinite(values).all():
+                    raise ValueError("invalid per-episode metric evidence")
+                if not np.isclose(np.mean(values, dtype=np.float64), row[metric]["mean"], atol=1e-5, rtol=1e-6):
+                    raise ValueError("reported metric disagrees with raw episodes")
+        required = {(typ, mode) for typ in OBJECTIVE_TYPES for mode in evaluation.get("context_modes", [])}
+        if not required or not required.issubset(objective_rows):
+            raise ValueError("missing required opponent/context evaluation rows")
+        if arm in rows_by_arm and row_ids != rows_by_arm[arm]:
+            raise ValueError("incomplete evaluation rows across independent fitting seeds")
+        rows_by_arm[arm] = row_ids
+    if len({tuple(sorted(seeds)) for seeds in fitting_seeds.values()}) != 1:
+        raise ValueError("unpaired fitting seed sets across compared arms")
+
+
 _MODEL_ERROR_KEYS = ("model_mse", "persistence_mse", "ratio_model_over_persistence", "position_rmse_model", "position_rmse_persistence")
 _REWARD_KEYS = ("explained_variance", "mae", "mse")
 _TERMINATION_KEYS = ("brier", "ece_10_bins", "capture_auroc", "capture_recall_at_0.5", "hard_threshold_accuracy")
@@ -812,6 +1008,7 @@ def cmd_compare(args: argparse.Namespace) -> int:
     evals = [json.loads((p / "evaluation.json").read_text()) for p in runs]
     manifests = [json.loads((p / "manifest.json").read_text()) for p in runs]
     per_ep = [dict(np.load(p / "evaluation_per_episode.npz")) for p in runs]
+    validate_comparison_inputs(runs, evals, manifests, per_ep)
     table: dict[str, Any] = {}
     modes = sorted({e["mode"] for e in evals})
     for e, m, pe in zip(evals, manifests, per_ep):
@@ -900,15 +1097,10 @@ def cmd_compare(args: argparse.Namespace) -> int:
             "n_factored_seeds": sum(1 for e in evals if e["mode"] == "factored" and e["encoder"] == enc),
         }
         g = gates[enc]
-        g["gate5_success_claim_supported"] = (
-            None
-            if g["factored_improves_blue_return_over_implicit_mean"] is None
-            else bool(
-                g["factored_improves_blue_return_over_implicit_mean"]
-                and g["all_factored_runs_pass_action_clamp_invariance"]
-                and g["n_factored_seeds"] >= 3
-            )
-        )
+        # Directional means do not establish a predeclared practically meaningful
+        # effect or uncertainty criterion. Certification belongs to a frozen protocol.
+        g["gate5_success_claim_supported"] = None
+        g["certification_status"] = "descriptive_only_requires_predeclared_protocol"
     results = {
         "schema_version": 1,
         "git_sha": git_sha(_ROOT),

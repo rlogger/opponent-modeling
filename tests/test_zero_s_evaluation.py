@@ -188,6 +188,9 @@ def test_0s_cli_defaults_to_online_without_legacy_bc(driver, tiny, saved_run, mo
     manifest["specialist_checkpoints"] = [
         {"type": name, "sha256": driver.file_sha256(dataset)} for name in driver.OBJECTIVE_TYPES
     ]
+    dataset.with_suffix(".manifest.json").write_text(json.dumps({"source_checkpoints": [
+        {"objective": name, "team": "pred", "seed": 2, "sha256": driver.file_sha256(dataset)}
+        for name in driver.OBJECTIVE_TYPES]}))
     (saved_run / "manifest.json").write_text(json.dumps(manifest))
     n = len(driver.OBJECTIVE_TYPES)
     ds = SimpleNamespace(

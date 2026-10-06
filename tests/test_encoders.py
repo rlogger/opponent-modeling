@@ -105,6 +105,25 @@ def test_train_jepa_gru_handles_variable_lengths():
     np.testing.assert_allclose(norms, np.ones_like(norms), atol=1e-4)
 
 
+@pytest.mark.parametrize("target_mode", ["later_prefix", "full"])
+def test_gru_jepa_uses_fresh_keys_for_context_and_target(target_mode):
+    # Typed-key checking catches accidental key reuse in compiled samplers.
+    # Both target modes remain repeatable from a fresh equal-valued root key.
+    x = np.random.default_rng(52).normal(size=(3, 5, 2)).astype(np.float32)
+    lengths = np.array([2, 4, 5], np.int32)
+    with jax.debug_key_reuse(True):
+        first, _, _ = train_jepa_gru_with_params(
+            x, lengths, jax.random.key(52), hid=4, steps=2,
+            target_mode=target_mode,
+        )
+        repeated, _, _ = train_jepa_gru_with_params(
+            x, lengths, jax.random.key(52), hid=4, steps=2,
+            target_mode=target_mode,
+        )
+    np.testing.assert_array_equal(first, repeated)
+    assert np.isfinite(first).all()
+
+
 def test_gru_jepa_never_promotes_short_episode_padding_to_valid_data():
     rng = np.random.default_rng(2)
     x = rng.normal(size=(8, 6, 3)).astype(np.float32)

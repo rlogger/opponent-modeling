@@ -6,7 +6,9 @@ Neither check needs a sibling checkout. See third_party/marl-opp-aware.
 """
 from __future__ import annotations
 
+import ast
 import hashlib
+import json
 from pathlib import Path
 
 import numpy as np
@@ -24,12 +26,49 @@ from tag_objectives import SimpleTagObjectivesMPE, to_mpe_action  # noqa: E402
 @pytest.mark.parametrize("filename,expected", [
     ("objectives.py",
      "71332590fc61490bfd6271ab72da01f41df952963c10d86b577035ac74796f84"),
-    ("resources.py",
-     "72910059f63c01613b4ad3803236497723724e3c16525d9b21ca51b920b0d4d4"),
 ])
 def test_environment_source_is_byte_identical_to_main_8c24db3(filename, expected):
     source = Path(__file__).resolve().parents[1] / "src" / "tag_objectives" / filename
     assert hashlib.sha256(source.read_bytes()).hexdigest() == expected
+
+
+def test_resource_behavior_preserves_historical_source_contract():
+    """Space metadata was corrected; historical transition/observation code stays.
+
+    Original resources.py blob: bc4414d95e04a1f80b488b33b0dca8ed8342de6d.
+    Original full-file SHA256:
+    72910059f63c01613b4ad3803236497723724e3c16525d9b21ca51b920b0d4d4.
+    The constructor's fixed 16/14 observation spaces were incorrect outside
+    the default JaxMARL team/landmark counts. Its numerical task parameters
+    remain covered by the reset and multistep goldens below; all nonconstructor
+    methods remain AST-identical to the pinned historical implementation.
+    """
+    source = Path(__file__).resolve().parents[1] / "src/tag_objectives/resources.py"
+    module = ast.parse(source.read_text())
+    cls = next(
+        node for node in module.body
+        if isinstance(node, ast.ClassDef) and node.name == "SimpleTagResourcesMPE"
+    )
+    behavior = ast.Module(
+        body=[node for node in cls.body
+              if isinstance(node, ast.FunctionDef) and node.name != "__init__"],
+        type_ignores=[],
+    )
+    def canonical(node):
+        if isinstance(node, ast.AST):
+            # Python 3.12 added type_params to function nodes; these methods
+            # have no generic type parameters under either supported runtime.
+            return [type(node).__name__, [
+                [name, canonical(value)] for name, value in ast.iter_fields(node)
+                if name != "type_params"
+            ]]
+        if isinstance(node, list):
+            return [canonical(value) for value in node]
+        return node
+
+    payload = json.dumps(canonical(behavior), separators=(",", ":"))
+    digest = hashlib.sha256(payload.encode()).hexdigest()
+    assert digest == "2c13f8e9480f11510adeedf1d7862141ed495bdd40fb24bd879e33df3faab158"
 
 
 # Seed 7 from original aecbab5, JAX 0.4.38 / JaxMARL 0.1.0, CPU float32.

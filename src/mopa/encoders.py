@@ -342,13 +342,14 @@ def train_jepa_gru_with_params(
         # Per-example integer sampling because short valid episodes can have a
         # smaller lower bound than ``tmin`` without exposing their padding.
         span = t_full - min_ctx
-        uniform = jax.random.uniform(tk, t_full.shape)
+        context_key, target_key = jax.random.split(tk)
+        uniform = jax.random.uniform(context_key, t_full.shape)
         t_ctx = min_ctx + jnp.floor(uniform * span).astype(jnp.int32)
         if use_full:
             t_tgt = t_full
         else:
             # Sample a strictly later valid prefix when room exists.
-            t_tgt = jax.random.randint(tk, t_full.shape, t_ctx + 1, t_full + 1)
+            t_tgt = jax.random.randint(target_key, t_full.shape, t_ctx + 1, t_full + 1)
         g = jax.grad(loss_fn)(params, target, Xj[idx], lens[idx], t_ctx, t_tgt)
         u, opt = tx.update(g, opt)
         params = optax.apply_updates(params, u)

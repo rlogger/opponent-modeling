@@ -44,7 +44,7 @@ from mopa.manifest import (  # noqa: E402
     git_sha,
     package_versions,
 )
-from mopa.tdmpc import create_agent, load_config  # noqa: E402
+from mopa.tdmpc import check_update, create_agent, load_config  # noqa: E402
 from mopa.tdmpc_data import (  # noqa: E402
     SequenceReplay,
     multistep_model_error,
@@ -275,6 +275,7 @@ def main():
     for step in range(1, args.updates + 1):
         key, update_key = jax.random.split(key)
         agent, info = agent.update(**replays["train"].sample(rng, agent.batch_size), key=update_key)
+        check_update(info, step)
         if step == 1 or step % 100 == 0 or step == args.updates:
             row = {"step": step, **{k: float(np.asarray(info[k])) for k in
                    ("total_loss", "consistency_loss", "reward_loss", "value_loss", "continue_loss", "red_loss", "policy_loss")}}

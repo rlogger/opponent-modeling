@@ -43,7 +43,7 @@ from mopa.response_ppo import (  # noqa: E402
     update_response,
     warm_start_response,
 )
-from mopa.tdmpc import create_agent, load_config  # noqa: E402
+from mopa.tdmpc import check_update, create_agent, load_config  # noqa: E402
 from mopa.tdmpc_data import SequenceReplay, state_statistics  # noqa: E402
 from mopa.zero_s import ZeroSOpponent, zero_s_features  # noqa: E402
 from tag_objectives import make_env  # noqa: E402
@@ -309,6 +309,7 @@ def train_and_evaluate(args, seed, arm, data, mean, std, shared, params):
         for i in range(n):
             update_key, k = jax.random.split(update_key)
             agent, info = agent.update(**replay.sample(rng, agent.batch_size), key=k)
+            check_update(info, i + 1)
             if i == n - 1:
                 info = {k: float(np.asarray(info[k])) for k in
                         ("total_loss", "consistency_loss", "reward_loss", "value_loss", "continue_loss", "red_loss", "policy_loss")}

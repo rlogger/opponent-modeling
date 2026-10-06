@@ -331,18 +331,45 @@ def reward_calibration(
 def termination_calibration(
     agent: Any, replay: SequenceReplay, *, max_samples: int = 8192, seed: int = 0
 ) -> dict[str, Any] | None:
-    """Continuation-probability calibration against ``1 - terminated_capture``."""
+    """Population-weighted calibration against ``1 - terminated_capture``.
+
+    Stratification retains rare captures without changing their population
+    weight. Each sampled transition receives its stratum's inverse inclusion
+    probability. The reported Brier score, ECE and accuracy therefore target
+    the original valid-transition population, not a capture-enriched cohort.
+    ECE remains a finite-sample estimate, as with ordinary uniform sampling.
+    """
     model = agent.model
     if not model.predict_continues:
         return None
     rng = np.random.default_rng(seed)
     e, t = np.nonzero(np.arange(replay.state.shape[1] - 1)[None, :] < replay.valid_length[:, None])
+    if max_samples < 2:
+        raise ValueError("max_samples must be at least two for stratified calibration")
+    if not len(e):
+        raise ValueError("termination calibration requires valid transitions")
+    population_size = len(e)
+    cap = np.asarray(replay.terminated[e, t], dtype=bool)
+    population_captures = int(cap.sum())
+    weights = np.ones(population_size, dtype=np.float64)
     if len(e) > max_samples:
-        # Keep every capture transition (rare) plus a random subsample of the rest.
-        cap = replay.terminated[e, t]
-        keep_cap = np.flatnonzero(cap)
-        rest = np.flatnonzero(~cap)
-        pick = np.concatenate([keep_cap, rng.choice(rest, size=max(max_samples - len(keep_cap), 0), replace=False)])
+        capture_ids, other_ids = np.flatnonzero(cap), np.flatnonzero(~cap)
+        if len(capture_ids) and len(other_ids):
+            n_capture = int(round(max_samples * len(capture_ids) / population_size))
+            n_capture = min(max(1, n_capture), len(capture_ids), max_samples - 1)
+            n_other = min(max_samples - n_capture, len(other_ids))
+            n_capture = min(max_samples - n_other, len(capture_ids))
+            pick = np.concatenate([
+                rng.choice(capture_ids, size=n_capture, replace=False),
+                rng.choice(other_ids, size=n_other, replace=False),
+            ])
+            weights = np.concatenate([
+                np.full(n_capture, len(capture_ids) / n_capture),
+                np.full(n_other, len(other_ids) / n_other),
+            ])
+        else:
+            pick = rng.choice(population_size, size=max_samples, replace=False)
+            weights = np.full(max_samples, population_size / max_samples)
         e, t = e[pick], t[pick]
     x = _encode(agent, replay.state[e, t], jax.random.PRNGKey(seed))
     a = model.transition_inputs(
@@ -351,15 +378,22 @@ def termination_calibration(
         jnp.asarray(replay.red_action[e, t]),
     )
     p_cont = np.asarray(jax.nn.sigmoid(model.continue_logits(x, a, model.continue_model.params)))
+    if p_cont.shape != (len(e),) or not np.isfinite(p_cont).all():
+        raise ValueError("continuation probabilities must be finite with shape (n_samples,)")
     y = 1.0 - replay.terminated[e, t].astype(np.float64)
-    brier = float(np.mean((p_cont - y) ** 2))
+    weights = weights / weights.sum()
+    brier = float(np.sum(weights * (p_cont - y) ** 2))
     # ECE over ten equal-width probability bins.
     bins = np.clip((p_cont * 10).astype(int), 0, 9)
     ece = 0.0
     for b in range(10):
         sel = bins == b
         if sel.any():
-            ece += sel.mean() * abs(p_cont[sel].mean() - y[sel].mean())
+            mass = weights[sel].sum()
+            ece += mass * abs(
+                np.average(p_cont[sel], weights=weights[sel])
+                - np.average(y[sel], weights=weights[sel])
+            )
     # AUROC for predicting capture (1 - y) with 1 - p_cont.
     score, label = 1.0 - p_cont, 1.0 - y
     pos, neg = score[label > 0.5], score[label < 0.5]
@@ -369,10 +403,13 @@ def termination_calibration(
     return {
         "n_samples": int(len(e)),
         "n_capture_transitions": int((label > 0.5).sum()),
+        "population_n_transitions": population_size,
+        "population_n_capture_transitions": population_captures,
+        "sampling": "capture_stratified_inverse_probability_weighted_v2",
         "brier": brier,
         "ece_10_bins": float(ece),
         "capture_auroc": auroc,
-        "hard_threshold_accuracy": float(np.mean((p_cont > 0.5) == (y > 0.5))),
+        "hard_threshold_accuracy": float(np.sum(weights * ((p_cont > 0.5) == (y > 0.5)))),
         "capture_recall_at_0.5": (
             float(np.mean(p_cont[label > 0.5] <= 0.5)) if (label > 0.5).any() else None
         ),

@@ -338,6 +338,13 @@ def replay_episodes(
     fraction of episodes whose replayed capture/timeout flags match exactly.
     """
     d = ds if isinstance(ds, dict) else ds.as_dict()
+    # This entry point is also public; do not rely on callers to invoke the
+    # structural validator first. Python's max(0.0, NaN) can otherwise hide a
+    # nonfinite replay residual and incorrectly report exact agreement.
+    for name in ("state", "blue_observation", "red_observation", "blue_action",
+                 "red_action", "blue_reward"):
+        if not np.isfinite(np.asarray(d[name])).all():
+            raise ValueError(f"{name} must be finite for simulator replay")
     labels = np.asarray(d["objective_label"])
     n_total = len(labels)
     idx = np.arange(n_total) if indices is None else np.asarray(indices, dtype=np.int64)
@@ -360,6 +367,10 @@ def replay_episodes(
             worst["state"],
             float(np.max(np.abs(np.asarray(state_fn(state)) - d["state"][rows, 0]))),
         )
+        for name, agent in (("blue_observation", prey_name), ("red_observation", pred_name)):
+            worst[name] = max(worst[name], float(np.max(
+                np.abs(np.asarray(obs[agent]) - d[name][rows, 0])
+            )))
         valid = np.asarray(d["valid_mask"][rows])
         done = np.zeros(len(rows), dtype=bool)
         term_ok = np.ones(len(rows), dtype=bool)
@@ -534,20 +545,28 @@ def validate_continuous_dataset(
 ) -> dict[str, Any]:
     """Structural checks for the continuous data contract plus exact replay."""
     d = ds if isinstance(ds, dict) else ds.as_dict()
-    n, t_plus, _ = d["state"].shape
+    state = np.asarray(d["state"])
+    if state.ndim != 3 or state.shape[0] < 1 or state.shape[1] < 2:
+        raise ValueError("state must be a nonempty [N, T + 1, D] array")
+    n, t_plus, _ = state.shape
     horizon = t_plus - 1
+    for name, value in d.items():
+        array = np.asarray(value)
+        if array.dtype.kind not in "biuf" or not np.isfinite(array).all():
+            raise ValueError(f"{name} must contain only finite numeric values")
     checks = {
         "state": (n, t_plus, None, np.float32),
         "blue_observation": (n, t_plus, None, np.float32),
         "red_observation": (n, t_plus, None, np.float32),
         "blue_action": (n, horizon, CONTINUOUS_ACTION_DIM, np.float32),
         "red_action": (n, horizon, CONTINUOUS_ACTION_DIM, np.float32),
+        "causal_context": (n, t_plus, None, np.float32),
     }
     for name, (n_exp, t_exp, last, dtype) in checks.items():
         arr = np.asarray(d[name])
         if arr.dtype != dtype:
             raise ValueError(f"{name} must be {dtype.__name__}, got {arr.dtype}")
-        if arr.shape[0] != n_exp or arr.shape[1] != t_exp or (last and arr.shape[2] != last):
+        if arr.ndim != 3 or arr.shape[0] != n_exp or arr.shape[1] != t_exp or (last and arr.shape[2] != last):
             raise ValueError(f"{name} has shape {arr.shape}")
         if not np.all(np.isfinite(arr)):
             raise ValueError(f"{name} must be finite")
@@ -578,15 +597,23 @@ def validate_continuous_dataset(
         raise ValueError("the terminal flag must sit at the last valid transition")
     if not np.array_equal(term.any(axis=1), np.asarray(d["captured"]).astype(bool)):
         raise ValueError("terminated_capture disagrees with captured")
-    if np.asarray(d["blue_reward"]).shape != (n, horizon):
-        raise ValueError("blue_reward must be [N, T]")
+    if np.asarray(d["blue_reward"]).shape != (n, horizon) or np.asarray(d["blue_reward"]).dtype != np.float32:
+        raise ValueError("blue_reward must be float32 [N, T]")
     if np.any(np.abs(np.asarray(d["blue_reward"])[~valid]) > 0):
         raise ValueError("padded rewards must be zero")
     labels = np.asarray(d["objective_label"])
     ckpt = np.asarray(d["checkpoint_seed"])
+    for name in ("objective_label", "checkpoint_seed", "valid_length", "capture_t"):
+        arr = np.asarray(d[name])
+        if arr.shape != (n,) or arr.dtype.kind not in "iu":
+            raise ValueError(f"{name} must be an integer [N] array")
+    if not np.isin(labels, np.arange(len(OBJECTIVE_TYPES))).all():
+        raise ValueError("objective_label must identify a known objective")
     env_seed = np.asarray(d["environment_seed"])
     if env_seed.shape != (n, 2) or env_seed.dtype != np.uint32:
         raise ValueError("environment_seed must be uint32 [N, 2]")
+    if np.asarray(d["step_seed"]).shape != (n, 2) or np.asarray(d["step_seed"]).dtype != np.uint32:
+        raise ValueError("step_seed must be uint32 [N, 2]")
     # Matched resets: identical reset keys across the three labels per checkpoint.
     for seed in np.unique(ckpt):
         groups = [env_seed[(ckpt == seed) & (labels == lab)] for lab in range(3)]

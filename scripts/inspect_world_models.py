@@ -20,7 +20,7 @@ import numpy as np
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT / "src"))
 from mopa.manifest import file_sha256  # noqa: E402
-from mopa.tdmpc import create_agent  # noqa: E402
+from mopa.tdmpc import check_update, create_agent  # noqa: E402
 from mopa.tdmpc_data import SequenceReplay  # noqa: E402
 from mopa.zero_s import ZeroSOpponent, strategy_prototypes  # noqa: E402
 
@@ -103,6 +103,7 @@ def load_or_fit(mode, out, source, manifest, data, latent, opponent, mean, std, 
     for step in range(1, updates + 1):
         key, update_key = jax.random.split(key)
         agent, info = agent.update(**replay.sample(rng, agent.batch_size), key=update_key)
+        check_update(info, step)
         if step == 1 or step % 100 == 0 or step == updates:
             row = {k: float(np.asarray(v)) for k, v in info.items() if np.asarray(v).ndim == 0}
             if not np.isfinite(list(row.values())).all():

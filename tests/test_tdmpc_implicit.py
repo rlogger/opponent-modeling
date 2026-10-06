@@ -65,12 +65,14 @@ def test_implicit_training_does_not_require_bc_artifacts(driver, monkeypatch, tm
         valid_mask=np.ones((2, 3), dtype=bool),
     )
     monkeypatch.setattr(driver, "load_continuous_dataset", lambda path: ds)
+    monkeypatch.setattr(driver, "checkpoint_bindings", lambda *args: ("sidecar", [{"sha256": "specialist"}]))
     agent = SimpleNamespace(horizon=3, batch_size=1)
     metric_names = (
         "total_loss", "consistency_loss", "reward_loss", "value_loss",
         "continue_loss", "red_loss", "policy_loss",
     )
-    agent.update = lambda **batch: (agent, dict.fromkeys(metric_names, 0.1))
+    agent.update = lambda **batch: (agent, {**dict.fromkeys(metric_names, 0.1),
+        "world_gradients_finite": True, "policy_gradients_finite": True})
 
     def create_agent(cfg, state_dim, **kwargs):
         assert cfg["opponent_mode"] == "implicit"
@@ -149,6 +151,8 @@ def test_implicit_evaluation_does_not_require_bc_artifacts(driver, monkeypatch, 
         observation_space=lambda name: SimpleNamespace(shape=(2,)),
     )
     monkeypatch.setattr(driver, "build_template", lambda path: (object(), manifest, {}))
+    monkeypatch.setattr(driver, "checkpoint_bindings", lambda *args: ("sidecar", [{"sha256": "specialist"}]))
+    monkeypatch.setattr(driver, "file_sha256", lambda path: "mock-hash")
     monkeypatch.setattr(driver, "load_continuous_dataset", lambda path: ds)
     monkeypatch.setattr(driver, "make_env", lambda *args, **kwargs: env)
     monkeypatch.setattr(driver, "tdmpc_controller", lambda *args: object())
@@ -196,7 +200,9 @@ def test_implicit_online_collection_needs_no_encoder(driver, monkeypatch, tmp_pa
         assert kwargs["encoder"] is None
         assert kwargs["record_transitions"] is True
         return {
-            "transitions": {"valid_length": np.asarray([2], dtype=np.int32)},
+            "transitions": {"valid_length": np.asarray([2], dtype=np.int32),
+                            "context": np.zeros((1, 2, 0), np.float32),
+                            "final_context": np.zeros((1, 0), np.float32)},
             "blue_return": np.zeros(1),
             "captured": np.zeros(1),
             "resources_collected": np.zeros(1),

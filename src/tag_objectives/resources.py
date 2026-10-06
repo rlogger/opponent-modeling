@@ -106,7 +106,15 @@ class SimpleTagResourcesMPE(SimpleTagMPE):
         else:
             self.fixed_obstacle_positions = None
 
-        prey_obs_dim = 14 + num_resources * 3
+        # JaxMARL 0.1.0 declares fixed 16/14-channel simple-tag spaces for its
+        # default 3-predator/1-prey/2-landmark setup. Its actual observation
+        # arrays vary with agent and landmark counts. Match those arrays while
+        # preserving the inherited observation construction and all dynamics.
+        common_obs_dim = 4 + 2 * self.num_landmarks + 2 * (self.num_agents - 1)
+        pred_obs_dim = common_obs_dim + 2 * min(1, self.num_agents - 1)
+        for a in self.adversaries:
+            self.observation_spaces[a] = Box(-jnp.inf, jnp.inf, (pred_obs_dim,))
+        prey_obs_dim = common_obs_dim + num_resources * 3
         for a in self.good_agents:
             self.observation_spaces[a] = Box(-jnp.inf, jnp.inf, (prey_obs_dim,))
 
