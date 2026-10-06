@@ -3,8 +3,9 @@
 Updated October 5, 2026. This guide preserves the September `td-mpc2`
 reproduction workflow and distinguishes it from the current consolidation.
 `marl-private` governs project instructions; [Implementation status](STATUS.md)
-records the current evidence boundary. The new local feasibility pilot is
-complete, while prescribed main experiments and final publication remain pending.
+records the current evidence boundary. The feasibility pilot and targeted
+continuation are complete, with retained control/calibration failures. Reviewed
+audit branches are published; the broad main campaign remains paused.
 
 ## Start here
 
@@ -30,8 +31,9 @@ and their older continuous results are not the current `0s` results.
 
 For historical reproduction, start from a separate clean checkout pinned to
 `84a38de8b33daa2d6ca942690453408bc12a74fe`, then use this guide. For the new campaign,
-use the consolidated executable commit and private protocol identified in its
-manifest, and record the actual commit and dirty state. Do not assume a local
+use the exact clean executable commit and committed private protocol identified
+in its manifest. The targeted result uses executable f0973e6 and private 4491552;
+see the [full pins and commands](control-pipeline.md#targeted-control-diagnostic). Do not assume a local
 working copy has the same implementation as the published result.
 
 At the September documentation audit, the author's working tree also contained unpublished benchmark,
@@ -179,8 +181,10 @@ training weights are not automatically rejected by the adaptation command.
    complete command. Use `uv.lock`; do not independently upgrade JAX or Distrax.
 2. Use fresh output directories. MAPPO's fixed filenames can overwrite older
    weights; follow the README's root-level `SAVE_PATH` and `--logdir` conventions.
-3. Keep specialist checkpoint 2 held out in the current `0s` protocol. Fit
-   encoders, normalization, and prototypes using training checkpoints 0/1 only.
+3. For the historical September `0s` protocol, keep specialist checkpoint 2 held
+   out and fit encoders, normalization, and prototypes on checkpoints 0/1 only.
+   New runs follow their frozen protocol; targeted v2 trains on family 0 and
+   evaluates family 1.
 4. Record valid transitions separately from padded timesteps, gradient updates,
    and episodes. Record collection and evaluation seed keys.
 5. Preserve manifests, resolved configs, input hashes, logs, checkpoints, and

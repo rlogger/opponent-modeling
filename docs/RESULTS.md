@@ -1,20 +1,81 @@
 # Results and development record
 
-Updated October 5, 2026. The tables below are preserved historical measurements,
-not results of the current audit campaign. The new local pilot completed eight
-small causal-prediction fits and ten controller arms over two fitting seeds.
-Its purpose was feasibility and runtime; the prescribed main comparisons,
-frozen-prefix diagnostic, opponent-weight replay validation and final publication
-remain pending. See [Implementation status](STATUS.md).
+Updated October 5, 2026. The targeted control continuation is complete; the
+broad experiment campaign remains paused. **The original MPPI runaway behavior was
+substantially reduced, but a fully repaired controller is not established.**
 
-Historical gate labels are not current acceptance certificates. In particular,
-the earlier strict continuous-BC offline criterion failed on one fold; favorable
-closed-loop signs do not repair that failure. The earlier nine fold × opponent
-groups are not nine independent controller fits, and the nominal matched-control
-pass does not establish a reliable benefit of explicit opponent modeling.
-Later code corrections preserve the original raw results and require newly bound
-runs before any changed scientific claim. No SOTA, calibrated uncertainty,
-adaptive co-training or learned Blotto claim is made here.
+## Targeted control continuation
+
+Protocol `resl_control_diagnostic_v2` is bound to specification
+`44915520b507df5e0ba78b54da0ca4e7d3b81724` and executable
+`f0973e690ed462a55e516d707dc3248dfe1c69f4`. Six original P2 controllers (implicit,
+BC and recurrent `0s`, fitting seeds 11/22) were restored at 128 updates. They
+received 1,872 updates on identical replay, then six rounds of 1,800 training-family
+transitions and 1,000 updates: 8,000 total updates per controller. Rewards, soft
+boundaries, opponent models and planner settings stayed fixed. P11 was off.
+The later phase combines data and fitting; it cannot isolate either cause.
+
+Each row below is one fit, averaged over 24 episodes (three specialists × four
+reused and four fresh resets). Entries show 128→8,000. Episodes are not independent
+fitting seeds. Fresh resets reuse the inspected opponent family.
+
+| Arm / seed | MPPI return | Boundary cost | Capture fraction | Resources per episode |
+| --- | --- | --- | --- | --- |
+| implicit /11 | −1037.49→−8.07 | 1038.74→8.70 | .042→.500 | .33→1.12 |
+| implicit /22 | −951.90→−9.63 | 952.73→16.72 | .042→.333 | .25→2.08 |
+| BC /11 | −996.00→−31.53 | 997.25→37.36 | .042→.417 | .33→2.00 |
+| BC /22 | −1003.14→−18.08 | 1004.39→20.79 | .042→.500 | .33→1.54 |
+| 0s /11 | −975.41→−48.79 | 976.66→55.25 | .042→.417 | .33→2.12 |
+| 0s /22 | −900.02→−11.41 | 901.27→14.33 | .000→.292 | .25→1.17 |
+
+All 36 MPPI objective/reset groups improved return, boundary cost and outside
+fraction, but capture worsened in 23 groups; one group collected fewer resources.
+The unchanged-replay 2,000-update stage worsened policy-only boundary cost in all 36
+groups. At 8,000, policy-only boundary cost remained worse in 12 groups, including
+worse pooled cost for implicit/22, 0s/11 and 0s/22. These failed comparisons remain
+explicit failures.
+
+On the fixed original failure traces, overall/outside reward MAE and RMSE
+improved for all six models. With deployed implicit/learned-red input, inside-bin
+MAE and RMSE worsened in all six; edge-bin errors worsened in five (BC/11 is the
+exception). With recorded-red input, 0s/11 interior MAE improves slightly while
+its RMSE worsens; this exception remains in the full table. Fixed edge-scene H3 return MSE
+also worsened in five fits (0s/22 is the exception). These calibration failures
+prevent a general repair claim. Initial candidate scenes have tied true returns;
+their rankings are unavailable. Learned Q tails are reported separately from
+realized three-step rewards. No Q-calibration or opponent-model benefit follows.
+
+Independent verification reconstructed raw aggregates from all 216 evaluation
+trace files (864 episodes). Its predeclared numerical sample replayed 72 files
+(288 episodes, 24,418 transitions), plus 36 training traces (2,728 transitions).
+Within that sample, the maximum absolute differences for actions, states and
+rewards were zero; the maximum causal-context difference was `7.1525574e-7`.
+Blue-policy reproduction applies to the evaluation sample; training replay used
+recorded blue actions. It also checked all 54 reward outputs, including fixed-row forward predictions,
+and all 105 candidate arrays with their complete 512-score populations. The
+largest candidate-score difference was approximately `6.546e-5`, within the
+original tolerances. These checks verify the declared evidence and sampled
+numerical paths; they do not establish bug-free or fully repaired control.
+
+The [private result record](https://github.com/rlogger/marl-private/blob/codex/resl-audit-20261005/experiments/2026-10-05-comprehensive-audit/CONTROL.md)
+retains every endpoint, objective/reset/mode, reward bin, failure and independent
+review. [Artifacts](https://github.com/rlogger/marl-private/releases/tag/resl-control-diagnostic-20261005)
+require private-repository access. [Reproduction](control-pipeline.md#targeted-control-diagnostic)
+uses the exact source/protocol pair, not the latest checkout. The first attempt
+remains failed and preserved separately; the second retains its original budgets
+and numerical tolerances.
+
+This is targeted diagnostic evidence, not the prescribed main comparison,
+statistical significance, fresh-opponent generalization, calibrated uncertainty,
+adaptive co-training, learned Blotto control or SOTA. It does not reconstruct the
+unavailable source/artifacts of the reported MLP-VAE experiment.
+
+## Historical September results
+
+Historical gate labels are not current acceptance certificates. The strict
+continuous-BC offline criterion failed on one fold; favorable closed-loop signs
+do not repair it. Nine fold × opponent groups are not nine independent fits.
+Historical outputs remain attached to their actual source versions.
 
 Snapshot: September 8, 2026, published `td-mpc2` implementation at `fc0dc64`
 (code unchanged by the README commit `84a38de`). All numbers below come from
@@ -247,14 +308,14 @@ the exact aggregation protocol; these means are not a new rerun.
 The [earlier continuous gate study](../experiments/continuous/README.md) also
 uses a different representation and protocol: 3D GRU-JEPA context, relative
 features, and later controller experiments with 22,000 updates and three seeds.
-Its stronger returns must not be presented as results for the current 8D `0s`,
+Its stronger returns must not be presented as results for the September 8D `0s`,
 66D-state, 8,000-update, one-seed controller.
 
 ## Remaining evidence gaps
 
 - No completed equal-budget comparison establishes a return benefit from `0s`
   over implicit dynamics or a separately trained vanilla-BC opponent model.
-- The current adaptation result is one training seed and one held-out checkpoint
+- The September adaptation result is one training seed and one held-out checkpoint
   family, not a generalization benchmark across environments.
 - Open-loop imagined trajectories and prototype plots are model diagnostics,
   not executed control. Local three-equation inspection work used 2,000-update

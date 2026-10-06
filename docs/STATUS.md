@@ -8,8 +8,8 @@ older implementation notes do not supersede those private instructions.
 
 The integration branch combines the continuous-control implementation with the
 existing [Spatial Blotto environment](spatial-blotto.md). Historical branches,
-experiments and unpublished source snapshots are preserved. Final publication
-and the prescribed main experiments are pending.
+experiments and unpublished source snapshots are preserved. Reviewed changes and evidence are published on the audit branch. Canonical
+consolidation and the prescribed main experiments remain paused.
 
 Before the new local pilot, the locked suite passed **787 tests, with no skips**,
 and Ruff passed. The pilot used executable commit
@@ -20,19 +20,29 @@ two fitting seeds. These runs establish feasibility; they do not satisfy the
 main experiment budgets or establish any performance hypothesis. Post-pilot
 corrections require their own locked checks before subsequent runs.
 
-The broad campaign is currently on hold. Targeted environment/controller
-corrections are authorized. A fresh comparison against `marl-opp-aware` commit
-`aecbab5daf6da402029e953be114a52e62a46c26` found exactly equal numerical outputs
-across 384 tested transitions, including controlled boundary, capture,
-collection and timeout cases. The game retains its soft boundary penalties.
+The broad campaign remains on hold. The targeted continuation completed six
+controllers through 8,000 updates and 864 evaluation episodes. MPPI boundary costs
+fell substantially, but capture and several policy-only/calibration outcomes
+worsened. [Results](RESULTS.md#targeted-control-continuation) retain the failed
+hypotheses; fully repaired control is not established. The frozen run source
+passed 875 locked tests with no skips locally and in remote CI before fitting.
+The exact-protocol-pin correction is separate from that frozen source and does
+not change its valid bindings.
+
+The deep current-tree review of `marl-opp-aware` at
+`aecbab5daf6da402029e953be114a52e62a46c26` covered 163 files/24,900 lines.
+Original/current numerical parity passed 384 transitions across 42 scenes,
+including boundary, capture, collection and timeout. The game retains soft
+boundary penalties. Historical discrete actors and true-simulator planners have
+different task/action/budget contracts; they are not matched TD-MPC baselines.
 See [source provenance](../third_party/marl-opp-aware/UPSTREAM.md).
 
 The optional P11 static/clock contract is implemented and independently reviewed;
 it has focused mathematical, gradient, timeout and checkpoint tests. It has no
 fitted comparative result yet and is disabled in the unchanged-model fitting
 diagnostic. [The contract and diagnostic commands](control-pipeline.md#targeted-control-diagnostic)
-separate these two interventions. Increasing fitting is a hypothesis to test,
-not a certified repair or a substitute for the prescribed main comparison.
+separate these two interventions. The fitting diagnostic produced mixed results; it does not certify a full
+repair or substitute for the prescribed main comparison.
 
 Implemented audit remedies include episode-bounded causal context and replay
 checks, explicit finite-update checks, saved optimizer/RNG state, separately

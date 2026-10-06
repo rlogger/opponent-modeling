@@ -12,11 +12,14 @@ implementation and public reproduction evidence; private meeting material stays
 in that repository. Runs identify the specification commit and protocol version
 alongside the executable commit, configuration and artifact hashes.
 
-The October 5 audit has completed a local feasibility pilot. The prescribed main
-comparisons and final publication are still pending. The pilot is infrastructure
-and runtime evidence, not evidence that opponent modeling improves control.
-Historical experiments keep their original directories and claims are qualified
-in [Results](docs/RESULTS.md).
+The October 5 work completed a feasibility pilot and a targeted control
+continuation. The latter greatly reduced runaway MPPI boundary costs but retained
+reward-calibration, candidate-ranking and policy-only failures. It does not
+establish reliable control or an opponent-model advantage. The broad main
+campaign remains paused. Reviewed code and source-bound evidence are published
+on the audit branch; canonical consolidation is not complete. Historical runs
+remain intact. See [Results](docs/RESULTS.md) and the
+[targeted reproduction binding](docs/control-pipeline.md#targeted-control-diagnostic).
 
 ## Installation
 
@@ -25,7 +28,7 @@ Requires Git, Python 3.11 or 3.12, and
 packages and the virtual environment. Run commands from the repository root.
 
 ```bash
-git clone https://github.com/rlogger/opponent-modeling.git
+git clone --branch codex/resl-audit-20261005 https://github.com/rlogger/opponent-modeling.git
 cd opponent-modeling
 
 export UV_PROJECT_ENVIRONMENT=venv
@@ -111,7 +114,7 @@ uv run --locked --all-extras python scripts/run_0s_world_model.py \
 Fits `0s`, freezes it, then trains the identity-state Equation 3 controller.
 Checkpoints 0/1 provide 1,200 training episodes; checkpoint 2 supplies 600 held-out
 episodes. The 8D opponent context uses only completed history. BC is not required.
-See [model details](docs/RESULTS.md#what-the-current-model-represents).
+See [model details](docs/RESULTS.md#what-the-september-model-represents).
 
 `--updates` counts gradient steps. Keep the specialist weights available for
 diagnostics. Retain `agent.msgpack`, `opponent.msgpack`, `state_stats.npz`,

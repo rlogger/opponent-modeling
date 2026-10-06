@@ -24,6 +24,28 @@ adds the existing collection/update procedure. Task rewards and planner settings
 stay fixed. The two fitting seeds and reused opponent family are diagnostic
 evidence; they are not the main comparison or a new generalization result.
 
+The completed run is bound to executable
+`f0973e690ed462a55e516d707dc3248dfe1c69f4` and private specification
+`44915520b507df5e0ba78b54da0ca4e7d3b81724`, protocol
+`experiments/2026-10-05-comprehensive-audit/control-diagnostic-protocol-v2.json`,
+SHA-256 `19a7953d1423c6475612d1ee04c0e603df74d90bb0624004f50c39bdab090dc7`.
+Use a separate clean checkout at that executable commit and recover the exact
+[private inputs and directory layout](https://github.com/rlogger/marl-private/blob/codex/resl-audit-20261005/experiments/2026-10-05-comprehensive-audit/data-provenance/input-publication-review.md)
+first. The immutable manifests contain absolute paths; changing those paths
+changes the binding. Recovery must not overwrite an existing checkout or run.
+The input archive alone does not include source checkouts. Private access is
+required. Set these variables before the commands below:
+
+```bash
+SPEC_REPO=/Users/rajdeepsingh/Documents/Playground/marl-private
+PROTOCOL="$SPEC_REPO/experiments/2026-10-05-comprehensive-audit/control-diagnostic-protocol-v2.json"
+SPEC_COMMIT=44915520b507df5e0ba78b54da0ca4e7d3b81724
+CODE_COMMIT=f0973e690ed462a55e516d707dc3248dfe1c69f4
+# Both paths must be fresh and absent; never point at the published run.
+NEW_RUN=/absolute/path/to/fresh-control-run
+NEW_REPORT=/absolute/path/to/fresh-control-report
+```
+
 ```bash
 uv run --locked --extra train --extra plot python scripts/run_control_diagnostic.py --execute \
   --spec-repo "$SPEC_REPO" --protocol "$PROTOCOL" \
@@ -35,7 +57,9 @@ uv run --locked --extra train --extra plot python scripts/summarize_control_diag
 ```
 
 Use fresh directories and the exact committed protocol; the driver rejects
-overwriting a prior run. The summary reconstructs raw rollout metrics and
+overwriting a prior run. The later protocol-pin correction additionally rejects
+a clean executable that differs from the protocol pin. Reproducing this completed
+run still requires its frozen f0973e6 source, not an arbitrary descendant. The summary reconstructs raw rollout metrics and
 checks the fixed original reward states and candidate actions at every declared
 endpoint. It reports finite-horizon reward and learned Q tail separately. A
 score including Q is not an estimate of the same quantity as three-step reward.
