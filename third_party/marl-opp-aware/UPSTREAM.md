@@ -1,6 +1,43 @@
 # Original environment provenance
 
-## Current source: opponent-modeling main
+## Current source and metadata correction
+
+On 2026-10-05, authenticated GitHub and Git inspection confirmed that the private
+`rlogger/marl-opp-aware` repository still has one remote branch, `main`, at
+`aecbab5daf6da402029e953be114a52e62a46c26`; no accessible forks or remote tags
+were returned. That is the same upstream revision pinned below. A fresh clone
+was inspected directly; an unauthenticated web 404 does not mean it is missing.
+
+`objectives.py` remains byte-identical to the main-source restoration below.
+`resources.py` now differs by a reviewed constructor correction to **declared
+observation-space shapes** for supported agent/landmark counts. Its current
+SHA256 is
+`f335be9828212c02d6c6f5c8815fd2f2a7323a304514cef7e5e5e4751fe84ae0`.
+The historical full-file hash is retained below rather than silently replaced.
+Observation arrays, reward, reset and transition code were not changed by this
+correction. `tests/test_resource_space_contract.py` checks the declared/actual
+shapes, and `tests/test_original_environment.py` retains the historical
+nonconstructor-method AST fingerprint and original numerical goldens.
+
+Against the freshly fetched upstream source, all 12 objective-class methods
+have equal ASTs after removing docstrings and the unused `n_preds` assignment.
+Resource reset, step and observation methods also match. The remaining resource
+differences are the declared-space correction and equivalent early-return
+formatting in `_place_resources` (`if`/`elif`/`else` became returning `if`s).
+These are source-comparison results; numerical runtime comparison is described
+separately below and does not certify every historical dependency version.
+
+A fresh 2026-10-05 runtime comparison imported the original files directly from
+that clean upstream clone and compared them with the current implementation
+under JAX/JAXlib 0.4.38, JaxMARL 0.1.0 and Flax 0.10.4. Three objectives, both
+discrete and continuous actions, and reset seeds 0/7/22 produced **360 matched
+transitions**. Another **24 controlled transitions** checked soft-boundary
+movement, simultaneous capture/collection, collection alone and the 99-to-100
+timeout. All reset/state/observation/reward/done/info leaves were exactly equal;
+the controlled blue rewards also matched their analytic values. No source
+weights, checkpoints or environment mechanics were changed for this check.
+
+## Historical main-source restoration
 
 On 2026-09-08, at the user's request, the two core modules were replaced by
 byte-identical files from this repository's `main` commit
@@ -12,7 +49,9 @@ The previous version is preserved on `new-env` at `180571beed82326a0d11da8fad20c
 | `src/tag_objectives/objectives.py` | `71332590fc61490bfd6271ab72da01f41df952963c10d86b577035ac74796f84` |
 | `src/tag_objectives/resources.py` | `72910059f63c01613b4ad3803236497723724e3c16525d9b21ca51b920b0d4d4` |
 
-There are no deviations in these two core files. Continuous support remains in
+At that restoration, there were no deviations in these two core files.
+The subsequent observation-space correction is documented above.
+Continuous support remains in
 the existing API and action adapter: `action_type="Continuous"` was already
 accepted by main's JaxMARL parent. The API now inspects the declared `Box` action
 space instead of requiring extra attributes on the environment. Main's default
@@ -26,10 +65,10 @@ matched exactly across **360 transitions**, maximum absolute error **0.0**.
 All task defaults also matched. Replacing these sources does not itself change
 the reward definitions or make learned specialist behavior more faithful.
 
-`tests/test_original_environment.py` now checks the exact main-source hashes
-above while retaining the original numerical goldens below. Its old AST-only
-checks were superseded because formatting/control-flow cleanup in main is
-semantically equivalent but not AST-identical.
+At that restoration, `tests/test_original_environment.py` checked the exact
+main-source hashes above while retaining the original numerical goldens below.
+The current test preserves the exact objective-file hash and the historical
+resource behavior fingerprint; only the declared resource spaces have changed.
 
 Validation after main-source replacement: **72 passed** across
 `test_original_environment.py`, `test_objectives_env.py`,

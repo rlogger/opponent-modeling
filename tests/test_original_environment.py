@@ -1,7 +1,9 @@
-"""Exact main-source contract plus original marl-opp-aware numerical goldens.
+"""Main-source behavior contract plus original marl-opp-aware numerical goldens.
 
 Source hashes are from opponent-modeling@8c24db3. Numerical goldens were obtained
 from marl-opp-aware@aecbab5, whose mechanics match main under the locked runtime.
+The resource constructor has an explicit observation-space metadata correction;
+its historical behavior fingerprint and full-file hash remain recorded below.
 Neither check needs a sibling checkout. See third_party/marl-opp-aware.
 """
 from __future__ import annotations
