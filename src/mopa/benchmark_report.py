@@ -210,6 +210,10 @@ def summarize_benchmark(
 
     table: dict[tuple[str, int, str], dict[str, np.ndarray]] = {}
     keys_by_seed: dict[int, list[str]] = {}
+    step_keys_by_seed: dict[int, np.ndarray] = {}
+    has_step_keys = ["step_keys" in record for record in records]
+    if any(has_step_keys) and not all(has_step_keys):
+        raise ValueError("simulator step keys must be supplied for every record or none")
     n_episodes: int | None = None
     for record in records:
         arm, seed, objective = record["arm"], record["seed"], record["objective"]
@@ -236,6 +240,13 @@ def summarize_benchmark(
         if seed in keys_by_seed and keys != keys_by_seed[seed]:
             raise ValueError(f"ordered reset keys differ within training seed {seed}")
         keys_by_seed[seed] = keys
+        if all(has_step_keys):
+            step_keys = np.asarray(record["step_keys"])
+            if step_keys.shape != (n_episodes, 2) or step_keys.dtype.kind not in "iu" or np.any(step_keys < 0):
+                raise ValueError("step_keys must contain one unsigned RNG key pair per episode")
+            if seed in step_keys_by_seed and not np.array_equal(step_keys, step_keys_by_seed[seed]):
+                raise ValueError(f"ordered simulator step keys differ within training seed {seed}")
+            step_keys_by_seed[seed] = step_keys
         values = {}
         for name in METRICS:
             if name not in record["metrics"]:

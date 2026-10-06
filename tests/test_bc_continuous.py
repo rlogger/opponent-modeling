@@ -77,6 +77,26 @@ def test_continuous_bc_metrics_hand_values():
         continuous_bc_metrics(pred[:, :1], tgt[:, :1])
 
 
+def test_bc_training_state_retains_optimizer_rng_without_changing_fit(tmp_path):
+    import optax
+    from flax import serialization
+
+    x, y = _linear_dataset(n=12, d=3)
+    plain = fit_continuous_bc(x, y, 8, steps=2, hidden_size=8)
+    path = tmp_path / "fit.msgpack"
+    saved = fit_continuous_bc(x, y, 8, steps=2, hidden_size=8, training_state_path=path)
+    np.testing.assert_array_equal(plain.predict(x), saved.predict(x))
+    raw = serialization.msgpack_restore(path.read_bytes())
+    optimizer = optax.adam(1e-3)
+    restored = serialization.from_state_dict(optimizer.init(saved.params), raw["optimizer"])
+    assert int(restored[0].count) == raw["step"] == 2
+    key = jax.random.wrap_key_data(raw["rng"], impl=raw["rng_implementation"])
+    assert jax.random.key_data(key).shape == (2,)
+    np.testing.assert_array_equal(raw["state_mean"], saved.mean)
+    for actual, expected in zip(jax.tree.leaves(raw["params"]), jax.tree.leaves(saved.params)):
+        np.testing.assert_array_equal(actual, expected)
+
+
 def test_causal_context_timing_and_derangements():
     latents = np.zeros((2, 5, 2), dtype=np.float32)
     latents[..., 0] = np.arange(5)[None, :] + 1

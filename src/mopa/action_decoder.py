@@ -9,7 +9,8 @@ Objective labels are deliberately absent from every API in this module.
 """
 from __future__ import annotations
 
-from dataclasses import dataclass
+from dataclasses import asdict, dataclass
+from pathlib import Path
 from typing import Any
 
 import flax.linen as nn
@@ -17,6 +18,7 @@ import jax
 import jax.numpy as jnp
 import numpy as np
 import optax
+from flax import serialization
 from flax.linen.initializers import orthogonal
 
 
@@ -444,12 +446,16 @@ def fit_action_decoder_vae(
     rng: jax.Array,
     *,
     config: ActionDecoderConfig | None = None,
+    training_state_path: str | Path | None = None,
+    initial_training_state: dict | str | Path | None = None,
 ) -> ActionDecoderFit:
     """Fit ``0s`` without labels and encode every supplied episode.
 
     State normalization and optimizer updates use windows originating only from
     ``train_episode_idx``. Each update samples ``config.batch`` training windows
     uniformly with replacement, matching the original implementation.
+    When continuing a saved fit, steps counts additional updates. Normalization,
+    optimizer, RNG and the original annealing horizon are restored unchanged.
     """
 
     cfg = ActionDecoderConfig() if config is None else config
@@ -463,9 +469,30 @@ def fit_action_decoder_vae(
     if np.any(train_idx < 0) or np.any(train_idx >= len(state)):
         raise ValueError("training episode index is out of bounds")
 
-    train_rows = state[train_idx][mask[train_idx]]
-    state_mean = train_rows.mean(axis=0).astype(np.float32)
-    state_std = (train_rows.std(axis=0) + 1e-6).astype(np.float32)
+    initial = initial_training_state
+    if isinstance(initial, (str, Path)):
+        initial = serialization.msgpack_restore(Path(initial).read_bytes())
+    if initial is not None:
+        if not isinstance(initial, dict) or initial.get("schema") != "action_decoder_training_v1":
+            raise ValueError("unsupported action-decoder training state")
+        old_config, new_config = dict(initial["config"]), asdict(cfg)
+        old_config.pop("steps")
+        new_config.pop("steps")
+        if old_config != new_config:
+            raise ValueError("continuation must preserve the original model, objective and optimizer configuration")
+        state_mean = np.asarray(initial["state_mean"], dtype=np.float32)
+        state_std = np.asarray(initial["state_std"], dtype=np.float32)
+        if state_mean.shape != (state.shape[-1],) or state_std.shape != state_mean.shape or not np.isfinite(state_mean).all() or not np.isfinite(state_std).all() or np.any(state_std <= 0):
+            raise ValueError("invalid saved training normalization")
+        start_step = int(initial["step"])
+        anneal_steps = int(initial.get("anneal_steps", initial["config"]["steps"]))
+        if start_step < 0 or anneal_steps < 0:
+            raise ValueError("invalid saved update count or annealing horizon")
+    else:
+        train_rows = state[train_idx][mask[train_idx]]
+        state_mean = train_rows.mean(axis=0).astype(np.float32)
+        state_std = (train_rows.std(axis=0) + 1e-6).astype(np.float32)
+        start_step, anneal_steps = 0, cfg.steps
     windows, state_windows, action_windows = _window_inputs(
         state,
         action,
@@ -500,6 +527,13 @@ def fit_action_decoder_vae(
     }
     optimizer = optax.adam(cfg.learning_rate)
     optimizer_state = optimizer.init(params)
+    if initial is not None:
+        restored = serialization.from_state_dict(params, initial["params"])
+        if any(np.shape(old) != np.shape(new) for old, new in zip(jax.tree.leaves(params), jax.tree.leaves(restored))):
+            raise ValueError("saved model parameter shapes differ")
+        params = jax.tree.map(jnp.asarray, restored)
+        optimizer_state = serialization.from_state_dict(optimizer_state, initial["optimizer"])
+        rng = jax.random.wrap_key_data(jnp.asarray(initial["rng"], jnp.uint32), impl=initial["rng_implementation"])
 
     sequence_jax = jnp.asarray(sequence)
     state_jax = jnp.asarray(state_windows)
@@ -547,7 +581,8 @@ def fit_action_decoder_vae(
         )
         updates, opt_state = optimizer.update(gradient, opt_state)
         model_params = optax.apply_updates(model_params, updates)
-        return model_params, opt_state, loss, reconstruction, raw_kl
+        finite = jnp.all(jnp.stack([jnp.all(jnp.isfinite(v)) for v in jax.tree.leaves((loss, reconstruction, raw_kl, gradient, opt_state, model_params))]))
+        return model_params, opt_state, loss, reconstruction, raw_kl, finite
 
     history: list[dict[str, float | int]] = []
     log_every = max(1, cfg.steps // 60)
@@ -556,14 +591,16 @@ def fit_action_decoder_vae(
         sampled = train_jax[
             jax.random.randint(batch_key, (cfg.batch,), 0, len(train_windows))
         ]
-        beta = _beta(step, cfg.steps, cfg.beta_max)
-        params, optimizer_state, loss, reconstruction, raw_kl = update(
+        beta = _beta(start_step + step, anneal_steps, cfg.beta_max)
+        params, optimizer_state, loss, reconstruction, raw_kl, finite = update(
             params, optimizer_state, sampled, sample_key, beta
         )
+        if not bool(finite):
+            raise FloatingPointError(f"nonfinite action-decoder update at step {start_step + step}")
         if step % log_every == 0 or step == cfg.steps - 1:
             history.append(
                 {
-                    "step": step,
+                    "step": start_step + step,
                     "loss": float(loss),
                     "action_mse": float(reconstruction),
                     "kl": float(raw_kl),
@@ -594,6 +631,18 @@ def fit_action_decoder_vae(
             windows.mask
         ]
         action_accuracy = float(correct.mean())
+    if training_state_path is not None:
+        payload = {
+            "schema": "action_decoder_training_v1", "config": asdict(cfg),
+            "step": start_step + cfg.steps, "anneal_steps": anneal_steps,
+            "params": serialization.to_state_dict(params),
+            "optimizer": serialization.to_state_dict(optimizer_state),
+            "rng": np.asarray(jax.random.key_data(rng)),
+            "rng_implementation": str(jax.random.key_impl(rng)),
+            "train_episode_idx": train_idx,
+            "state_mean": state_mean, "state_std": state_std,
+        }
+        Path(training_state_path).write_bytes(serialization.msgpack_serialize(payload))
     return ActionDecoderFit(
         encoder=frozen,
         decoder_params=params["d"],

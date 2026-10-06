@@ -20,7 +20,7 @@ import jax
 import jax.numpy as jnp
 import numpy as np
 import optax
-from flax import struct
+from flax import serialization, struct
 from flax.linen.initializers import orthogonal
 from flax.training.train_state import TrainState
 from flax.traverse_util import flatten_dict, unflatten_dict
@@ -201,6 +201,7 @@ def fit_continuous_bc(
     learning_rate: float = 1e-3,
     hidden_size: int = BC_HID,
     metadata: dict[str, Any] | None = None,
+    training_state_path: Path | str | None = None,
 ) -> ContinuousBCPolicy:
     """Fit ``tanh(MLP(x))`` to bounded actions with mean squared error."""
     x = np.asarray(features, dtype=np.float32)
@@ -253,6 +254,20 @@ def fit_continuous_bc(
             "head": "tanh",
         }
     )
+    if training_state_path is not None:
+        payload = {
+            "schema": "continuous_bc_training_v1",
+            "config": {"steps": steps, "batch_size": batch_size, "learning_rate": learning_rate,
+                       "hidden_size": hidden_size, "input_size": int(x.shape[1]),
+                       "action_dim": CONTINUOUS_ACTION_DIM, "rng_seed": int(rng_seed)},
+            "step": steps, "params": serialization.to_state_dict(params),
+            "optimizer": serialization.to_state_dict(opt_state),
+            "rng": np.asarray(jax.random.key_data(key)),
+            "rng_implementation": str(jax.random.key_impl(key)),
+            "state_mean": mean, "state_std": std, "sample_count": n,
+            "metadata": details,
+        }
+        Path(training_state_path).write_bytes(serialization.msgpack_serialize(payload))
     return ContinuousBCPolicy(
         params=params,
         mean=jnp.asarray(mean),

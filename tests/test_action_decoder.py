@@ -193,3 +193,53 @@ def test_continuous_actions_require_vector_shape():
             jax.random.PRNGKey(0),
             config=ActionDecoderConfig(steps=0, action_type="continuous"),
         )
+
+
+def test_optional_training_checkpoint_preserves_fit_and_restores_optimizer(tmp_path):
+    import optax
+    from flax import serialization
+
+    state = np.random.default_rng(8).normal(size=(3, 4, 2)).astype(np.float32)
+    action = np.tanh(state).astype(np.float32)
+    lengths, train = np.array([4, 3, 4]), np.array([0, 1])
+    cfg = ActionDecoderConfig(action_type="continuous", hid=4, lat=2, window=2, steps=2, batch=2)
+    path = tmp_path / "training.msgpack"
+    saved = fit_action_decoder_vae(state, action, lengths, train, jax.random.key(12), config=cfg, training_state_path=path)
+    plain = fit_action_decoder_vae(state, action, lengths, train, jax.random.key(12), config=cfg)
+    np.testing.assert_array_equal(saved.episode_latents, plain.episode_latents)
+    for p, q in zip(jax.tree.leaves(saved.decoder_params), jax.tree.leaves(plain.decoder_params), strict=True):
+        np.testing.assert_array_equal(p, q)
+    raw = serialization.msgpack_restore(path.read_bytes())
+    assert raw["step"] == cfg.steps
+    np.testing.assert_array_equal(raw["train_episode_idx"], train)
+    state = serialization.from_state_dict(optax.adam(cfg.learning_rate).init(raw["params"]), raw["optimizer"])
+    assert int(state[0].count) == cfg.steps
+    assert raw["rng"].shape == (2,)
+
+
+def test_continued_training_restores_optimizer_rng_schedule_and_frozen_statistics(tmp_path):
+    from dataclasses import replace
+
+    from flax import serialization
+
+    state = np.random.default_rng(9).normal(size=(3, 4, 2)).astype(np.float32)
+    action = np.tanh(state).astype(np.float32)
+    lengths, train = np.array([4, 3, 4]), np.array([0, 1])
+    cfg = ActionDecoderConfig(action_type="continuous", hid=4, lat=2, window=2, steps=4, batch=2)
+    original_path, split_path = tmp_path / "original.msgpack", tmp_path / "split.msgpack"
+    original = fit_action_decoder_vae(state, action, lengths, train, jax.random.key(3), config=cfg, training_state_path=original_path)
+    replay = state + 0.5
+    whole = fit_action_decoder_vae(replay, action, lengths, train, jax.random.key(81), config=replace(cfg, steps=2), initial_training_state=original_path)
+    fit_action_decoder_vae(replay, action, lengths, train, jax.random.key(71), config=replace(cfg, steps=1), initial_training_state=original_path, training_state_path=split_path)
+    split = fit_action_decoder_vae(replay, action, lengths, train, jax.random.key(61), config=replace(cfg, steps=1), initial_training_state=split_path, training_state_path=split_path)
+    for a, b in zip(jax.tree.leaves(whole.decoder_params), jax.tree.leaves(split.decoder_params), strict=True):
+        np.testing.assert_array_equal(a, b)
+    np.testing.assert_array_equal(whole.encoder.state_mean, original.encoder.state_mean)
+    np.testing.assert_array_equal(whole.encoder.state_std, original.encoder.state_std)
+    np.testing.assert_array_equal(whole.episode_latents, split.episode_latents)
+    raw = serialization.msgpack_restore(split_path.read_bytes())
+    assert raw["step"] == 6 and raw["anneal_steps"] == 4
+    assert [row["step"] for row in whole.history] == [4, 5]
+    assert all(row["beta"] == 1 for row in whole.history)
+    with pytest.raises(ValueError, match="preserve"):
+        fit_action_decoder_vae(replay, action, lengths, train, jax.random.key(1), config=replace(cfg, free_bits=0), initial_training_state=original_path)
