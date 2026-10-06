@@ -27,7 +27,10 @@ from mopa.continuous_data import (  # noqa: E402
     markov_state,
     replay_episodes,
 )
-from mopa.evaluation import run_matched_episodes  # noqa: E402
+from mopa.evaluation import (  # noqa: E402
+    run_matched_episodes,
+    specialist_action_function,
+)
 from mopa.manifest import file_sha256, package_versions  # noqa: E402
 from mopa.opponent_updates import (  # noqa: E402
     OpponentReplay,
@@ -257,7 +260,7 @@ def run(args):
                 path = directory / f"{origin}_round{round_index}_{OBJECTIVE_TYPES[label]}.npz"
                 np.savez_compressed(path, **tr, environment_seed=reset, step_seed=steps,
                                     checkpoint_seed=np.full(number, family), objective_label=np.full(number, label))
-                red_fn = jax.jit(lambda obs: deterministic_specialist_action(red[family, label], obs, 35))
+                red_fn = specialist_action_function(red[family, label], 35)
                 certification = verify(path, env, step_fn, state_fn, red_fn, opponent)
                 certification["complete_initial_state_sha256"] = identities
                 certification["physically_complete"] = True

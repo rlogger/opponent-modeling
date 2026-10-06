@@ -45,11 +45,11 @@ from mopa.causal_opponent import (  # noqa: E402
 from mopa.continuous_data import (  # noqa: E402
     OBJECTIVE_TYPES,
     continuous_checkpoint_path,
-    deterministic_specialist_action,
     load_continuous_actor_params,
     load_continuous_dataset,
     markov_state,
 )
+from mopa.evaluation import specialist_action_function  # noqa: E402
 from mopa.manifest import file_sha256, package_versions  # noqa: E402
 from mopa.response_ppo import (  # noqa: E402
     ResponsePPO,
@@ -564,7 +564,7 @@ def summarize(out, binding, params):
     train_resets.update(tuple(k) for k in offline["environment_seed"].tolist())
     mean, std = state_statistics(offline["state"], offline["valid_mask"], feature_map="markov")
     red_policies = {
-        (checkpoint, objective): jax.jit(lambda obs, p=parameters: deterministic_specialist_action(p, obs, 35))
+        (checkpoint, objective): specialist_action_function(parameters, 35)
         for (checkpoint, label), parameters in params.items()
         for objective in (OBJECTIVE_TYPES[label],)
     }

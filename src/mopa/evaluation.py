@@ -48,12 +48,22 @@ def _environment_functions(env):
 def _red_action(params, observations, obs_width):
     return deterministic_specialist_action(params, observations, obs_width)
 
+def specialist_action_function(params, obs_width):
+    """Bind weights as runtime JIT inputs, matching recorded specialist actions.
+
+    Do not wrap this callable in another JIT that captures the weights as
+    constants: that can change float32 arithmetic relative to collection.
+    """
+    return partial(_red_action, params, obs_width=obs_width)
+
+
 __all__ = [
     "CONTEXT_MODES",
     "BlueController",
     "mappo_prey_controller",
     "random_controller",
     "run_matched_episodes",
+    "specialist_action_function",
 ]
 
 

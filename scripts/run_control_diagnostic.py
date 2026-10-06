@@ -30,11 +30,11 @@ from run_opponent_updates import (  # noqa: E402
 from mopa.bc_continuous import FrozenBCOpponent  # noqa: E402
 from mopa.continuous_data import (  # noqa: E402
     OBJECTIVE_TYPES,
-    deterministic_specialist_action,
     load_continuous_actor_params,
     markov_state,
     replay_episodes,
 )
+from mopa.evaluation import specialist_action_function  # noqa: E402
 from mopa.manifest import file_sha256, package_versions  # noqa: E402
 from mopa.tdmpc import check_update, create_agent  # noqa: E402
 from mopa.tdmpc_data import SequenceReplay, state_statistics  # noqa: E402
@@ -347,7 +347,7 @@ def run(args):
         verifier = load_verifier()
         step_fn = jax.jit(jax.vmap(env.step_env))
         state_fn = jax.jit(lambda state: markov_state(env, state))
-        red_fns = {pair: jax.jit(lambda obs, par=par: deterministic_specialist_action(par, obs, 35))
+        red_fns = {pair: specialist_action_function(par, 35)
                    for pair, par in params.items()}
         for label in range(3):
             subset = np.flatnonzero(data['objective_label'] == label)

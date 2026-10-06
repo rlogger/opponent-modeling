@@ -198,3 +198,23 @@ def test_diagnostic_evidence_is_required_and_hash_checked_before_fitting(driver,
     artifact.write_bytes(b'changed diagnostic bytes')
     with pytest.raises(ValueError, match='changed'):
         driver.diagnostic_input_hashes(p)
+
+
+def test_specialist_verification_keeps_weights_as_runtime_jit_inputs():
+    import jax
+    import jax.numpy as jnp
+
+    from mopa.evaluation import _red_action, specialist_action_function
+    from mopa.nets import ContinuousActor
+
+    observations = jnp.arange(17, dtype=jnp.float32)[None] / 3
+    params = ContinuousActor().init(jax.random.PRNGKey(91), jnp.zeros((1, 35)))
+    predict = specialist_action_function(params, 35)
+    original = np.asarray(predict(observations))
+    np.testing.assert_array_equal(original, _red_action(params, observations, 35))
+    # Replacing a leaf after the first compiled call must still reach the JIT.
+    # A JIT that closes over the weights keeps the old compiled constant here.
+    params['params']['Dense_2']['bias'] = jnp.array([1., -1.], jnp.float32)
+    changed = np.asarray(predict(observations))
+    np.testing.assert_array_equal(changed, _red_action(params, observations, 35))
+    assert np.max(np.abs(changed - original)) > .5

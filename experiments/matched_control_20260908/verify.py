@@ -11,10 +11,10 @@ import jax.numpy as jnp
 import numpy as np
 
 from mopa.continuous_data import (
-    deterministic_specialist_action,
     load_continuous_actor_params,
     markov_state,
 )
+from mopa.evaluation import specialist_action_function
 from mopa.manifest import file_sha256, package_versions
 from mopa.zero_s import ZeroSOpponent
 from tag_objectives import joint_action_dict, make_env
@@ -100,6 +100,7 @@ def main(argv=None):
     seeds = [int(s) for s in args.seeds.split(",")]
     output = args.root / "numerical_verification.json"
     sources = [Path(__file__), ROOT / "uv.lock", ROOT / "src/mopa/zero_s.py", ROOT / "src/mopa/continuous_data.py",
+               ROOT / "src/mopa/evaluation.py", ROOT / "src/mopa/nets.py", ROOT / "src/mopa/continuous.py",
                *(ROOT / "src/tag_objectives" / name for name in ("objectives.py", "resources.py", "actions.py", "teams.py"))]
     binding = {"code": {str(p.relative_to(ROOT)): file_sha256(p) for p in sources}, "dependencies": package_versions()}
     result = dict(passed=False, complete=False, scope="completed-artifact snapshot" if args.available else "all requested completed controllers",
@@ -152,7 +153,7 @@ def main(argv=None):
                     else:
                         if specialist["sha256"] not in red_functions:
                             params = load_continuous_actor_params(specialist["path"])
-                            red_functions[specialist["sha256"]] = jax.jit(lambda o, p=params: deterministic_specialist_action(p, o, 35))
+                            red_functions[specialist["sha256"]] = specialist_action_function(params, 35)
                         audited = {**verify_trace(path, env, step_fn, state_fn, red_functions[specialist["sha256"]], opponent if context_sha else None), **identity}
                     result["traces"].append(audited)
                 print(f"Verified snapshot: seed {seed} {arm}, {len(recordings)} immutable traces", flush=True)
