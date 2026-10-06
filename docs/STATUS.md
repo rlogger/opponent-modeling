@@ -25,7 +25,8 @@ controllers through 8,000 updates and 864 evaluation episodes. MPPI boundary cos
 fell substantially, but capture and several policy-only/calibration outcomes
 worsened. [Results](RESULTS.md#targeted-control-continuation) retain the failed
 hypotheses; fully repaired control is not established. The frozen run source
-passed 875 locked tests with no skips locally and in remote CI before fitting.
+passed 875 locked tests with no skips locally before fitting. Remote CI also
+passed the same 875 tests; its completion is recorded separately.
 The exact-protocol-pin correction is separate from that frozen source and does
 not change its valid bindings.
 
